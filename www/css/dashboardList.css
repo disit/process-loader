@@ -166,8 +166,8 @@ div.dashboardsListCardImgDiv
     width: 90%;
     margin-left: 5%;
     height: 160px;
-    margin-top: 10px;
-    margin-bottom: 10px;
+    margin-top: 0px;
+    margin-bottom: 0px;
 }
 
 div.dashboardsListCardClick2EditDiv

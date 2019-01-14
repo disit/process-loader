@@ -466,7 +466,7 @@ if(isset($_POST['list'])){
 		
 	}
 	
-	if($row3b->file_type[0]=='MicroService' || $row3b->file_type[0]=='Microservice'){
+	if($row3b->file_type[0]=='MicroService' || $row3b->file_type[0]=='Microservice' || $row3b->file_type[0]=='DataAnalyticMicroService'){
 		    $solr =  array(
 			
                         "file_name" => $row3b->File_name,

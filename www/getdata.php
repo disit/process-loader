@@ -149,7 +149,9 @@ if (isset($_GET['action']) && !empty($_GET['action'])) {
 						"protocol"=> $row2['Protocol'],
 						"method"=> $row2['Method'],
 						"protocol"=> $row2['Protocol'],
-						"opensource"=> $row2['OpenSource']
+						"opensource"=> $row2['OpenSource'],
+						"Js"=> $row2['Js'],
+						"Html"=>$row2['Html']
 
 
 
@@ -465,6 +467,112 @@ $query10=$query_facet;
 			echo json_encode($list_production);
 			mysqli_close($link);
 		//
+	} elseif ($action == "get_microservices"){
+		
+				if ($ruolo =='Qualified'){
+		$query2 = "SELECT * FROM processloader_db.uploaded_files WHERE file_type='MicroService' ORDER BY Id DESC";
+		}else{
+		$query2 = "SELECT * FROM processloader_db.uploaded_files WHERE uploaded_files.Username='".$utente_us."' AND file_type='MicroService' ORDER BY Id DESC";
+		}
+
+        $result2 = mysqli_query($link, $query2) or die(mysqli_error($link));
+        $files_list = array();
+        if ($result2->num_rows > 0) {
+            while ($row2 = mysqli_fetch_array($result2)) {
+                $files= array(
+                     //lista attibuti files zip
+					 "file" => array(
+						"id" => $row2['Id'],
+						"name" => $row2['File_name'],
+						"desc" => $row2['Description'],
+						"date" => $row2['Creation_date'],	
+						"type" => $row2['file_type'],
+						"status" => $row2['status'],
+						"utente" => $row2['Username'],
+						"pub"=> $row2['Public'],
+						"category"=> $row2['Category'],
+						"resource"=> $row2['Resource_input'],
+						"image"=> $row2['Img'],
+						"format"=> $row2['Format'],
+						"realtime"=> $row2['Realtime'],
+						"periodic"=> $row2['Periodic'],
+						"licence"=> $row2['License'],
+						"protocol"=> $row2['Protocol'],
+						"url"=> $row2['Url'],
+						"help"=> $row2['Help'],
+						"OS"=> $row2['OS'],
+						"protocol"=> $row2['Protocol'],
+						"method"=> $row2['Method'],
+						"protocol"=> $row2['Protocol'],
+						"opensource"=> $row2['OpenSource'],
+						"Js"=> $row2['Js'],
+						"Html"=>$row2['Html']
+
+
+
+
+
+						
+					 )
+                );
+                array_push($files_list, $files);
+            }
+        }
+        mysqli_close($link);
+        echo json_encode($files_list);
+		
+	} elseif ($action == "get_microservices_microAnalitys"){
+					if ($ruolo =='Qualified'){
+		$query2 = "SELECT * FROM processloader_db.uploaded_files WHERE file_type='DataAnalyticMicroService' ORDER BY Id DESC";
+		}else{
+		$query2 = "SELECT * FROM processloader_db.uploaded_files WHERE uploaded_files.Username='".$utente_us."' AND file_type='DataAnalyticMicroService' ORDER BY Id DESC";
+		}
+
+        $result2 = mysqli_query($link, $query2) or die(mysqli_error($link));
+        $files_list = array();
+        if ($result2->num_rows > 0) {
+            while ($row2 = mysqli_fetch_array($result2)) {
+                $files= array(
+                     //lista attibuti files zip
+					 "file" => array(
+						"id" => $row2['Id'],
+						"name" => $row2['File_name'],
+						"desc" => $row2['Description'],
+						"date" => $row2['Creation_date'],	
+						"type" => $row2['file_type'],
+						"status" => $row2['status'],
+						"utente" => $row2['Username'],
+						"pub"=> $row2['Public'],
+						"category"=> $row2['Category'],
+						"resource"=> $row2['Resource_input'],
+						"image"=> $row2['Img'],
+						"format"=> $row2['Format'],
+						"realtime"=> $row2['Realtime'],
+						"periodic"=> $row2['Periodic'],
+						"licence"=> $row2['License'],
+						"protocol"=> $row2['Protocol'],
+						"url"=> $row2['Url'],
+						"help"=> $row2['Help'],
+						"OS"=> $row2['OS'],
+						"protocol"=> $row2['Protocol'],
+						"method"=> $row2['Method'],
+						"protocol"=> $row2['Protocol'],
+						"opensource"=> $row2['OpenSource'],
+						"Js"=> $row2['Js'],
+						"Html"=>$row2['Html']
+
+
+
+
+
+						
+					 )
+                );
+                array_push($files_list, $files);
+            }
+        }
+        mysqli_close($link);
+        echo json_encode($files_list);
 	}
     else{
         echo 'invalid action ' . $action;

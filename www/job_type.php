@@ -125,10 +125,9 @@ if (!isset($_GET['pageTitle'])){
 		</div>
 		
 <!-- Elenco dei Modal -->
+<!--
 <div class="modal fade" id="info-modal" role="dialog">
     <div class="modal-dialog">
-    
-      <!-- Modal content-->
       <div class="modal-content">
         <div class="modal-header" style="background-color: white">
           <button type="button" class="close" data-dismiss="modal">&times;</button>
@@ -143,8 +142,28 @@ if (!isset($_GET['pageTitle'])){
       </div>
       
     </div>
+  </div>-->
+    <div class="modal fade" id="info-modal" role="dialog" tabindex="-1">
+    <div class="modal-dialog" style="background-color: white;">
+    
+      <!-- Modal content-->
+      <div class="modal-content" style="background-color: white;">
+        <div class="modal-header" style="background-color: white;">
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+          <h4 class="modal-title">Information</h4>
+        </div>
+        <div class="modal-body" style="background-color: white;">
+		This page contains a list of every Process type created by the current user. For each element in the list is available create a new process based on the parameters of the process type.
+		</ul>
+        </div>
+        <div class="modal-footer" style="background-color: white;">
+          <input type="button" name="chiudi_job" class="btn cancelBtn" value="Cancel" data-dismiss="modal">
+        </div>
+      </div>
+      
+    </div>
   </div>
-  
+  <!-- -->
 <div class="modal fade bd-example-modal-lg" id="show_jobs" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" style="display: none;">
 <div class="modal-dialog">
 <div class="modal-content">
@@ -192,20 +211,21 @@ if (!isset($_GET['pageTitle'])){
 			</div>
 		  </div>
 <!-- fine Login-->
-<div class="modal fade" id="data-modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" style="display: none;">
+<div class="modal fade" id="data-modal" tabindex="-10" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" style="display: none;">
     	  <div class="modal-dialog">
 			<div class="modal-content">
 			<div class="modal-header" style="background-color: white">
                <button type="button" class="close" data-dismiss="modal">&times;</button>
 			   <h4 class="modal-title" id="titolo_proc"></h4>
+			   <!--<span class="fa fa-info-circle" data-toggle="modal" data-target="#info-modal"  style="color:#337ab7;font-size:24px;">-->
 			</div>
 			<!-- -->
 			<form name="param_jobs" method="post" id="param_jobs" action="caricaJob2.php" accept-charset="UTF-8">
      	<!--<form name="param_jobs" method="post" action="carica_processo.php">-->
 		<div class="form-parametri" id="Process_0">
 		<ul class="nav nav-tabs">
-		<li><a data-toggle="tab" href="#job_parameter" class="active">Process Parameters</a></li>
-		<li><a data-toggle="tab" href="#job_trigger">Trigger</a></li>
+		<li><a data-toggle="tab" href="#job_parameter" class="active">Process Parameters *</a></li>
+		<li><a data-toggle="tab" href="#job_trigger">Trigger *</a></li>
 		<li><a data-toggle="tab" href="#job_advanced">Advanced Parameters</a></li>
 		</ul>
 		<div class="panel-body"><div class="alert alert-success" hidden>New Process has been created correctly.</div>
@@ -390,13 +410,27 @@ $(document).ready(function () {
 			$(document).empty();
 			//window.alert("You need to log in to access to this page!");
 			if(window.self !== window.top){
-			window.location.href = 'page.php?showFrame=false&pageTitle=Process%20Loader:%20View%20Resources';	
+			//window.location.href = 'page.php?showFrame=false&pageTitle=Process%20Loader:%20View%20Resources';	
+			window.location.href='https://www.snap4city.org/auth/realms/master/protocol/openid-connect/auth?response_type=code&redirect_uri=https%3A%2F%2Fmain.snap4city.org%2Fmanagement%2FssoLogin.php%3Fredirect%3DiframeApp.php%253FlinkUrl%253Dhttps%253A%252F%252Fwww.snap4city.org%252Fdrupal%252Fopenid-connect%252Flogin%2526linkId%253Dsnap4cityPortalLink%2526pageTitle%253Dwww.snap4city.org%2526fromSubmenu%253Dfalse&client_id=php-dashboard-builder&nonce=be3aea0a2bb852217929cbb639370c9e&state=d090eb830f9abb504fd7012f6a12389c&scope=openid+username+profile';	
 			}
 			else{
 			window.location.href = 'page.php?pageTitle=Process%20Loader:%20View%20Resources';
 			}
 		}
 	
+	var role_active = "<?=$process['functionalities'][$role]; ?>";
+
+			//console.log(role_active);
+			if (role_active == 0){
+						$(document).empty();
+						if(window.self !== window.top){
+						//window.location.href = 'page.php?showFrame=false&pageTitle=Process%20Loader:%20View%20Resources';
+						window.location.href='https://www.snap4city.org/auth/realms/master/protocol/openid-connect/auth?response_type=code&redirect_uri=https%3A%2F%2Fmain.snap4city.org%2Fmanagement%2FssoLogin.php%3Fredirect%3DiframeApp.php%253FlinkUrl%253Dhttps%253A%252F%252Fwww.snap4city.org%252Fdrupal%252Fopenid-connect%252Flogin%2526linkId%253Dsnap4cityPortalLink%2526pageTitle%253Dwww.snap4city.org%2526fromSubmenu%253Dfalse&client_id=php-dashboard-builder&nonce=be3aea0a2bb852217929cbb639370c9e&state=d090eb830f9abb504fd7012f6a12389c&scope=openid+username+profile';							
+						}
+						else{
+						window.location.href = 'page.php?pageTitle=Process%20Loader:%20View%20Resources';
+						}
+					}
 	//
 	////
 	var titolo_default = "<?=$default_title; ?>";
@@ -762,6 +796,10 @@ $(document).ready(function () {
 					}
 					
 					//CREAZIONE JSON
+					//Se i trigger sono vuoti:
+					if (($('#nome_trig').val()=="")||($('#descrizione_trig').val()=="")||($('#gruppo_trig').val()=="")){
+						alert("You have to insert trigger data before confirm!");
+					}
 					///
 					var inputJSON = $("#param_jobs").serializeJSON();
 						

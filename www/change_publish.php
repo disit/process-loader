@@ -60,14 +60,40 @@ if (($access_pub == null)|| ($access_pub == "")||($access_pub=="ToBeDefined")){
 
 
 if (($control == 1) && ($change == 1)){
-	if (isset($_REQUEST['showFrame'])){
-			if ($_REQUEST['showFrame'] == 'false'){
-				header ("location:file_archive.php?showFrame=false&not_valid=error");
+	if (isset($_REQUEST['editor'])){
+		 if ($_REQUEST['editor'] == 'MicroService'){
+					if (isset($_REQUEST['showFrame'])){
+								if ($_REQUEST['showFrame'] == 'false'){
+										header ("location:MicroService_editor.php?showFrame=false&not_valid=error");
+								}else{
+										header ("location:MicroService_editor.php?not_valid=error");
+									}	
+						}else{
+							header ("location:MicroService_editor.php?not_valid=error");
+						}
 			}else{
-				header ("location:file_archive.php?not_valid=error");
-			}	
+					 if ($_REQUEST['editor'] == 'DataAnalyticMicroService'){
+							if (isset($_REQUEST['showFrame'])){
+								if ($_REQUEST['showFrame'] == 'false'){
+										header ("location:dataAnalyticMicroService_editor.php?showFrame=false&not_valid=error");
+								}else{
+										header ("location:dataAnalyticMicroService_editor.php?not_valid=error");
+									}	
+						}else{
+							header ("location:dataAnalyticMicroService_editor.php?not_valid=error");
+						}
+					 } 
+			}
 		}else{
-			header ("location:file_archive.php?not_valid=error");
+					if (isset($_REQUEST['showFrame'])){
+							if ($_REQUEST['showFrame'] == 'false'){
+								header ("location:file_archive.php?showFrame=false&not_valid=error");
+							}else{
+								header ("location:file_archive.php?not_valid=error");
+							}	
+						}else{
+							header ("location:file_archive.php?not_valid=error");
+						}
 		}
 }
 else {
@@ -82,6 +108,31 @@ else {
 		$url = "http://localhost:8983/solr/collection1/dataimport?command=full-import";
 		url_get($url);
 		//header("location:file_archive.php");
+	if (isset($_REQUEST['editor'])){
+					if ($_REQUEST['editor'] == 'MicroService'){
+					if (isset($_REQUEST['showFrame'])){
+								if ($_REQUEST['showFrame'] == 'false'){
+										header ("location:MicroService_editor.php?showFrame=false");
+								}else{
+										header ("location:MicroService_editor.php");
+									}	
+						}else{
+							header ("location:MicroService_editor.php");
+						}
+			}else{
+					 if ($_REQUEST['editor'] == 'DataAnalyticMicroService'){
+							if (isset($_REQUEST['showFrame'])){
+								if ($_REQUEST['showFrame'] == 'false'){
+										header ("location:dataAnalyticMicroService_editor.php?showFrame=false");
+								}else{
+										header ("location:dataAnalyticMicroService_editor.php");
+									}	
+						}else{
+							header ("location:dataAnalyticMicroService_editor.php");
+						}
+					 } 
+			}
+		}else{
 		if (isset($_REQUEST['showFrame'])){
 			if ($_REQUEST['showFrame'] == 'false'){
 				header ("location:file_archive.php?showFrame=false");
@@ -91,5 +142,6 @@ else {
 		}else{
 			header ("location:file_archive.php");
 		}
+	}
 }
 ?>

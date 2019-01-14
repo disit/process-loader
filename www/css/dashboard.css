@@ -15,6 +15,7 @@
    along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
 
+
 @font-face {
     font-family: Montserrat;
     src: url(../fonts/montserrat/Montserrat-Regular.ttf);
@@ -2044,6 +2045,54 @@ a.moduleLink:hover
 }
 
 .editDashBtnCard:hover
+{
+    background-color: rgba(0, 162, 211, 1);
+}
+
+.editDashBtnCard_modify
+{
+    border: none;
+    font-weight: bold;
+    background-color: rgba(51, 64, 69, 1);
+    color: white;
+    border-radius: 5px;
+    font-size: 1.2em;
+    margin-bottom: 10px;
+}
+
+.editDashBtnCard_modify:hover
+{
+    background-color: rgba(0, 162, 211, 1);
+}
+
+.editDashBtnCard_publish
+{
+    border: none;
+    font-weight: bold;
+    background-color: rgba(51, 64, 69, 1);
+    color: white;
+    border-radius: 5px;
+    font-size: 1.2em;
+    margin-bottom: 10px;
+}
+
+.editDashBtnCard_publish:hover
+{
+    background-color: rgba(0, 162, 211, 1);
+}
+
+.editDashBtnCard_owner
+{
+    border: none;
+    font-weight: bold;
+    background-color: rgba(51, 64, 69, 1);
+    color: white;
+    border-radius: 5px;
+    font-size: 1.2em;
+    margin-bottom: 10px;
+}
+
+.editDashBtnCard_owner:hover
 {
     background-color: rgba(0, 162, 211, 1);
 }

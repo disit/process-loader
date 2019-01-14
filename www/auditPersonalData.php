@@ -17,6 +17,7 @@
    along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
 //include('config.php'); // Includes Login Script
+session_start();
 include ('external_service.php');
 if (isset ($_SESSION['username'])){
   $utente_att = $_SESSION['username'];	
@@ -227,80 +228,104 @@ if ($_GET["end"] == ""){
 }
 
 $query_n = "SELECT activity.* FROM profiledb.activity";
+$query_count = "select COUNT(*) FROM profiledb.activity";
 //Controlla//
 //if (isset($_GET['user'])||isset($_GET['appName'])||isset($_GET['varN'])||isset($_GET['mot'])||isset($_GET["start"])||isset($_GET["end"])){
 if (($user_lab !="")||($appN_lab != "")||($varN_lab !="")||($mot_lab !="")||($start_lab !="")||($end_lab !="")||($domain_lab!="")||($accessType_lab!="")||($sourceRequest_lab!="")||($delApp_lab!="")||($delUser_lab !="")){
 	//$query_n = $query_n . "WHERE activity.id >0 ";
 	$query_n = $query_n . "	WHERE ";
+	$query_count = $query_count . "	WHERE ";
 ///
 if ($user != ""){
 	$query_n = $query_n . $user;
+	$query_count = $query_count . $user;
 }
 if ($start_d !=""){
 	if ($user != ""){
-	$query_n = $query_n . 'AND	';	
+	$query_n = $query_n . 'AND	';
+	$query_count = $query_count . 'AND	';	
 	}
 	$query_n = $query_n . $start_d;
+	$query_count = $query_count . $start_d;	
 }
 if ($end_d !=""){
 	if (($user != "")||($start_d !="")){
-	$query_n = $query_n . 'AND	';	
+	$query_n = $query_n . 'AND	';
+	$query_count = $query_count . 'AND	';		
 	}
 	$query_n = $query_n . $end_d;
+	$query_count = $query_count . $end_d;	
 }
 if ($varN !=""){
 	if (($user != "")||($start_d !="")||($end_d !="")){
-	$query_n = $query_n . 'AND	';	
+	$query_n = $query_n . 'AND	';
+	$query_count = $query_count . 'AND	';
 	}
 	$query_n = $query_n . $varN;
+	$query_count = $query_count . $varN;
 }
 if ($appN !=""){
 	if (($user != "")||($start_d !="")||($end_d !="")||($varN !="")){
-	$query_n = $query_n . 'AND	';	
+	$query_n = $query_n . 'AND	';
+	$query_count = $query_count . 'AND	';	
 	}
 	$query_n = $query_n . $appN;
+	$query_count = $query_count . $appN;
 }
 if ($mot !=""){
 	if (($user != "")||($start_d !="")||($end_d !="")||($appN !="")||($varN !="")){
 	$query_n = $query_n . 'AND	';	
+	$query_count = $query_count . 'AND	';
 	}
 	$query_n = $query_n . $mot;
+	$query_count = $query_count . $mot;
 }
 if ($domain !=""){
 	if (($user != "")||($start_d !="")||($end_d !="")||($appN !="")||($varN !="")||($mot !="")){
-	$query_n = $query_n . 'AND	';	
+	$query_n = $query_n . 'AND	';
+	$query_count = $query_count . 'AND	';
 	}
 	$query_n = $query_n . $domain;
+	$query_count = $query_count . $domain;
 }
 if ($accesstype != ""){
 	if (($user != "")||($start_d !="")||($end_d !="")||($appN !="")||($varN !="")||($mot !="")||($domain !="")){
 	$query_n = $query_n . 'AND	';	
+	$query_count = $query_count . 'AND	';
 	}
 	$query_n = $query_n . $accesstype;
+	$query_count = $query_count . $accesstype;
 }
 if ($delApp != ""){
 	if (($user != "")||($start_d !="")||($end_d !="")||($appN !="")||($varN !="")||($mot !="")||($domain !="")||($accesstype != "")){
-	$query_n = $query_n . 'AND	';	
+	$query_n = $query_n . 'AND	';
+	$query_count = $query_count . 'AND	';	
 	}
 	$query_n = $query_n . $delApp;
+	$query_count = $query_count . $delApp;
 }
 if ($delUser != ""){
 	if (($user != "")||($start_d !="")||($end_d !="")||($appN !="")||($varN !="")||($mot !="")||($domain !="")||($delApp != "")||($accesstype != "")){
-	$query_n = $query_n . 'AND	';	
+	$query_n = $query_n . 'AND	';
+	$query_count = $query_count . 'AND	';	
 	}
 	$query_n = $query_n . $delUser;
+	$query_count = $query_count . $delUser;
 }
 
 if ($sourceRequest != ""){
 	if (($user != "")||($start_d !="")||($end_d !="")||($appN !="")||($varN !="")||($mot !="")||($domain !="")||($delUser != "")||($delApp != "")||($accesstype != "")){
 	$query_n = $query_n . 'AND	';	
+	$query_count = $query_count . 'AND	';
 	}
 	$query_n = $query_n . $sourceRequest;
+	$query_count = $query_count . $sourceRequest;
 }
 /////  OTTENRERE IL TOTAL ROWS  //////
 }
 
-$total_rows_query = $query_n;
+//$total_rows_query = $query_n;
+$total_rows_query = $query_count;
 /////
 $query_n = $query_n . "	ORDER BY ".$order." ".$by." LIMIT ".$start_from.", ".$limit.";";
 //echo ($query_n);
@@ -322,9 +347,37 @@ $num_rows = $result->num_rows;
 	}
 	
 $result0 = mysqli_query($link, $total_rows_query) or die(mysqli_error($link));
-		$total_rows = $result0->num_rows;
-	mysqli_close($link);
+		//$total_rows = $result0->num_rows;
+		///////////
+				$count_list = array();
+				if ($result0->num_rows > 0) {
+					while($row = mysqli_fetch_assoc($result0)){
+						array_push($count_list, $row);
+					}
+				}
+				//var_dump($count_list);
+				$total_rows = $count_list[0]["COUNT(*)"];
+		////////////
 	
+//
+//SOURCE REQUEST //
+$array_sr = array ();
+$query_request = "SELECT DISTINCT activity.source_request FROM profiledb.activity";
+$result_request = mysqli_query($link, $query_request) or die(mysqli_error($link));
+if ($result_request ->num_rows > 0) {
+					while($row_request  = mysqli_fetch_assoc($result_request )){
+						$variable_source_req = $row_request['source_request'];
+						//echo($variable_source_req);
+						array_push($array_sr, $variable_source_req);
+					}
+				}
+//
+$lun_sr = count($array_sr);
+//var_dump($array_sr);
+//
+
+mysqli_close($link);
+//	
 ?>
 
 <html lang="en">
@@ -449,7 +502,7 @@ $result0 = mysqli_query($link, $total_rows_query) or die(mysqli_error($link));
 							<th class="app_name"><div><a href="'.$pagina_attuale.'&orderBy=app_name&order='.$by_par.'">App Name '.$icon_by.'</a></div><div class="input-group mb-3"><input type="text" style="color: black;" size="18" id="filterAppName" placeholder="Search..." /></div><div><button id="filterAppN" type="button" class="filter">Search</button></div></th>
 							<th class="delegated_username"><div><a href="'.$pagina_attuale.'&orderBy=delegated_username&order='.$by_par.'">Delegated Username '.$icon_by.'</a></div><div class="input-group mb-3"><input type="text" style="color: black;" size="18"  id="filterDelUs" placeholder="Search..." /></div><div><button id="filterDelUs" type="button" class="filter">Search</button></div></th>
 							<th class="delegated_app_name"><div><a href="'.$pagina_attuale.'&orderBy=delegated_app_name&order='.$by_par.'">Delegated AppName '.$icon_by.'</a></div><div class="input-group mb-3"><input type="text" style="color: black;" size="18"  id="filterDelAp" placeholder="Search..." /></div><div><button id="filterDelApp" type="button" class="filter">Search</button></div></th>
-							<th class="source_request"><div><a href="'.$pagina_attuale.'&orderBy=source_request&order='.$by_par.'">Source request '.$icon_by.'</a></div><select name="sourceReq" class="selectpicker form-control" id="sourceReq" style="color: black; width:auto;"><option value=""></option><option value="dashboardwizard">dashboardwizard</option><option value="dashboardmanager">dashboardmanager</option><option value="iotapp">iotapp</option></select><button id="filterSource" type="button" class="filter">Search</button></th>
+							<th class="source_request"><div><a href="'.$pagina_attuale.'&orderBy=source_request&order='.$by_par.'">Source request '.$icon_by.'</a></div><select name="sourceReq" class="selectpicker form-control" id="sourceReq" style="color: black; width:auto;"><option value=""></option></select><button id="filterSource" type="button" class="filter">Search</button></th>
 							<th class="variable_name"><div><a href="'.$pagina_attuale.'&orderBy=variable_name&order='.$by_par.'">Variable name '.$icon_by.'</a></div><div class="input-group mb-3"><input type="text" style="color: black;" size="18"  id="filterVarN" placeholder="Search..." /></div><div><button id="filterVarNBtn" type="button" class="filter">Search</button></div></th>
 							<th class="motivation"><div><a href="'.$pagina_attuale.'&orderBy=motivation&order='.$by_par.'">Motivation '.$icon_by.'</a></div><div class="input-group mb-3"><input type="text" style="color: black;" size="18"  id="filterMot" placeholder="Search..." /></div><div><button id="filterMotBtn" type="button" class="filter">Search</button></div></th>
 							<th class="access_type"><div><a href="'.$pagina_attuale.'&orderBy=access_type&order='.$by_par.'">Access Type '.$icon_by.'</a></div><select name="AccessType" class="selectpicker form-control" id="AccessType" style="color: black; width:auto;"><option value=""></option><option value="READ">READ</option><option value="WRITE">WRITE</option></select><button id="filterAccType" type="button" class="filter">Search</button></th>
@@ -545,6 +598,15 @@ $result0 = mysqli_query($link, $total_rows_query) or die(mysqli_error($link));
 <script type='text/javascript'>
 			var Paramter_end = "";
 			
+			var array_rs= new Array();
+			//array_rs= '<?=json_encode($array_sr); ?>';
+			<?php foreach($array_sr as $key => $val){ ?>
+						array_rs.push('<?php echo $val; ?>');
+					<?php } ?>
+			var lun_sr ='<?=$lun_sr; ?>';
+			console.log(array_rs);
+			
+			
 			$(function () {
 				$("[data-toggle='tooltip']").tooltip();
 				});
@@ -563,6 +625,13 @@ $result0 = mysqli_query($link, $total_rows_query) or die(mysqli_error($link));
 			$('.ellipsis').css("width","150 px");
 			
 		}
+		
+		//
+		for(var i = 1; i < lun_sr; i++){
+			$('#sourceReq').append('<option value="'+array_rs[i]+'">'+array_rs[i]+'</option>');
+		}
+		//
+		//
 		
 		var pagina_corrente="<?=$corr_page; ?>";
 		//trovare il link con value uguale alla pagina e colorarlo di bianco.
@@ -610,18 +679,19 @@ $result0 = mysqli_query($link, $total_rows_query) or die(mysqli_error($link));
 		
 		var role_active = $("#role_att").text();
 	//redirect
-		/*var role="<?=$role_att; ?>";
-	
-		if (role == ""){
+		var role="<?=$role_att; ?>";
+		var role_active = "<?=$process['functionalities'][$role]; ?>";
+		if (role_active ==0){
 			$(document).empty();
 			//window.alert("You need to log in to access to this page!");
 			if(window.self !== window.top){
-			window.location.href = 'page.php?showFrame=false&pageTitle=Process%20Loader:%20View%20Resources';	
+			//window.location.href = 'page.php?showFrame=false&pageTitle=Process%20Loader:%20View%20Resources';	
+			window.location.href='https://www.snap4city.org/auth/realms/master/protocol/openid-connect/auth?response_type=code&redirect_uri=https%3A%2F%2Fmain.snap4city.org%2Fmanagement%2FssoLogin.php%3Fredirect%3DiframeApp.php%253FlinkUrl%253Dhttps%253A%252F%252Fwww.snap4city.org%252Fdrupal%252Fopenid-connect%252Flogin%2526linkId%253Dsnap4cityPortalLink%2526pageTitle%253Dwww.snap4city.org%2526fromSubmenu%253Dfalse&client_id=php-dashboard-builder&nonce=be3aea0a2bb852217929cbb639370c9e&state=d090eb830f9abb504fd7012f6a12389c&scope=openid+username+profile';	
 			}
 			else{
 			window.location.href = 'page.php?pageTitle=Process%20Loader:%20View%20Resources';
 			}
-		}*/
+		}
 		//
 		var titolo_default = "<?=$default_title; ?>";
 				if (titolo_default != ""){

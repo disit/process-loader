@@ -21,4 +21,17 @@ $username= 'profiledb_user_read';
 $password= 'profiledbpassreadonly';
 $dbname= 'profiledb';
 $snap4city_API='localhost';
+
+//PHOTO SERVICE//
+$host_photo= 'localhost';
+$username_photo= 'root';
+$password_photo= 'toor';
+$dbname_photo= 'processloader_db';
+$photo_api='http://www.disit.org/ServiceMap/api/v1/photo/thumbs/';
+
+//KPI EDITOR//
+$host_kpi= 'localhost';
+$username_kpi= 'root';
+$password_kpi= 'toor';
+$dbname_kpi= 'processloader_db';
 ?>

@@ -184,12 +184,27 @@ while ($row = $result->fetch_row()) {
 			$(document).empty();
 			//window.alert("You need to log in to access to this page!");
 			if(window.self !== window.top){
-			window.location.href = 'page.php?showFrame=false&pageTitle=Process%20Loader:%20View%20Resources';	
+			//window.location.href = 'page.php?showFrame=false&pageTitle=Process%20Loader:%20View%20Resources';	
+			window.location.href='https://www.snap4city.org/auth/realms/master/protocol/openid-connect/auth?response_type=code&redirect_uri=https%3A%2F%2Fmain.snap4city.org%2Fmanagement%2FssoLogin.php%3Fredirect%3DiframeApp.php%253FlinkUrl%253Dhttps%253A%252F%252Fwww.snap4city.org%252Fdrupal%252Fopenid-connect%252Flogin%2526linkId%253Dsnap4cityPortalLink%2526pageTitle%253Dwww.snap4city.org%2526fromSubmenu%253Dfalse&client_id=php-dashboard-builder&nonce=be3aea0a2bb852217929cbb639370c9e&state=d090eb830f9abb504fd7012f6a12389c&scope=openid+username+profile';	
 			}
 			else{
 			window.location.href = 'page.php?pageTitle=Process%20Loader:%20View%20Resources';
 			}
 		}
+		//
+		var role_active = "<?=$process['functionalities'][$role]; ?>";
+
+			//console.log(role_active);
+			if (role_active == 0){
+						$(document).empty();
+						if(window.self !== window.top){
+						//window.location.href = 'page.php?showFrame=false&pageTitle=Process%20Loader:%20View%20Resources';	
+						window.location.href='https://www.snap4city.org/auth/realms/master/protocol/openid-connect/auth?response_type=code&redirect_uri=https%3A%2F%2Fmain.snap4city.org%2Fmanagement%2FssoLogin.php%3Fredirect%3DiframeApp.php%253FlinkUrl%253Dhttps%253A%252F%252Fwww.snap4city.org%252Fdrupal%252Fopenid-connect%252Flogin%2526linkId%253Dsnap4cityPortalLink%2526pageTitle%253Dwww.snap4city.org%2526fromSubmenu%253Dfalse&client_id=php-dashboard-builder&nonce=be3aea0a2bb852217929cbb639370c9e&state=d090eb830f9abb504fd7012f6a12389c&scope=openid+username+profile';	
+						}
+						else{
+						window.location.href = 'page.php?pageTitle=Process%20Loader:%20View%20Resources';
+						}
+					}
 		//
 		var titolo_default = "<?=$default_title; ?>";
 				if (titolo_default != ""){

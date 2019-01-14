@@ -1,0 +1,59 @@
+.message-properties>dt {
+	padding: 0px 3px 2px 3px;
+	font-family: monospace;
+	font-weight: normal;
+	margin: 5px 3px 1px;
+	color: #AD1625;
+	white-space: nowrap;}
+.palette-header {
+	position: relative;
+	background: #f3f3f3;
+	cursor: pointer;
+	text-align: left;
+	padding: 9px;
+	font-weight: bold;
+	overflow: hidden;
+        white-space: nowrap;
+	text-overflow: ellipsis;'+
+	}
+dl.message-properties>dt .property-type {
+	font-family: "Helvetica Neue", Arial, Helvetica, sans-serif;
+	color: #666;
+	font-style: italic;
+	font-size: 11px;
+	float: right;
+}
+dl.message-properties {
+	border: 1px solid #ddd;
+        border-radius: 2px;
+	margin: 5px auto 10px;
+}
+
+h3 {
+    font-weight: 500;
+    font-size: 1.138em;
+    margin: 7px auto 5px;
+    line-height: 1.3em;
+}
+
+ol.node-ports li {
+    border: 1px solid #ddd;
+    border-radius: 2px;
+    list-style-position: inside;
+    padding: 3px;
+    margin-bottom: 5px;
+}
+
+body {
+    margin: 0;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    line-height: 20px;
+    color: #333333;
+    background-color: #ffffff;
+}
+
+dl.message-properties>dd {
+    margin: 0px 8px 2px 13px;
+    vertical-align: top;
+}

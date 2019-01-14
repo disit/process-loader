@@ -28,6 +28,8 @@ echo $path_del;
 //DELETE FILE
 if (file_exists($path_del)) {
 unlink($path_del);
+$new_del= explode('/', $path_del,2);
+rmdir($new_del);
 }
 //
 $sql3 = "DELETE FROM `uploaded_files` WHERE `uploaded_files`.`Id`='".$id_file."'";
@@ -37,16 +39,40 @@ url_get($url);
 
 mysqli_close($link);
 
-
-if (isset($_REQUEST['showFrame'])){
-	if ($_REQUEST['showFrame'] == 'false'){
-		header ("location:file_archive.php?showFrame=false");
-	}else{
-		header ("location:file_archive.php");
-	}	
-}else{
-	header ("location:file_archive.php");
+if (isset($_REQUEST['editor'])){
+					if ($_REQUEST['editor'] == 'MicroService'){
+							if (isset($_REQUEST['showFrame'])){
+										if ($_REQUEST['showFrame'] == 'false'){
+												header ("location:MicroService_editor.php?showFrame=false");
+										}else{
+												header ("location:MicroService_editor.php");
+											}	
+								}else{
+									header ("location:MicroService_editor.php");
+								}
+					}else{
+							 if ($_REQUEST['editor'] == 'DataAnalyticMicroService'){
+									if (isset($_REQUEST['showFrame'])){
+										if ($_REQUEST['showFrame'] == 'false'){
+												header ("location:dataAnalyticMicroService_editor.php?showFrame=false");
+										}else{
+												header ("location:dataAnalyticMicroService_editor.php");
+											}	
+								}else{
+									header ("location:dataAnalyticMicroService_editor.php");
+								}
+							 } 
+					}
+		}else{
+			if (isset($_REQUEST['showFrame'])){
+				if ($_REQUEST['showFrame'] == 'false'){
+					header ("location:file_archive.php?showFrame=false");
+				}else{
+					header ("location:file_archive.php");
+				}	
+			}else{
+				header ("location:file_archive.php");
+			}
 }
-
 
 ?>

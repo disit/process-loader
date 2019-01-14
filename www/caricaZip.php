@@ -48,7 +48,6 @@ $url = $_POST['url'];
 ////Manipolazione ULR//
 			$check = strstr($url,'http:');
 						if ($check){
-									//$param=$param0;
 									$url=$url;
 					}else{
 							$check2 = strstr($url,'https');
@@ -92,7 +91,6 @@ if ($tipo=="ETL"){
 	$new_img = '';
 }
 
-/////////////////////////////
 ///BASE///
 $base= basename($nome,".zip");
 if (($tipo == 'ETL')||($tipo=="R")||($tipo=="Java")){
@@ -133,8 +131,6 @@ if ($tipo == 'MicroService'){
 	$utente = $_SESSION['username'];
 	//$utente = 'Prova_microservice';
 	$cartellaMicro = 'uploads/'.$utente.'/'.$time3.'/';
-	//$string = file_get_contents($percorso);
-	//$string = file_get_contents($cartella . $nome);
 	if (isset($_POST['micro_param'])){
 		$string_value= $_POST['micro_param'];
 		$string=explode(",",$string_value);
@@ -153,6 +149,8 @@ if ($tipo == 'MicroService'){
 		$micro_pass = "";
 	}
 	
+	
+	
 	$json_a = json_decode($string, true);
 	//$parameters = $json_a['parameterList'];
 	$parameters = $array_parametri;
@@ -160,14 +158,21 @@ if ($tipo == 'MicroService'){
 	$baseMicro= basename($nome,".json");
 	//$nome_funzione = preg_replace("[^A-Za-z0-9 ]", "", $micro_name);
 	$nome_funzione = preg_replace('/[^A-Za-z0-9]/', '', $micro_name);
-	//$nome_funzione = preg_replace(" ", "", $nome_funzione);
-	/////scrittura HTML /////
-	//$nomeHTML = $baseMicro.".html";
 	$nomeHTML = $micro_name.".html";
 	$myfileHtml = fopen($nomeHTML,"w");
-	$contentHtml = '<script type="text/javascript"> RED.nodes.registerType("'.$micro_name.'", {category: "UserCreated", color: "#FFFFFF", defaults: { name:{value: ""}';
+	$color = '#FFFFFF';
+	$category = 'UserCreated';
+	
+	$contentHtml = '<script type="text/javascript"> RED.nodes.registerType("'.$micro_name.'", {category: "'.$category.'", color: "'.$color.'", defaults: { name:{value: ""}';
+	//HELP CREATION
+	//
+	//
+	//$help = '<div id="palette_node_service-info" class="palette_node ui-draggable" style="background-color: rgb(255, 255, 255); height: 28px;" onclick="loadContent(service-info.html);"><div class="palette_label" dir="">'.$micro_name.'</div><div class="palette_icon_container"><div class="palette_icon" style="background-image: url(icons/white-globe.png)"></div></div><div class="palette_port palette_port_output" style="top: 9px;"></div><div class="palette_port palette_port_input" style="top: 9px;"></div></div>'.$help;
+	//	
 	for ($j=0;$j<$num;$j++){
-	$contentHtml = $contentHtml . ','.$parameters[$j].':{value:"",required:false}';
+		if (($parameters[$j] != "")||($parameters[$j] != null)){
+				$contentHtml = $contentHtml . ','.$parameters[$j].':{value:"",required:false}';
+		}
 	}
 	//if checked
 	if ($auth_check == 'Yes'){
@@ -177,8 +182,10 @@ if ($tipo == 'MicroService'){
 	$contentHtml = $contentHtml.'}, outputs: 1,inputs: 1,outputLabels: ["response"],icon: "white-globe.png",label: function() {return this.name || "'.$micro_name.'"; } });</script>';
 	$contentHtml = $contentHtml . '<script type="text/x-red" data-template-name="'.$micro_name.'"><div class="form-row"><label for="node-input-name">Name</label><input type="text" id="node-input-name" placeholder="'.$baseMicro.'"></div>';	
 	for ($i=0;$i<$num;$i++){
+		if (($parameters[$i] != "")||($parameters[$i] != null)){
 		$htmlParam = '<div class="form-row"><label for="node-input-'.$parameters[$i].'">'.$parameters[$i].'</label><input type="text" id="node-input-'.$parameters[$i].'" placeholder="'.$parameters[$i].'"></div>';
 		$contentHtml = $contentHtml . $htmlParam;
+		}
 	}
 	//If checked
 	if ($auth_check == 'Yes'){
@@ -193,7 +200,6 @@ if ($tipo == 'MicroService'){
 	///// FIne HTML /////
 	
 	////scrittura Java script///
-	//$nomeJS = $baseMicro.".js";
 	$nomeJS = $micro_name.".js";
 	$myfileJs = fopen($nomeJS,"w");
 	
@@ -204,9 +210,12 @@ if ($tipo == 'MicroService'){
 	$contentjs =  $contentjs . 'function '.$nome_funzione.'(config) { RED.nodes.createNode(this, config); var node = this;node.on("input", function(msg) {';
 	$contentjs = $contentjs . 'var uri = "'.$url.'"; ';
 	
+	
 	for ($y=0;$y<$num;$y++){
+		if (($parameters[$y] != "")||($parameters[$y] != null)){
 		$contentjs = $contentjs . 'var '.$parameters[$y].' = (msg.payload.'.$parameters[$y].' ? msg.payload.'.$parameters[$y].' : config.'.$parameters[$y].');';
 		}
+	}
 		//if checked
 		if ($auth_check == 'Yes'){
 			$contentjs = $contentjs .'var username = (msg.payload.username ? msg.payload.username : config.username);';
@@ -217,36 +226,33 @@ if ($tipo == 'MicroService'){
 		if ($auth_check == 'Yes'){
 		$contentjs = $contentjs . 'var btoa = require("btoa");';	
 		}
-		$contentjs = $contentjs .'var xmlHttp = new XMLHttpRequest();console.log(encodeURI(uri + "?'.$parameters[0].'="+'. $parameters[0];
+		$contentjs = $contentjs .'var xmlHttp = new XMLHttpRequest();';
+		//console.log(encodeURI(uri + "?'.$parameters[0].'="+'. $parameters[0];
+		/*
 		for ($z=1;$z<$num;$z++){
+			if (($parameters[$z] != "")||($parameters[$z] != null)){
 			$contentjs = $contentjs.'+(typeof '.$parameters[$z].' != "undefined" && '.$parameters[$z].' != "" ? "&'.$parameters[$z].'=" + '.$parameters[$z].' : "")';
-		}
-		/*
-		if ($micro_user !=""){
-		//$contentjs = $contentjs . '+ (typeof uid != "undefined" && uid != "" ? "&uid=" + uid : "")';
-		//$contentjs = $contentjs . '+ (typeof '.$micro_user.' != "undefined" && '.$micro_user.' != "" ? "&'.$micro_user.'=" + '.$micro_user.' : "")';
-		$contentjs = $contentjs.'+ "&user='.$micro_user.'"';
-		}
-		if ($micro_pass !=""){
-		//$contentjs = $contentjs . '+ (typeof uid != "undefined" && uid != "" ? "&uid=" + uid : "")';
-		//$contentjs = $contentjs . '+ (typeof '.$micro_pass.' != "undefined" && '.$micro_pass.' != "" ? "&'.$micro_pass.'=" + '.$micro_pass.' : "")';
-		$contentjs = $contentjs.'+ "&password='.$micro_pass.'"';
+			}
 		}*/
+		/*if (($parameters[0] != "")||($parameters[0] != null)){
 		$contentjs = $contentjs . '));xmlHttp.open("'.$method.'", encodeURI(uri + "?'.$parameters[0].'=" + '.$parameters[0];
-		for ($x=1;$x<$num;$x++){
-		$contentjs = $contentjs.' +(typeof '.$parameters[$x].' != "undefined" && '.$parameters[$x].' != "" ? "&'.$parameters[$x].'=" + '.$parameters[$x].' : "")';
-		}
-		//if checked
-		/*
-		if ($micro_user !=""){
-		//$contentjs = $contentjs.' + (typeof uid != "undefined" && uid != "" ? "&uid=" + uid : "")), false);';
-		//$contentjs = $contentjs.' + (typeof '.$micro_user.' != "undefined" && '.$micro_user.' != "" ? "&=" + '.$micro_user.' : "")';
-		$contentjs = $contentjs.'+ "&user='.$micro_user.'"';
-		}
-		if ($micro_pass !=""){
-		//$contentjs = $contentjs.' + (typeof '.$micro_pass.' != "undefined" && '.$micro_pass.' != "" ? "&=" + '.$micro_pass.' : "")';
-		$contentjs = $contentjs.'+ "&password='.$micro_pass.'"';
+		}else{
+		//$contentjs = $contentjs . '));xmlHttp.open("'.$method.'", encodeURI(uri + "?'.$parameters[0].'=" + '.$parameters[0];	
 		}*/
+		$first = true;
+		//$contentjs = $contentjs . '));xmlHttp.open("'.$method.'", encodeURI(uri';
+		$contentjs = $contentjs . 'xmlHttp.open("'.$method.'", encodeURI(uri';
+		for ($x=0;$x<$num;$x++){
+			if (($parameters[$x] != "")||($parameters[$x] != null)){
+				if ($first){
+					$contentjs = $contentjs . '+ "?'.$parameters[$x].'=" + '.$parameters[$x];
+					$first = false;
+				}else{
+					$contentjs = $contentjs.' +(typeof '.$parameters[$x].' != "undefined" && '.$parameters[$x].' != "" ? "&'.$parameters[$x].'=" + '.$parameters[$x].' : "")';
+				}
+			}
+		}
+
 		$contentjs = $contentjs . '), false);'; 
 		if ($auth_check == 'Yes'){
 		$contentjs = $contentjs . 'xmlHttp.setRequestHeader("Authorization","Basic " + btoa (username + ":" + password));';	
@@ -257,7 +263,7 @@ if ($tipo == 'MicroService'){
 		fclose($myfileJs);
 	//////fine js /////
 	/////PACKAGE
-	$packageContent = '{"name": "node-red-contrib-'.$micro_name.'","version": "0.0.1","description": "","dependencies": {"xmlhttprequest": "^1.8.0", "btoa": "1.2.1" },"node-red": {"nodes": {"'.$micro_name.'": "'.$micro_name.'.js"}}}';
+	$packageContent = '{"name": "'.$micro_name.'","version": "0.0.1","description": "","dependencies": {"xmlhttprequest": "^1.8.0", "btoa": "1.2.1" },"node-red": {"nodes": {"'.$micro_name.'": "'.$micro_name.'.js"}}}';
 	$myfilePackage = fopen("package.json","w");
 	fwrite($myfilePackage, $packageContent);
 	fclose($myfilePackage);
@@ -267,11 +273,8 @@ if ($tipo == 'MicroService'){
 	$zip = new ZipArchive();
 	//$nome_download = $baseMicro.".zip";
 	$nome_download = $micro_name.".zip";
-	//$rootPath = realpath('xmlhttprequest');
-	//$nomeZip = $cartella.$baseMicro.".zip";
 	$nomeZip = $cartella.$micro_name.".zip";
 	if (($zip->open($nomeZip, ZipArchive::CREATE)) === TRUE) {
-		//if ($zip->open($nomeZip) === TRUE) {
 				$zip->addFile($nomeHTML,$micro_name.'/'.$nomeHTML);
 				$zip->addFile($nomeJS,$micro_name.'/'.$nomeJS);
 				$zip->addFile('package.json',$micro_name.'/package.json');
@@ -289,10 +292,6 @@ if ($tipo == 'MicroService'){
 				$zip->addFile('btoa/test.js',$micro_name.'/node_modules/btoa/test.js');
 				$zip->addFile('btoa/bin/btoa.js',$micro_name.'/node_modules/btoa/bin/btoa.js');
 				}
-				//
-				//$zip->addFromString('xmlhttprequest',$micro_name.'/xmlhttprequest');
-				//$zip->addFile('xmlhttprequest/');
-		//echo ("RIUSCITO! CARICAMENTO ".$nomeZip."	CON I FILES ". $nomeHTML. " E ".$nomeJS);		
 	}else{
 	//$zipM->addFile($nome);
 	//echo ('ERROR DURING ZIP CREATION');
@@ -304,10 +303,22 @@ if ($tipo == 'MicroService'){
 	unlink($nomeJS);
 	unlink('package.json');
 	/////
+	$fileform = 'json';
+	$fileacc = 'http';
 	/////////CARICA SU DATABASE//////////////
 	$query_zip="INSERT INTO processloader_db.uploaded_files (Id,File_name,Description,User,Creation_date,file_type,status,Username,Resource_input,Img,Category,Format,Protocol,Realtime,Periodic,Public,Date_of_publication,License,Download_number,Votes,Average_stars,Total_stars,OpenSource,Url,Help,Html,Js,Method)VALUES (NULL,'".$nome_download."','".$descrizione."','0','".$data."','".$tipo."','Awaiting approval','".$utente_us."','".$subnat."','".$new_img ."','".$nature."','".$fileform."','".$fileacc."','0','0','0',NULL,'".$fileLic."','0','0','0','0','0','".$url."','".$help."','".$contentHtml."','".$contentjs."','".$method."')";
 	$query_caricamento = mysqli_query($connessione_al_server,$query_zip) or die ("Error during resource Upload	".mysqli_error($connessione_al_server));
-		
+		if (isset($_REQUEST['editor'])){
+			if (isset($_REQUEST['showFrame'])){
+						if ($_REQUEST['showFrame'] == 'false'){
+								header ("location:MicroService_editor.php?showFrame=false&result=ok");
+						}else{
+								header ("location:MicroService_editor.php?result=ok");
+							}	
+				}else{
+					header ("location:MicroService_editor.php?result=ok");
+				}
+		}else{
 		if (isset($_REQUEST['showFrame'])){
 						if ($_REQUEST['showFrame'] == 'false'){
 								header ("location:file_archive.php?showFrame=false");
@@ -318,7 +329,7 @@ if ($tipo == 'MicroService'){
 					header ("location:file_archive.php");
 				}
 		
-	
+		}
 	////////////////////
 }else {
 	if (move_uploaded_file($percorso, $cartella . $nome)){
@@ -331,12 +342,12 @@ if ($tipo == 'MicroService'){
 										 $query_caricamento = mysqli_query($connessione_al_server,$query_zip) or die ("Error during resource Upload	".mysqli_error($connessione_al_server));
 										 if (isset($_REQUEST['showFrame'])){
 													if ($_REQUEST['showFrame'] == 'false'){
-														header ("location:file_archive.php?showFrame=false");
+														header ("location:file_archive.php?showFrame=false&result=ok");
 													}else{
-														header ("location:file_archive.php");
+														header ("location:file_archive.php?result=ok");
 													}	
 												}else{
-													header ("location:file_archive.php");
+													header ("location:file_archive.php?result=ok");
 												}
 							}else{ 
 								echo('<div>Error during upload in repository! Click on <a href="file_archive.php">Qui</a> To redo this operation!</div>');
@@ -358,12 +369,12 @@ if ($tipo == 'MicroService'){
 							$query_caricamento = mysqli_query($connessione_al_server,$query_zip) or die ("Error during resource Upload	".mysqli_error($connessione_al_server));
 										 if (isset($_REQUEST['showFrame'])){
 													if ($_REQUEST['showFrame'] == 'false'){
-														header ("location:file_archive.php?showFrame=false");
+														header ("location:file_archive.php?showFrame=false&result=ok");
 													}else{
-														header ("location:file_archive.php");
+														header ("location:file_archive.php?result=ok");
 													}	
 												}else{
-													header ("location:file_archive.php");
+													header ("location:file_archive.php?result=ok");
 												}
 		}
 	////

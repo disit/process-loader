@@ -44,12 +44,13 @@ if (isset($_REQUEST['errore'])){
 
 if (isset($_REQUEST['showFrame'])){
 	if ($_REQUEST['showFrame'] == 'false'){
-		//echo ('true');
-		$hide_menu= "hide";
+				$hide_menu= "hide";
+			}else{
+				$hide_menu= "";
+			}	
 	}else{
 		$hide_menu= "";
-	}	
-}else{$hide_menu= "";}
+	}
 
 if (!isset($_GET['pageTitle'])){
 	$default_title = "Process Loader: Uploaded Resources";
@@ -75,37 +76,30 @@ if (isset($_REQUEST['error'])){
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-
+		
         <title>Process Loader</title>
 		
 		<!-- jQuery -->
         <script src="jquery/jquery-1.10.1.min.js"></script>
-
 		<!-- Bootstrap Core JavaScript -->
-        <script src="bootstrap/bootstrap.min.js"></script>
-			
+        <script src="bootstrap/bootstrap.min.js"></script>			
         <!-- Bootstrap Core CSS -->
         <link href="bootstrap/bootstrap.css" rel="stylesheet">
-
         <!-- Bootstrap toggle button -->
         <link href="bootstrapToggleButton/css/bootstrap-toggle.min.css" rel="stylesheet">
-        <script src="bootstrapToggleButton/js/bootstrap-toggle.min.js"></script>
-       
+        <script src="bootstrapToggleButton/js/bootstrap-toggle.min.js"></script>     
        <!-- Dynatable -->
        <link rel="stylesheet" href="dynatable/jquery.dynatable.css">
-       <script src="dynatable/jquery.dynatable.js"></script>
-        
+       <script src="dynatable/jquery.dynatable.js"></script>        
        <!-- Font awesome icons -->
-        <link rel="stylesheet" href="fontAwesome/css/font-awesome.min.css">
-        
+        <link rel="stylesheet" href="fontAwesome/css/font-awesome.min.css">       
         <!-- Custom CSS -->
         <link href="css/dashboard.css" rel="stylesheet">
         <link href="css/dashboardList.css" rel="stylesheet">
-		
-		
+			
 		<script type="text/javascript" src="js/bootstrap-datetimepicker-master/js/bootstrap-datetimepicker.min.js"></script>
         <link href="js/bootstrap-datetimepicker-master/css/bootstrap-datetimepicker.min.css" rel="stylesheet">
-    </head>
+</head>
 
 <body class="guiPageBody">
 <?php include('functionalities.php'); ?>
@@ -193,9 +187,7 @@ if (isset($_REQUEST['error'])){
 									<br />		
 									<div class="input-group" style="display:none;"><span class="input-group-addon" >Url: </span><input id="url" type="text" class="form-control" name="url" readonly></div>
 									<div class="input-group" style="display:none;"><span class="input-group-addon" >Path: </span><input id="path" type="text" class="form-control" name="path" readonly></div>
-									<div class="input-group" style="display:none;"><span class="input-group-addon" >type: </span><input id="type" type="text" class="form-control" name="type" readonly></div>
-									
-									
+									<div class="input-group" style="display:none;"><span class="input-group-addon" >type: </span><input id="type" type="text" class="form-control" name="type" readonly></div>		
 				<!--ProcParameters-->
 									<div class="input-group" style="display:none;"><span class="input-group-addon" >Process Parameters: </span><input id="ProcParameters" type="text" class="form-control" name="ProcParameters" readonly></div>
 				<!-- file position-->
@@ -205,8 +197,7 @@ if (isset($_REQUEST['error'])){
 									<div class="input-group"><span class="input-group-addon">Time Out: </span><input id="time_out" type="text" class="form-control" name="time_out"></div><br />
 									<div class="input-group"><span class="checkbox-inline"><input id="conc" type="checkbox" name="conc"  checked="checked" value="1">non Concurrent</span></div><br />
 									<div class="input-group"><span class="checkbox-inline"><input id="store" type="checkbox" name="store"  checked="checked" value="1">Store Durably</span></div><br />
-									<div class="input-group"><span class="checkbox-inline"><input id="recovery" type="checkbox" name="recovery" value="1">Request Recovery</span></div><br />
-				
+									<div class="input-group"><span class="checkbox-inline"><input id="recovery" type="checkbox" name="recovery" value="1">Request Recovery</span></div><br />		
 								</div>
 								<div id="job_trigger" class="tab-pane fade">
 									<div class="input-group"><span class="input-group-addon">Trigger Name: </span><input id="nome_trig" type="text" class="form-control" name="nome_trig"></div><br />
@@ -263,109 +254,6 @@ if (isset($_REQUEST['error'])){
 				</form>
 		</div>
 	</div>
-	
-	
-	
-	
-	<!-- Parametri processi 2      agg     da lavorarci-->
-	<div class="modal fade" id="data-modal2" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" style="display: none;">
-		<div class="modal-dialog">
-			<div class="modal-content">
-				<div class="modal-header" style="background-color: white">
-					<button type="button" class="close" data-dismiss="modal">&times;</button>
-					<h4 class="modal-title" id="titolo_proc2"></h4>
-				</div>
-				<form id="modal_modify_NO" name="param_login_1" method="post" action="publish2.php" enctype="multipart/form-data" >    <!-- da agg -->
-					<div class="form-parametri" id="Process_1">
-						<ul class="nav nav-tabs">
-							<li><a data-toggle="tab" href="#process_mandatory_parameter" class="active">Process Mandatory Metadata</a></li>
-
-						</ul>
-						<div class="panel-body">
-							<div class="tab-content">
-								<div id="process_mandatory_parameter" class="tab-pane fade in active">
-									<div class="input-group" style="display:none;" hidden><span class="input-group-addon" hidden>Id: </span><input id="id2" type="text" class="form-control" name="id2" readonly></div>
-									<div class="input-group" style="display:none;" hidden><span class="input-group-addon" hidden>File: </span><input id="file_zip2" type="text" class="form-control" name="file_zip2" readonly></div>
-									<div class="input-group" style="display:none;" hidden><span class="input-group-addon" hidden>Publication Date: </span><input id="data_pub2" type="text" class="form-control" name="data_pub2" readonly></div>
-									<div class="input-group" style="display:none;" hidden><span class="input-group-addon" hidden>App Type: </span><input id="tipo_zip2" type="text" class="form-control" name="tipo_zip2" readonly></div>
-									<div class="input-group"><span class="input-group-addon">Nature: </span>
-									<input id="category2" type="text" class="form-control" name="category2" required="required">
-									</div>
-									<div class="input-group" ><span class="input-group-addon">Sub Nature: </span><input id="resource" type="text" class="form-control" name="resource" required="required"></div>
-									<div class="input-group" id="div-format2"><span class="input-group-addon">Format: </span>
-									<input id="format2" type="text" class="form-control" name="format2">
-									</div>	
-									<div class="input-group" id="div-protocol2"><span class="input-group-addon">Access: </span>
-									<input id="protocol2" type="text" class="form-control" name="protocol2" required="required">
-									</div>	
-									<div class="input-group"><span class="input-group-addon">Licence: </span>
-									<input id="licence2" type="text" class="form-control" name="licence2" required="required">
-									</div>			
-									<div class="input-group"><span class="input-group-addon">Description: </span>
-									<input id="desc2" type="text" class="form-control" name="desc2" required="required">
-									</div>
-									<div class="input-group" id="div-help2"><span class="input-group-addon">Help: </span>
-									<input id="help2" type="text" class="form-control" name="help2" required="required">
-									</div>
-									<div class="input-group" id="div-method2"><span class="input-group-addon">Method: </span>
-									<input id="method2" type="text" class="form-control" name="method2" required="required">
-									</div>		
-									<div class="input-group" id="div-url2"><span class="input-group-addon">Url: </span>
-									<input id="url2" type="text" class="form-control" name="url2" required="required">
-									</div>		
-									<div class="input-group" id="div-os2"><span class="input-group-addon">OS: </span>
-									<input id="os2" type="text" class="form-control" name="os2" required="required">
-									</div>									
-									<div class="input-group" id="div-realtime2">
-										<span> Real-time: <select name="realtime" class="form-control" id="realtime2">
-											  <option value="0">No</option>
-											  <option value="1">Yes</option>
-											</select></span>
-									</div>
-									<div class="input-group" id="div-periodic2">
-										<span >	Periodic:	<select name="periodic" class="form-control" id="periodic2">
-										  <option value="0">No</option>
-										  <option value="1">Yes</option>
-										</select></span>
-									</div>	
-									<div class="input-group" id="div-opensource2">
-										<span >	OpenSource:	<select id="opensource2" name="opensource2" class="form-control">
-										  <option value="0">No</option>
-										  <option value="1">Yes</option>
-										</select></span>
-									</div>	
-									
-										<div class="input-group"><span class="input-group-addon">Select Image: </span>
-									<input id="img2" type="file" class="form-control" name="img2" accept="image/*">
-									</div>
-									<!-- -->
-
-								</div>
-											
-							</div>
-				<!-- FINE ADVANCED-->		
-						</div>
-					</div>
-					<div class="panel-footer">
-						<div class="form-group">
-							<input type="button" name="chiudi_job" class="btn cancelBtn" value="Cancel" data-dismiss="modal">
-							<input type="submit" name="Publish_process" class="btn confirmBtn" id="Publish_process" value="Confirm">
-						</div>
-					</div>
-					
-			</div>
-				</form>
-		
-		
-		
-	
-		</div>
-		
-		
-		
-		
-	</div>
-	
 
 </div>
 
@@ -398,8 +286,17 @@ if (isset($_REQUEST['error'])){
 									<div class="input-group" style="display:none;" hidden><span class="input-group-addon" hidden>App Type: </span><input id="tipo_zip3" type="text" class="form-control" name="tipo_zip3" hidden readonly></div>
 									<div class="input-group"><span class="input-group-addon">Nature: </span>
 									<input id="category3" type="text" class="form-control" name="category3" >
+									
+									<!--
+									<select id="category3" name="category3" class="form-control" value=""></select>-->
+									<!---->
 									</div>
-									<div class="input-group"><span class="input-group-addon">Sub Nature: </span><input id="resource3" type="text" class="form-control" name="resource3" required="required"></div>
+									<div class="input-group"><span class="input-group-addon">Sub Nature: </span>
+									<input id="resource3" type="text" class="form-control" name="resource3" required="required">
+									<!--
+									<select id="resource3" name="resource3" class="form-control" value=""></select>
+									-->
+									</div>
 									<div class="input-group" id="div-format3"><span class="input-group-addon">Format: </span>
 									<input id="format3" type="text" class="form-control" name="format3" >
 									</div>	
@@ -443,11 +340,16 @@ if (isset($_REQUEST['error'])){
 										</select></span>
 									</div>	
 									
-									
+									<!--
 									<div class="input-group"><span class="input-group-addon">Select Image: </span>
 									<input id="img3" type="file" class="form-control" name="img3"  accept="image/*">
 									</div>
-											
+										-->	
+									<div>
+									<span>Select Image: </span>
+									<input id="img3" type="file" name="img3"  accept="image/*">
+									</div>	
+									<!--	-->
 					
 								</div>
 
@@ -490,7 +392,6 @@ if (isset($_REQUEST['error'])){
 			</form>
 			
 			<div class="login-help">
-							  <!--<a href="registrazione.php">Register</a>-->
 			</div>
 		</div>
 	</div>
@@ -516,7 +417,6 @@ if (isset($_REQUEST['error'])){
 			</div>
 			<div class="panel-footer">
 				<div class="form-group">
-					<!--<input type="button" name="chiudi_job" class="btn cancelBtn" value="Cancel" data-dismiss="modal">-->
 					<input type="submit" name="chiudi_job" id="chiudi_job" class="btn cancelBtn" data-dismiss="modal" value="Cancel">
 				</div>
 			</div>
@@ -572,7 +472,7 @@ if (isset($_REQUEST['error'])){
 					<option value="DevDash">DevDash</option>
 					<option value="ETL">ETL</option>
 					<option value="Java">Jar</option>
-					<option value="MicroService">MicroService</option>
+					<!--<option value="MicroService">MicroService</option>-->
 					<option value="Mobile App">Mobile App</option>
 					<option value="IoTApp">IoTApp</option>
 					<option value="IoTBlocks">IoTBlocks</option>
@@ -585,10 +485,18 @@ if (isset($_REQUEST['error'])){
 	<div class="input-group"><span class="input-group-addon">Description : </span><input name="filedesc" type="text" class="form-control" required="required" /></div>
 	</div>
 	<br />
-	<div class="input-group"><span class="input-group-addon">Nature : </span><input name="filenat" type="text" class="form-control" required="required"/>
+	<div class="input-group"><span class="input-group-addon">Nature : </span>
+	<input name="filenat" type="text" class="form-control" required="required"/>
+	<!--
+		<select name="filenat" class="selectpicker form-control" id="filenat" required="required"></select>
+	-->
 	</div>
 	<br />
-	<div class="input-group"><span class="input-group-addon">SubNature : </span><input name="filesubN" type="text" class="form-control" required="required"/>
+	<div class="input-group"><span class="input-group-addon">SubNature : </span>
+	<input name="filesubN" type="text" class="form-control" required="required"/>
+	<!--
+		<select name="filesubN" class="selectpicker form-control" id="filesubN" required="required"></select>
+	<!---->
 	</div>
 	<br/>
 	<div>
@@ -603,10 +511,7 @@ if (isset($_REQUEST['error'])){
 	<div class="input-group" id ="micro_url" ><span class="input-group-addon">Url: </span><input name="url" type="text" class="form-control" id="url_input"></input>
 	</div>
 	<br />
-	<!--<div class="input-group" id ="micro_param" >
-	<span class="input-group-addon">Parameters List: </span><input name="micro_param" type="text" class="form-control"></input>
-	</div>
-	<br />-->
+
 	<div id="elenco_parametri">
 	<div id="param_container">
 	<div class="input-group">
@@ -621,13 +526,6 @@ if (isset($_REQUEST['error'])){
 	<div class="input-group" id ="micro_method" ><span class="input-group-addon">Method: </span><select name="metod" type="text" class="form-control"><option>GET</option><option>POST</option></select>
 	</div>
 	<br />
-	<!--
-	<div class="input-group" id ="micro_user" ><span class="input-group-addon">MicroService User: </span><input name="micro_user" type="text" class="form-control"></input>
-	</div>
-	<br />
-	<div class="input-group" id ="micro_pass" ><span class="input-group-addon">MicroService Password: </span><input name="micro_pass" type="password" class="form-control"></input>
-	</div>
-	-->
 	<div class="input-group" id ="micro_check" >
 	Do you want create a Microservice with Authentication?		<input type="checkbox" name="auth_check" value="Yes"/> 
 	</div>
@@ -703,7 +601,6 @@ if (isset($_REQUEST['error'])){
 		function FunctionMicro(){
 			var valore_select = $('#filetype').val();
 			if(valore_select == 'MicroService'){
-				//alert('OK');
 				$('#micro_help').show();
 				$('#micro_url').show();
 				$('#url_input').required=true;
@@ -750,7 +647,6 @@ if (isset($_REQUEST['error'])){
 		var cont = $('.paramItem').length;
 		var cont2 = cont +1; 
 		var attuale = $(".contatore_param").val();
-		//$("#param_container").append('parameter '+cont2+': <input type="Text" class="paramItem" name="paramItem['+cont+']"></input><br />');
 		$("#param_container").append('<div class="input-group"><span class="input-group-addon">parameter '+cont2+': </span><input type="Text" class="form-control paramItem" name="paramList['+cont+']"></input></div><br />');
 		$(".contatore_param").text(attuale +' 1');		
 		});
@@ -771,6 +667,8 @@ if (isset($_REQUEST['error'])){
 			$('#uploadRes').attr("action","caricaZip.php?showFrame=false");
 		}
 		
+
+		
 		///////
 		var titolo_default = "<?=$default_title; ?>";
 				if (titolo_default != ""){
@@ -787,14 +685,25 @@ if (isset($_REQUEST['error'])){
 	
 		if (role == ""){
 			$(document).empty();
-			//window.alert("You need to log in to access to this page!");
 			if(window.self !== window.top){
-			window.location.href = 'page.php?showFrame=false&pageTitle=Process%20Loader:%20View%20Resources';	
+			window.location.href='https://www.snap4city.org/auth/realms/master/protocol/openid-connect/auth?response_type=code&redirect_uri=https%3A%2F%2Fmain.snap4city.org%2Fmanagement%2FssoLogin.php%3Fredirect%3DiframeApp.php%253FlinkUrl%253Dhttps%253A%252F%252Fwww.snap4city.org%252Fdrupal%252Fopenid-connect%252Flogin%2526linkId%253Dsnap4cityPortalLink%2526pageTitle%253Dwww.snap4city.org%2526fromSubmenu%253Dfalse&client_id=php-dashboard-builder&nonce=be3aea0a2bb852217929cbb639370c9e&state=d090eb830f9abb504fd7012f6a12389c&scope=openid+username+profile';
 			}
 			else{
 			window.location.href = 'page.php?pageTitle=Process%20Loader:%20View%20Resources';
 			}
 		}
+		var role_active = "<?=$process['functionalities'][$role]; ?>";
+
+			//console.log(role_active);
+			if (role_active == 0){
+						$(document).empty();
+						if(window.self !== window.top){
+						window.location.href='https://www.snap4city.org/auth/realms/master/protocol/openid-connect/auth?response_type=code&redirect_uri=https%3A%2F%2Fmain.snap4city.org%2Fmanagement%2FssoLogin.php%3Fredirect%3DiframeApp.php%253FlinkUrl%253Dhttps%253A%252F%252Fwww.snap4city.org%252Fdrupal%252Fopenid-connect%252Flogin%2526linkId%253Dsnap4cityPortalLink%2526pageTitle%253Dwww.snap4city.org%2526fromSubmenu%253Dfalse&client_id=php-dashboard-builder&nonce=be3aea0a2bb852217929cbb639370c9e&state=d090eb830f9abb504fd7012f6a12389c&scope=openid+username+profile';						
+						}
+						else{
+						window.location.href = 'page.php?pageTitle=Process%20Loader:%20View%20Resources';
+						}
+					}
 			
 		var error_message = "<?=$message; ?>";
 		if (error_message == "ok"){
@@ -818,19 +727,12 @@ if (isset($_REQUEST['error'])){
 		/////
 		utente_attivo=$("#utente_att").text();
 			if (utente_attivo=='Login'){
-					//console.log("VUOTO");
-					//$(document).empty();
 					alert("Effettua il login!");
 				}else{
 
 		//
 		var role_active = $("#role_att").text();
-		/*
-	if (role_active == 'ToolAdmin'){
-		$('#sc_mng').show();
-	}
-	*/
-		//$(".data:input").datepicker();
+		
 		$(function(){
 			
 			var dateNow = new Date();
@@ -864,7 +766,6 @@ if (isset($_REQUEST['error'])){
 						desc: data[i].file['desc'],
 						 date: data[i].file['date'],
 						 type:data[i].file['type'],
-						 //user:data[i].file['user'],
 						 utente:data[i].file['utente'],
 						 status:data[i].file['status'],
 						 pub: data[i].file['pub'],
@@ -937,8 +838,7 @@ if (isset($_REQUEST['error'])){
 						if (substr == 0)
 						{
 							$("#elenco_files").append('<tr><td>'+i+'</td><td class="file_id" value="'+array_files[i]['id']+'">'+array_files[i]['id']+'</td><td><a href="'+href+'" class="file_archive_link" download>'+array_files[i]['name']+'</a></td><td class="username_td">'+array_files[i]['utente']+'</td><td>'+array_files[i]['date']+'</td><td>'+array_files[i]['desc']+'</td><td>'+array_files[i]['type']+'</td><td class="status" >'+array_files[i]['status']+'</td><td class="actions">'+button_create_jt+'</td><td class="show_button">'+button_show_jt+'</td><td><button type="button" class="editDashBtn modify_jt" data-target="#data-modal3" data-toggle="modal">EDIT</button></td><td><button type="button" value="0" data-toggle="modal" class="pubDashBtn pubblicato" data-target="#publish">No</button></td><td><button type="button" class="delDashBtn delete_file" data-target="#delete-modal" data-toggle="modal">DEL</button></td></tr>');	<!-- agg --!>	
-
-							//$("#elenco_files").append('<tr><td class="file_id" hidden>'+array_files[i]['id']+'</td><td><a href="uploads/'+us+'/'+data4+'/'+file1[0]+'/'+array_files[i]['name']+'" class="file_archive_link">'+array_files[i]['name']+'</a></td><td>'+array_files[i]['date']+'</td><td>'+array_files[i]['desc']+'</td><td>'+array_files[i]['type']+'</td><td class="status" >'+array_files[i]['status']+'<button type="button" class="btn btn-secondary delete_file" data-target="#delete-modal" data-toggle="modal">DELETE</button></td><td class="actions"><button type="button" class="btn btn-secondary crea_jt" data-target="#data-modal" data-toggle="modal">New Process Type</button></td><td class="show_button"><button type="button" class="btn btn-secondary mostra_jt" data-target="#show_jobType" data-toggle="modal" >Show Process Type</button></td><td>'+pubblicato+'<p></p><p></p><p></p><button type="button" class="btn btn-secondary publish_jt" data-target="#data-modal2" data-toggle="modal">PUBLISH</button></td></tr>');	<!-- agg --!>	
+	
 						}
 						else
 						{
@@ -1038,8 +938,6 @@ if (isset($_REQUEST['error'])){
 		
 		//Quando si clicca sul modal di eliminazione
 		$(document).on('click','.delete_file',function(){
-			//var ind = ($(this).parent().parent().index())-1;
-			//var ind = ($(this).parent().parent().index());
 			var ind = $(this).parent().parent().first().children().html();
 			var valore_el = array_files[ind]['id'];
 			$("#id_file_del").val(valore_el);
@@ -1059,9 +957,6 @@ if (isset($_REQUEST['error'])){
 			else{
 				var path_file = 'uploads/'+us+'/'+data4+'/'+array_files[ind]['name'];
 			}
-			
-			//var path_file = 'uploads/'+us+'/'+data3+'/'+file1[0]+'/';
-			//
 			
 			$("#path_del").val(path_file);
 		});
@@ -1091,8 +986,6 @@ if (isset($_REQUEST['error'])){
 		
 		//QUANDO SI CLICCA SUL MODAL del process type
 		$(document).on('click','.crea_jt',function(){
-			//var ind = ($(this).parent().parent().index())-1;
-			//var ind = ($(this).parent().parent().index());
 			var ind = $(this).parent().parent().first().children().html();
 			//console.log(ind);
 			$("#titolo_proc").text("CREATE NEW PROCESS TYPE FROM FILE: " + array_files[ind]['name']);
@@ -1130,12 +1023,9 @@ if (isset($_REQUEST['error'])){
 				var file2 = file_n1.split(".");	
 				$("#path").val("<?=$java_path; ?>");
 
-			
-				
-				//console.log("ProcessParameters:  "+jsonPar);
+
 				var pathJt = $("#path").val();
 				console.log("path:	" + pathJt);
-				//$("#ProcParameters").val(jsonPar);
 				$("#file_position").val(file_position);
 			}else if (array_files[ind]['type'] === 'R'){
 				$("#type").val('Process Executor');
@@ -1151,11 +1041,9 @@ if (isset($_REQUEST['error'])){
 				var file2 = file_n1.split(".");
 
 				var file_position = us1+'/'+data5+'/'+file2[0];
-				//$("#ProcParameters").val(jsonPar);
 				$("#file_position").val(file_position);
 			}else if(array_files[ind]['type'] === 'Java'){
 
-				//$("#type").val('REST');
 				$("#type").val('Process Executor');
 				$("#path").val("<?=$java_path; ?>");
 				var typeJt = $("#type").val();
@@ -1165,11 +1053,7 @@ if (isset($_REQUEST['error'])){
 				var file2 = file_n1.split(".");
 
 				var file_position = us1+'/'+data5+'/'+file2[0];
-				//var dir_repository = "<?=$repository_files; ?>";
 
-				//var jsonPar = '{"'+file2[0]+'":"'+dir_repository+us1+'/'+data5+'/'+file2[0]+'/Main.java"}';
-				//$("#ProcParameters").val(jsonPar);
-				//$("#file_position").val(file_position);
 			}
 		});
 		
@@ -1179,12 +1063,8 @@ if (isset($_REQUEST['error'])){
 		
 		//QUANDO SI CLICCA SUL MODAL di publish    agg da lavorare su questo
 		$(document).on('click','.publish_jt',function(){
-			//var ind = ($(this).parent().parent().index())-1;
-			//var ind = ($(this).parent().parent().index());
 			var ind = $(this).parent().parent().first().children().html();
-			//var id_row = $(this).parent().parent().child(1).children().html();
-			//alert(id_row);
-			//console.log(ind);
+
 			
 			$("#titolo_proc2").text("PUBLISH PROCESS FROM FILE: " + array_files[ind]['name'] );
 			$("#file_zip2").val(array_files[ind]['name']);
@@ -1328,9 +1208,8 @@ if (isset($_REQUEST['error'])){
 				
 		//QUANDO SI CLICCA SUL MODAL di modify    agg da lavorare su questo
 		$(document).on('click','.modify_jt',function(){
-			//var ind = ($(this).parent().parent().index())-1;
-			//var ind = ($(this).parent().parent().index());
 			var ind = $(this).parent().parent().first().children().html();
+			var id_mic = array_files[ind]['id'];
 			//alert(ind);
 			var type = array_files[ind]['type'];
 			if(type=='ETL'|| type=='R'||type=='Java'){
@@ -1356,7 +1235,6 @@ if (isset($_REQUEST['error'])){
 				$("#div-method3").hide();
 				$("#div-os3").hide();
 				$("#div-protocol3").hide();
-				//$("#div-os3").show();
 			}
 			if(type=='IoTBlocks' || type=='IoTApp'){
 				$("#div-protocol3").show();
@@ -1371,6 +1249,11 @@ if (isset($_REQUEST['error'])){
 				$("#div-opensource3").hide();
 			}
 			if(type=='MicroService'){
+				if (nascondi == 'hide'){
+					window.location.replace("MicroService_editor.php?microServ="+id_mic+"&showFrame=false");
+				}else{
+					window.location.replace("MicroService_editor.php?microServ="+id_mic);
+				}
 				$("#div-url3").show();
 				$("#div-method3").hide();
 				$("#div-protocol3").hide();
@@ -1394,8 +1277,11 @@ if (isset($_REQUEST['error'])){
 			
 			$("#titolo_proc3").text("MODIFY METADATA OF PROCESS FROM FILE: " + array_files[ind]['name'] );
 			$("#file_zip3").val(array_files[ind]['name']);
-			$("#category3").val(array_files[ind]['category']);
-			$("#resource3").val(array_files[ind]['resource']);
+			//$('#category3 option[value="'+array_files[ind]['category']+'"]').attr('selected','selected');
+			//$('#resource3 option[value="'+array_files[ind]['resource']+'"]').attr('selected','selected');
+			$('#category3').val(array_files[ind]['category']);
+			$('#resource3').val(array_files[ind]['resource']);
+			//
 			$("#format3").val(array_files[ind]['format']);
 			
 
@@ -1407,23 +1293,12 @@ if (isset($_REQUEST['error'])){
 
 			$("#method3").val(array_files[ind]['method']);
 			$("#os3").val(array_files[ind]['OS']);
-			//
 			
 			$("select[name=opensource3]").val(array_files[ind]['opensource']);
 			$("select[name=realtime3]").val(array_files[ind]['realtime']);
-			$("select[name=periodic3]").val(array_files[ind]['periodic']);
-			
-			/*console.log("Tipo: " + typeof array_files[ind]['periodic']);
-			console.log("Tipo: " + typeof array_files[ind]['realtime']);*/
-		
-			//$("#periodic3").val(array_files[ind]['periodic']);
-			//$("#realtime3").val(array_files[ind]['realtime']);
-
+			$("select[name=periodic3]").val(array_files[ind]['periodic']);		
 			$("#tipo_zip3").val(array_files[ind]['type']);
 			$("#id3").val(array_files[ind]['id']);
-			//console.log();
-			
-
 
 		});
 		
@@ -1440,8 +1315,6 @@ if (isset($_REQUEST['error'])){
 		//MOSTRA JOB TYPE
 		$(document).on('click','.mostra_jt',function(){
 			var array_process = [];
-			//var ind = ($(this).parent().parent().index())-1;
-			//var ind = ($(this).parent().parent().index());
 			var ind = $(this).parent().parent().first().children().html();
 			$("#mostra_elenco").text("Process Model list:  "+array_files[ind]['name']);
 			$.ajax({
@@ -1461,7 +1334,6 @@ if (isset($_REQUEST['error'])){
 					};
 					$("#elenco").append('<tr><td class="id_job_row">'+array_process[i]['id']+'</td><td class="name_job_row">'+array_process[i]['name']+'</td><td class="group_job_row">'+array_process[i]['group']+'</td><td>'+array_process[i]['type']+'</td></tr>');
 				}}
-			//alert("ELENCO DEI JOB COLLEGATI!");
 		});
 		});
 		
