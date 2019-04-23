@@ -32,8 +32,22 @@ $message ="";
 if (isset ($_REQUEST['message'])){
 	$message=$_REQUEST['message'];
 }
+
+if (isset($_REQUEST['showFrame'])){
+	if ($_REQUEST['showFrame'] == 'false'){
+				$hide_menu= "hide";
+				$hide = 'style="Display: none;"';
+			}else{
+				$hide_menu= "";
+			}	
+	}else{
+		$hide_menu= "";
+		$hide = '';
+	}
+	
  ?>
-<div class="hidden-xs hidden-sm col-md-2" id="mainMenuCnt">
+<?php echo ('<div class="hidden-xs hidden-sm col-md-2" id="mainMenuCnt" '.$hide.'>');
+?>
     <div id="headerClaimCnt" class="col-md-12 centerWithFlex">Snap4City</div>
     <div class="col-md-12 mainMenuUsrCnt">
         <div class="row">
@@ -109,7 +123,8 @@ if (isset ($_REQUEST['message'])){
 				$privileges = str_replace("{", "", $privileges);
 				$privileges = str_replace("}", "", $privileges);
 				$pieces = explode(",", $privileges);
-				if (in_array($_SESSION['role'], $pieces)) {
+				//if (in_array($_SESSION['role'], $pieces)) {
+				if (in_array($role_att, $pieces)){
 					$exist = 1;
 				}else{
 					$exist = 0;
@@ -130,43 +145,40 @@ if (isset ($_REQUEST['message'])){
   </div>  
     
     
-
-<div class="modal fade" id="login-modal" tabindex="-1" role="dialog" aria-labelledby="login-modal" aria-hidden="true">
-	<div class="modal-dialog" role="document">
-		<div class="modal-content">
-			<form name="form_login" method="post" action="login.php">
-				<div class="modalHeader centerWithFlex" id="loginFormTitle">
-					Login
-				</div>
-
-				<div id="loginFormBody" class="modal-body modalBody">   
-					<div class="col-xs-12 modalCell">
-						<div class="modalFieldCnt">
-							<input type="text" class="modalInputTxt" id="inputUsername" name="username" required> 
+<!--
+	<div class="modal fade" id="login-modal" tabindex="-1" role="dialog" aria-labelledby="login-modal" aria-hidden="true">
+		<div class="modal-dialog" role="document">
+			<div class="modal-content">
+				<form name="form_login" method="post" action="login.php">
+					<div class="modalHeader centerWithFlex" id="loginFormTitle">
+						Login
+					</div>
+					<div id="loginFormBody" class="modal-body modalBody">   
+						<div class="col-xs-12 modalCell">
+							<div class="modalFieldCnt">
+								<input type="text" class="modalInputTxt" id="inputUsername" name="username" required> 
+							</div>
+							<div class="modalFieldLabelCnt">Username</div>
 						</div>
-						<div class="modalFieldLabelCnt">Username</div>
-					</div>
-					<div class="col-xs-12 modalCell">
-						<div class="modalFieldCnt">
-							<input type="password" class="modalInputTxt" id="inputPassword" name="password" required> 
+						<div class="col-xs-12 modalCell">
+							<div class="modalFieldCnt">
+								<input type="password" class="modalInputTxt" id="inputPassword" name="password" required> 
+							</div>
+							<div class="modalFieldLabelCnt">Password</div>
 						</div>
-						<div class="modalFieldLabelCnt">Password</div>
+						<div class="col-xs-12 modalCell">
+							<div id="loginFormMessage"></div>
+						</div>
 					</div>
-					<div class="col-xs-12 modalCell">
-						<div id="loginFormMessage"></div>
+					<div id="loginFormFooter" class="modal-footer">
+					   <button type="reset" id="loginCancelBtn" class="btn cancelBtn" data-dismiss="modal">Reset</button>
+					   <button type="submit" id="loginConfirmBtn" class="btn confirmBtn">Confirm</button>
 					</div>
-				</div>
-
-
-				<div id="loginFormFooter" class="modal-footer">
-				   <button type="reset" id="loginCancelBtn" class="btn cancelBtn" data-dismiss="modal">Reset</button>
-				   <button type="submit" id="loginConfirmBtn" class="btn confirmBtn">Confirm</button>
-				</div>
-			</form>	
-		</div>    <!-- Fine modal content -->
-	</div> <!-- Fine modal dialog -->
-</div><!-- Fine modale -->    
-    
+				</form>	
+			</div>
+		</div>
+	</div>    
+--> 
 <script type='text/javascript'>
 var user_active = $("#nome_ut").text();
 var role_active = $("#role_att").text();
@@ -265,9 +277,28 @@ var role_active = $("#role_att").text();
 				
 			}
 			
-			
+			//Hide
+			var nascondi= "<?=$hide_menu; ?>";
+				if (nascondi == 'hide'){
+					$('#mainMenuCnt').hide();
+				}else{
+					$('#mainMenuCnt').show();
+				}
+			//
             
         });
+		
+		//Link Diretto al ssoKeyCloak
+		$(document).on('click','#utente_att',function(){
+			//alert('CONNESSIONE');
+			window.location.replace("login.php");
+			//
+		});
+		
+		$(document).on('click','#mainMenuIconCnt',function(){
+			window.location.replace("login.php");
+		});
+		//
     });
 </script>    
 

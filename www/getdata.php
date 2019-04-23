@@ -446,7 +446,7 @@ $query10=$query_facet;
 			mysqli_close($link);
 		//
 	} elseif($action == "get_production_sched"){
-		$query9 = "SELECT `schedulers`.`*` FROM processloader_db.`schedulers` WHERE `schedulers`.`type`='production' ORDER BY Id DESC;";
+		$query9 = "SELECT `schedulers`.* FROM processloader_db.`schedulers` WHERE `schedulers`.`type`='production' ORDER BY Id DESC;";
 		$result9 = mysqli_query($link, $query9) or die(mysqli_error($link));
 		$list_production = array();
         if ($result9->num_rows > 0) {

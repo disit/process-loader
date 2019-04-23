@@ -71,9 +71,15 @@ if (!isset($_GET['pageTitle'])){
         <script src="bootstrapToggleButton/js/bootstrap-toggle.min.js"></script>
        
        <!-- Dynatable -->
+	   <!--
        <link rel="stylesheet" href="dynatable/jquery.dynatable.css">
        <script src="dynatable/jquery.dynatable.js"></script>
-        
+        -->
+		<script type="text/javascript" charset="utf8" src="lib/datatables.js"></script>
+		<script type="text/javascript" src="lib/dataTables.responsive.min.js"></script>
+		<script type="text/javascript" src="lib/dataTables.bootstrap4.min.js"></script>
+		<script type="text/javascript" src="lib/jquery.dataTables.min.js"></script>
+		<link href="lib/responsive.dataTables.css" rel="stylesheet" />
        <!-- Font awesome icons -->
         <link rel="stylesheet" href="fontAwesome/css/font-awesome.min.css">
         
@@ -125,7 +131,7 @@ if (!isset($_GET['pageTitle'])){
 			</div>
 			-->
 			
-                <table id="storico" class="table table-striped table-bordered">
+                <table id="storico" class="table table-striped table-bordered" style="width: 100%">
 					<thead class="dashboardsTableHeader">
                     <tr>
                         <th>Activity </th>
@@ -301,6 +307,27 @@ function myFunctionDate() {
 					//alert(array_act);
 					$("#storico").append('<tr><td>'+array_act[i]['id']+'</td><td>'+array_act[i]['date']+'</td><td>'+array_act[i]['desAct']+'</td><td>'+array_act[i]['name']+'</td><td>'+array_act[i]['job_type_name']+'</td><td>'+array_act[i]['file']+'</td><td>'+array_act[i]['group']+'</td></tr>');
 					}
+					var table = $('#storico').DataTable({
+						"searching": true,
+						"paging": true,
+						"ordering": true,
+						"info": false,
+						"responsive": true,
+						"lengthMenu": [5,10,15],
+						"iDisplayLength": 10,
+						"pagingType": "full_numbers",
+						"dom": '<"pull-left"l><"pull-right"f>tip',
+						"language":{"paginate": {
+										"first":      "First",
+										"last":       "Last",
+										"next":       "Next >>",
+										"previous":   "<< Prev"
+										},
+						"lengthMenu":     "Show	_MENU_ ",
+						}
+					});	
+					/////////
+					/*
 					$('#storico').dynatable(
 							{
 							features: {
@@ -344,7 +371,7 @@ function myFunctionDate() {
 						  }
 					}
 					);
-					$('#dynatable-pagination-links-storico').show();
+					$('#dynatable-pagination-links-storico').show();*/
 				}
 		});
 		

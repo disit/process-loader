@@ -21,9 +21,12 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1">
       <link rel="stylesheet" href="css/bootstrap.min.css">
-          <script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
+	  <!--
+          <script src="https://code.jquery.com/jquery-1.10.1.min.js"></script>
           <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
           <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+		-->
+		<script src="jquery/jquery-1.10.1.min.js"></script>
           <link href="css/bootstrap.css" rel="stylesheet">
          <link href="css/loader.css" rel="stylesheet">
 </head>
@@ -36,7 +39,7 @@ $.ajax({
 	url:'aggiornaUplaoadedFiles.php',
 	type: "GET",
 	success: function(){
-		console.log("Passaggio Riuscito");
+		//console.log("Passaggio Riuscito");
 	}
 });
 }, 60000);

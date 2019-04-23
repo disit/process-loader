@@ -17,7 +17,6 @@
    along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
 //include('config.php'); // Includes Login Script
-session_start();
 include ('external_service.php');
 if (isset ($_SESSION['username'])){
   $utente_att = $_SESSION['username'];	
@@ -416,8 +415,15 @@ mysqli_close($link);
 	   <script type="text/javascript" src="js/bootstrap-datetimepicker-master/js/bootstrap-datetimepicker.min.js"></script>
        <link href="js/bootstrap-datetimepicker-master/css/bootstrap-datetimepicker.min.css" rel="stylesheet">
 	   <!-- DATA TABLE-->
+	   <!--
 	   <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.16/css/jquery.dataTables.css">
 		<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.16/js/jquery.dataTables.js"></script>
+	   -->
+	   <script type="text/javascript" charset="utf8" src="lib/datatables.js"></script>
+		<script type="text/javascript" src="lib/dataTables.responsive.min.js"></script>
+		<script type="text/javascript" src="lib/dataTables.bootstrap4.min.js"></script>
+		<script type="text/javascript" src="lib/jquery.dataTables.min.js"></script>
+		<link href="lib/responsive.dataTables.css" rel="stylesheet" />
 	  <!-- -->
     </head>
 	<body class="guiPageBody">
@@ -457,14 +463,12 @@ mysqli_close($link);
                             Snap4City
                         </div>
                     </div>
-                    <?php
-				if ($hide_menu != "hide"){
-                    echo ('<div class="row" id="title_row">
-                        <div class="col-xs-10 col-md-12 centerWithFlex" id="headerTitleCnt">'.$_GET['pageTitle'].'</div>
+                    
+				<div class="row" id="title_row">
+                        <div class="col-xs-10 col-md-12 centerWithFlex" id="headerTitleCnt"><?php echo urldecode($_GET['pageTitle']); ?></div>
                         <!--<div class="col-xs-2 hidden-md hidden-lg centerWithFlex" id="headerMenuCnt"></div>-->
-                    </div>');
-				}
-					?>
+						<div class="col-xs-2 hidden-md hidden-lg centerWithFlex" id="headerMenuCnt"><?php include "mobMainMenu.php" ?></div>
+                    </div>
                     <div class="row" id="contenitore_table">
 					<div class="col col-lg-2 panel-group" style="margin-top:35px">
 						<button id="reset" class="btn cancelBtn" type="reset" value="">Reset Filters</button>
@@ -481,7 +485,7 @@ mysqli_close($link);
 				<!--<option value="50">50</option>-->
 				</select>
 				</div>
-                <table id="DataTypes" class="table table-striped table-bordered">
+                <table id="DataTypes" class="table table-striped table-bordered" style="width: 100%">
 						<thead class="dashboardsTableHeader">
 						<?php 
 						if ($by == 'DESC'){
@@ -496,17 +500,17 @@ mysqli_close($link);
 					}
 						echo ('
 						<tr>
-							<th class="id"><div><a href="'.$pagina_attuale.'&orderBy=id&order='.$by_par.'">Id '.$icon_by.'</a></div></th>
-							<th class="time"><div><a href="'.$pagina_attuale.'&orderBy=time&order='.$by_par.'">Date and Time '.$icon_by.'</a></div><div><input id="start" style="color: black; width:auto"  type="text" name="start" value="" class="datepicker" placeholder="From..."><input id="end" type="text" name="end" style="color: black; width:auto;" value="" class="datepicker" placeholder="To..."></div><button id="filter" type="button" class="filter">Search</button></th>
-							<th class="username"><div><a href="'.$pagina_attuale.'&orderBy=username&order='.$by_par.'">Username '.$icon_by.'</a></div><div class="input-group mb-3"><input type="text" style="color: black;" size="18"  id="filterUser" placeholder="Search..." /></div><div><button id="filterUserBtn" type="button" class="filter">Search</button></div></th>
-							<th class="app_name"><div><a href="'.$pagina_attuale.'&orderBy=app_name&order='.$by_par.'">App Name '.$icon_by.'</a></div><div class="input-group mb-3"><input type="text" style="color: black;" size="18" id="filterAppName" placeholder="Search..." /></div><div><button id="filterAppN" type="button" class="filter">Search</button></div></th>
-							<th class="delegated_username"><div><a href="'.$pagina_attuale.'&orderBy=delegated_username&order='.$by_par.'">Delegated Username '.$icon_by.'</a></div><div class="input-group mb-3"><input type="text" style="color: black;" size="18"  id="filterDelUs" placeholder="Search..." /></div><div><button id="filterDelUs" type="button" class="filter">Search</button></div></th>
-							<th class="delegated_app_name"><div><a href="'.$pagina_attuale.'&orderBy=delegated_app_name&order='.$by_par.'">Delegated AppName '.$icon_by.'</a></div><div class="input-group mb-3"><input type="text" style="color: black;" size="18"  id="filterDelAp" placeholder="Search..." /></div><div><button id="filterDelApp" type="button" class="filter">Search</button></div></th>
-							<th class="source_request"><div><a href="'.$pagina_attuale.'&orderBy=source_request&order='.$by_par.'">Source request '.$icon_by.'</a></div><select name="sourceReq" class="selectpicker form-control" id="sourceReq" style="color: black; width:auto;"><option value=""></option></select><button id="filterSource" type="button" class="filter">Search</button></th>
-							<th class="variable_name"><div><a href="'.$pagina_attuale.'&orderBy=variable_name&order='.$by_par.'">Variable name '.$icon_by.'</a></div><div class="input-group mb-3"><input type="text" style="color: black;" size="18"  id="filterVarN" placeholder="Search..." /></div><div><button id="filterVarNBtn" type="button" class="filter">Search</button></div></th>
-							<th class="motivation"><div><a href="'.$pagina_attuale.'&orderBy=motivation&order='.$by_par.'">Motivation '.$icon_by.'</a></div><div class="input-group mb-3"><input type="text" style="color: black;" size="18"  id="filterMot" placeholder="Search..." /></div><div><button id="filterMotBtn" type="button" class="filter">Search</button></div></th>
-							<th class="access_type"><div><a href="'.$pagina_attuale.'&orderBy=access_type&order='.$by_par.'">Access Type '.$icon_by.'</a></div><select name="AccessType" class="selectpicker form-control" id="AccessType" style="color: black; width:auto;"><option value=""></option><option value="READ">READ</option><option value="WRITE">WRITE</option></select><button id="filterAccType" type="button" class="filter">Search</button></th>
-							<th class="domain"><div><a href="'.$pagina_attuale.'&orderBy=domain&order='.$by_par.'">Domain '.$icon_by.'</a></div><select name="optDomain" class="selectpicker form-control" id="optDomain" style="color: black; width:auto;"><option value=""></option><option value="DELEGATION">DELEGATION</option><option value="DATA">DATA</option></select><button id="filterDomain" type="button" class="filter">Search</button></th>	
+							<th class="id"><div><a href="auditPersonalData.php?'.$_REQUEST['showFrame'].'&limit='.$limit.'&page='.$page.'&orderBy=id&order='.$by_par.'">Id '.$icon_by.'</a></div></th>
+							<th class="time"><div><a href="auditPersonalData.php?'.$_REQUEST['showFrame'].'&limit='.$limit.'&page='.$page.'&orderBy=time&order='.$by_par.'">Date and Time '.$icon_by.'</a></div><div><input id="start" style="color: black; width:auto"  type="text" name="start" value="" class="datepicker" placeholder="From..."><input id="end" type="text" name="end" style="color: black; width:auto;" value="" class="datepicker" placeholder="To..."></div><button id="filter" type="button" class="filter">Search</button></th>
+							<th class="username"><div><a href="auditPersonalData.php?'.$_REQUEST['showFrame'].'&limit='.$limit.'&page='.$page.'&orderBy=username&order='.$by_par.'">Username '.$icon_by.'</a></div><div class="input-group mb-3"><input type="text" style="color: black;" size="18"  id="filterUser" placeholder="Search..." /></div><div><button id="filterUserBtn" type="button" class="filter">Search</button></div></th>
+							<th class="app_name"><div><a href="auditPersonalData.php?'.$_REQUEST['showFrame'].'&limit='.$limit.'&page='.$page.'&orderBy=app_name&order='.$by_par.'">App Name '.$icon_by.'</a></div><div class="input-group mb-3"><input type="text" style="color: black;" size="18" id="filterAppName" placeholder="Search..." /></div><div><button id="filterAppN" type="button" class="filter">Search</button></div></th>
+							<th class="delegated_username"><div><a href="auditPersonalData.php?'.$_REQUEST['showFrame'].'&limit='.$limit.'&page='.$page.'&orderBy=delegated_username&order='.$by_par.'">Delegated Username '.$icon_by.'</a></div><div class="input-group mb-3"><input type="text" style="color: black;" size="18"  id="filterDelUs" placeholder="Search..." /></div><div><button id="filterDelUs" type="button" class="filter">Search</button></div></th>
+							<th class="delegated_app_name"><div><a href="auditPersonalData.php?'.$_REQUEST['showFrame'].'&limit='.$limit.'&page='.$page.'&orderBy=delegated_app_name&order='.$by_par.'">Delegated AppName '.$icon_by.'</a></div><div class="input-group mb-3"><input type="text" style="color: black;" size="18"  id="filterDelAp" placeholder="Search..." /></div><div><button id="filterDelApp" type="button" class="filter">Search</button></div></th>
+							<th class="source_request"><div><a href="auditPersonalData.php?'.$_REQUEST['showFrame'].'&limit='.$limit.'&page='.$page.'&orderBy=source_request&order='.$by_par.'">Source request '.$icon_by.'</a></div><select name="sourceReq" class="selectpicker form-control" id="sourceReq" style="color: black; width:auto;"><option value=""></option></select><button id="filterSource" type="button" class="filter">Search</button></th>
+							<th class="variable_name"><div><a href="auditPersonalData.php?'.$_REQUEST['showFrame'].'&limit='.$limit.'&page='.$page.'&orderBy=variable_name&order='.$by_par.'">Variable name '.$icon_by.'</a></div><div class="input-group mb-3"><input type="text" style="color: black;" size="18"  id="filterVarN" placeholder="Search..." /></div><div><button id="filterVarNBtn" type="button" class="filter">Search</button></div></th>
+							<th class="motivation"><div><a href="auditPersonalData.php?'.$_REQUEST['showFrame'].'&limit='.$limit.'&page='.$page.'&orderBy=motivation&order='.$by_par.'">Motivation '.$icon_by.'</a></div><div class="input-group mb-3"><input type="text" style="color: black;" size="18"  id="filterMot" placeholder="Search..." /></div><div><button id="filterMotBtn" type="button" class="filter">Search</button></div></th>
+							<th class="access_type"><div><a href="auditPersonalData.php?'.$_REQUEST['showFrame'].'&limit='.$limit.'&page='.$page.'&orderBy=access_type&order='.$by_par.'">Access Type '.$icon_by.'</a></div><select name="AccessType" class="selectpicker form-control" id="AccessType" style="color: black; width:auto;"><option value=""></option><option value="READ">READ</option><option value="WRITE">WRITE</option></select><button id="filterAccType" type="button" class="filter">Search</button></th>
+							<th class="domain"><div><a href="auditPersonalData.php?'.$_REQUEST['showFrame'].'&limit='.$limit.'&page='.$page.'&orderBy=domain&order='.$by_par.'">Domain '.$icon_by.'</a></div><select name="optDomain" class="selectpicker form-control" id="optDomain" style="color: black; width:auto;"><option value=""></option><option value="DELEGATION">DELEGATION</option><option value="DATA">DATA</option></select><button id="filterDomain" type="button" class="filter">Search</button></th>	
 						</tr>');
 						?>
 						</thead>	
@@ -514,19 +518,21 @@ mysqli_close($link);
 					<?php 
 							for ($i = 0; $i <= $num_rows; $i++) {
 							
-							echo ("<tr>
-									<td>".$process_list[$i]['id']."</td>
-									<td>".$process_list[$i]['time']."</td>
-									<td>".$process_list[$i]['username']."</td>
-									<td>".$process_list[$i]['app_name']."</td>
-									<td>".$process_list[$i]['delegated_username']."</td>
-									<td>".$process_list[$i]['delegated_app_name']."</td>
-									<td>".$process_list[$i]['source_request']."</td>
-									<td>".$process_list[$i]['variable_name']."</td>
-									<td>".$process_list[$i]['motivation']."</td>
-									<td>".$process_list[$i]['access_type']."</td>
-									<td>".$process_list[$i]['domain']."</td>
-								</tr>");
+									if($process_list[$i]['id']){
+										echo ("<tr>
+												<td>".$process_list[$i]['id']."</td>
+												<td>".$process_list[$i]['time']."</td>
+												<td>".$process_list[$i]['username']."</td>
+												<td>".$process_list[$i]['app_name']."</td>
+												<td>".$process_list[$i]['delegated_username']."</td>
+												<td>".$process_list[$i]['delegated_app_name']."</td>
+												<td>".$process_list[$i]['source_request']."</td>
+												<td>".$process_list[$i]['variable_name']."</td>
+												<td>".$process_list[$i]['motivation']."</td>
+												<td>".$process_list[$i]['access_type']."</td>
+												<td>".$process_list[$i]['domain']."</td>
+											</tr>");
+									}
 							}
 					?>	
 					</tbody>
@@ -625,6 +631,14 @@ mysqli_close($link);
 			$('.ellipsis').css("width","150 px");
 			
 		}
+		
+		var table = $('#DataTypes').DataTable({
+								"searching": false,
+								"paging": false,
+								"ordering": false,
+								"info": false,
+								"responsive": true,
+							});
 		
 		//
 		for(var i = 1; i < lun_sr; i++){

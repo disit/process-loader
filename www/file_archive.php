@@ -89,8 +89,16 @@ if (isset($_REQUEST['error'])){
         <link href="bootstrapToggleButton/css/bootstrap-toggle.min.css" rel="stylesheet">
         <script src="bootstrapToggleButton/js/bootstrap-toggle.min.js"></script>     
        <!-- Dynatable -->
+	   <!--
        <link rel="stylesheet" href="dynatable/jquery.dynatable.css">
-       <script src="dynatable/jquery.dynatable.js"></script>        
+       <script src="dynatable/jquery.dynatable.js"></script> 
+		-->
+		<script type="text/javascript" charset="utf8" src="lib/datatables.js"></script>
+		<script type="text/javascript" src="lib/dataTables.responsive.min.js"></script>
+		<script type="text/javascript" src="lib/dataTables.bootstrap4.min.js"></script>
+		<script type="text/javascript" src="lib/jquery.dataTables.min.js"></script>
+		<link href="lib/responsive.dataTables.css" rel="stylesheet" />
+		<!-- -->
        <!-- Font awesome icons -->
         <link rel="stylesheet" href="fontAwesome/css/font-awesome.min.css">       
         <!-- Custom CSS -->
@@ -100,7 +108,20 @@ if (isset($_REQUEST['error'])){
 		<script type="text/javascript" src="js/bootstrap-datetimepicker-master/js/bootstrap-datetimepicker.min.js"></script>
         <link href="js/bootstrap-datetimepicker-master/css/bootstrap-datetimepicker.min.css" rel="stylesheet">
 </head>
+<style>
+td { 
+    text-overflow: ellipsis;
 
+  /* Required for text-overflow to do anything */
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+html, body {
+    max-width: 100%;
+    overflow-x: hidden;
+}
+</style>
 <body class="guiPageBody">
 <?php include('functionalities.php'); ?>
         <div class="container-fluid">
@@ -129,13 +150,16 @@ if (isset($_REQUEST['error'])){
 			</div>
 			<!-- Fine Upload New File-->
 			<!--<h2>Uploaded File list	 <span class="fa fa-info-circle" data-toggle="modal" data-target="#info-modal"  style="color:#337ab7;font-size:24px;"></h2>-->
-				<table id="elenco_files" class="table table-striped table-bordered">
+				<table id="elenco_files" class="table table-striped table-bordered" style="width:100%">
 					<thead class="dashboardsTableHeader">
 					<tr>
-						<th hidden>N</th>
-						<th hidden>id</th>
 						<th>file Name</th>
-						<th class="username_td" hidden>Username</th>
+						<!--<th class="username_td">Username</th>-->
+						<?php 
+						if(($role_att == 'RootAdmin')||($role_att == 'ToolAdmin')){
+						echo('<th>Username</th>');
+						}
+						?>
 						<th>Upload Date</th>
 						<th>Description</th> 
 						<th>App type</th>
@@ -406,13 +430,15 @@ if (isset($_REQUEST['error'])){
 				<h4 class="modal-title" id="mostra_elenco">Process Model List</h4>
 			</div>
 			<div id="contenuto_elenco">
-				<table id="elenco" class="table table-striped table-bordered">
+				<table id="elenco" class="table table-striped table-bordered" style="width:100%">
+					<thead class="dashboardsTableHeader">
 					<tr>
 						<th>Process Model Id</th>
 						<th>Name</th>
 						<th>Group</th>
 						<th>Type</th>
 					</tr>
+					</thead>
 				</table>
 			</div>
 			<div class="panel-footer">
@@ -632,6 +658,7 @@ if (isset($_REQUEST['error'])){
 	
 	$(document).ready(function () {
 		//NASCONDI CAMPI
+		
 		$('#micro_help').hide();
 		$('#micro_url').hide();
 		$('#micro_url').required=false;
@@ -823,8 +850,8 @@ if (isset($_REQUEST['error'])){
 					var substr = stato.search("OK");
 					if (array_files[i]['type']=='ETL' || array_files[i]['type']=='JAVA' || array_files[i]['type']=='R'){
 						var href = 'uploads/'+us+'/'+data4+'/'+file1[0]+'/'+array_files[i]['name'];
-						var button_create_jt ='<button type="button" class="editDashBtn crea_jt" data-target="#data-modal" data-toggle="modal" >NEW</button>';
-						var button_show_jt ='<button type="button" class="viewDashBtn mostra_jt" data-target="#show_jobType" data-toggle="modal" >VIEW</button>';
+						var button_create_jt ='<button type="button" class="editDashBtn crea_jt" data-target="#data-modal" value="'+i+'" data-toggle="modal" >NEW</button>';
+						var button_show_jt ='<button type="button" class="viewDashBtn mostra_jt" data-target="#show_jobType" value="'+i+'" data-toggle="modal" >VIEW</button>';
 					}
 					else{
 						var href = 'uploads/'+us+'/'+data4+'/'+array_files[i]['name'];
@@ -832,23 +859,31 @@ if (isset($_REQUEST['error'])){
 						var button_show_jt ="";
 					}
 					
-			
+					var td_user='';
+					if((role=='RootAdmin')||(role=='ToolAdmin')){
+						//<td>'+array_files[i]['utente']+'</td>
+						td_user='<td>'+array_files[i]['utente']+'</td>';
+					}else{
+						td_user='';
+					}
+					
+					
 					if (array_files[i]['pub']==0)
 					{
 						if (substr == 0)
 						{
-							$("#elenco_files").append('<tr><td>'+i+'</td><td class="file_id" value="'+array_files[i]['id']+'">'+array_files[i]['id']+'</td><td><a href="'+href+'" class="file_archive_link" download>'+array_files[i]['name']+'</a></td><td class="username_td">'+array_files[i]['utente']+'</td><td>'+array_files[i]['date']+'</td><td>'+array_files[i]['desc']+'</td><td>'+array_files[i]['type']+'</td><td class="status" >'+array_files[i]['status']+'</td><td class="actions">'+button_create_jt+'</td><td class="show_button">'+button_show_jt+'</td><td><button type="button" class="editDashBtn modify_jt" data-target="#data-modal3" data-toggle="modal">EDIT</button></td><td><button type="button" value="0" data-toggle="modal" class="pubDashBtn pubblicato" data-target="#publish">No</button></td><td><button type="button" class="delDashBtn delete_file" data-target="#delete-modal" data-toggle="modal">DEL</button></td></tr>');	<!-- agg --!>	
+							$("#elenco_files").append('<tr><td><a href="'+href+'" class="file_archive_link" download>'+array_files[i]['name']+'</a></td>'+td_user+'<td>'+array_files[i]['date']+'</td><td>'+array_files[i]['desc']+'</td><td>'+array_files[i]['type']+'</td><td class="status" >'+array_files[i]['status']+'</td><td class="actions">'+button_create_jt+'</td><td class="show_button">'+button_show_jt+'</td><td><button type="button" class="editDashBtn modify_jt" value="'+i+'" data-target="#data-modal3" data-toggle="modal">EDIT</button></td><td><button type="button" value="'+i+'" data-toggle="modal" class="pubDashBtn pubblicato" data-target="#publish">No</button></td><td><button type="button" class="delDashBtn delete_file" data-target="#delete-modal" data-toggle="modal" value="'+i+'">DEL</button></td></tr>');	<!-- agg --!>	
 	
 						}
 						else
 						{
 							if (substr1 == 0)
 							{
-								$("#elenco_files").append('<tr><td>'+i+'</td><td class="file_id">'+array_files[i]['id']+'</td><td><a href="'+href+'" download class="file_archive_link">'+array_files[i]['name']+'</a></td><td class="username_td">'+array_files[i]['utente']+'</td><td>'+array_files[i]['date']+'</td><td>'+array_files[i]['desc']+'</td><td>'+array_files[i]['type']+'</td><td> no </td><td class="status" >'+array_files[i]['status']+'	</td><td class="actions"></td><td class="show_button"></td><td class="actions"></td><td></td><td><button type="button" class="delDashBtn delete_file" data-target="#delete-modal" data-toggle="modal">DEL</button></td></tr>');	
+								$("#elenco_files").append('<tr><td><a href="'+href+'" download class="file_archive_link">'+array_files[i]['name']+'</a></td>'+td_user+'<td>'+array_files[i]['date']+'</td><td>'+array_files[i]['desc']+'</td><td>'+array_files[i]['type']+'</td><td> no </td><td class="status" >'+array_files[i]['status']+'	</td><td class="actions"></td><td class="show_button"></td><td class="actions"></td><td></td><td><button type="button" class="delDashBtn delete_file" data-target="#delete-modal" data-toggle="modal" value="'+i+'">DEL</button></td></tr>');	
 							}
 							else
 							{
-								$("#elenco_files").append('<tr><td>'+i+'</td><td class="file_id">'+array_files[i]['id']+'</td><td><a href="'+href+'" download class="file_archive_link">'+array_files[i]['name']+'</a></td><td class="username_td">'+array_files[i]['utente']+'</td><td>'+array_files[i]['date']+'</td><td>'+array_files[i]['desc']+'</td><td>'+array_files[i]['type']+'</td><td> no </td><td class="status" >'+array_files[i]['status']+' </td><td class="actions"></td><td class="show_button"></td><td></td><td><button type="button" class="delDashBtn delete_file" data-target="#delete-modal" data-toggle="modal">DEL</button></td></tr>');			
+								$("#elenco_files").append('<tr><td><a href="'+href+'" download class="file_archive_link">'+array_files[i]['name']+'</a></td>'+td_user+'<td>'+array_files[i]['date']+'</td><td>'+array_files[i]['desc']+'</td><td>'+array_files[i]['type']+'</td><td> no </td><td class="status" >'+array_files[i]['status']+' </td><td class="actions"></td><td class="show_button"></td><td></td><td><button type="button" class="delDashBtn delete_file" data-target="#delete-modal" data-toggle="modal" value="'+i+'">DEL</button></td></tr>');			
 							}
 						}
 
@@ -857,23 +892,46 @@ if (isset($_REQUEST['error'])){
 						if (substr == 0)
 						{
 							
-							$("#elenco_files").append('<tr><td>'+i+'</td><td class="file_id">'+array_files[i]['id']+'</td><td><a href="'+href+'" download class="file_archive_link">'+array_files[i]['name']+'</a></td><td class="username_td">'+array_files[i]['utente']+'</td><td>'+array_files[i]['date']+'</td><td>'+array_files[i]['desc']+'</td><td>'+array_files[i]['type']+'</td><td class="status" >'+array_files[i]['status']+'</td><td class="actions">'+button_create_jt+'</td><td class="show_button">'+button_show_jt+'</td><td><button type="button" class="editDashBtn modify_jt" data-target="#data-modal3" data-toggle="modal">EDIT</button></td><td><button type="button" value="1" data-toggle="modal" class="pubDashBtn pubblicato" data-target="#publish">Yes</button></td><td><button type="button" class="delDashBtn delete_file" data-target="#delete-modal" data-toggle="modal">DEL</button></td></tr>');	<!-- agg --!>	
+							$("#elenco_files").append('<tr><td><a href="'+href+'" download class="file_archive_link">'+array_files[i]['name']+'</a></td>'+td_user+'<td>'+array_files[i]['date']+'</td><td>'+array_files[i]['desc']+'</td><td>'+array_files[i]['type']+'</td><td class="status" >'+array_files[i]['status']+'</td><td class="actions">'+button_create_jt+'</td><td class="show_button">'+button_show_jt+'</td><td><button type="button" class="editDashBtn modify_jt" value="'+i+'" data-target="#data-modal3" data-toggle="modal">EDIT</button></td><td><button type="button" value="'+i+'" data-toggle="modal" class="pubDashBtn pubblicato" data-target="#publish">Yes</button></td><td><button type="button" class="delDashBtn delete_file" data-target="#delete-modal" data-toggle="modal" value="'+i+'">DEL</button></td></tr>');	<!-- agg --!>	
 						}
 						else
 						{
 							if (substr1 == 0)
 							{
-								$("#elenco_files").append('<tr><td>'+i+'</td><td class="file_id">'+array_files[i]['id']+'</td><td><a href="'+href+'" download class="file_archive_link">'+array_files[i]['name']+'</a></td><td class="username_td">'+array_files[i]['utente']+'</td><td>'+array_files[i]['date']+'</td><td>'+array_files[i]['desc']+'</td><td>'+array_files[i]['type']+'</td><td> no </td><td class="status" >'+array_files[i]['status']+'	</td><td class="actions"></td><td class="show_button"></td><td class="actions"></td><td></td><td><button type="button" class="delDashBtn delete_file" data-target="#delete-modal" data-toggle="modal">DEL</button></td></tr>');	
+								$("#elenco_files").append('<tr><td><a href="'+href+'" download class="file_archive_link">'+array_files[i]['name']+'</a></td>'+td_user+'<td>'+array_files[i]['date']+'</td><td>'+array_files[i]['desc']+'</td><td>'+array_files[i]['type']+'</td><td> no </td><td class="status" >'+array_files[i]['status']+'	</td><td class="actions"></td><td class="show_button"></td><td class="actions"></td><td></td><td><button type="button" class="delDashBtn delete_file" data-target="#delete-modal" data-toggle="modal" value="'+i+'">DEL</button></td></tr>');	
 							}
 							else
 							{
 								
-									$("#elenco_files").append('<tr><td>'+i+'</td><td class="file_id">'+array_files[i]['id']+'</td><td><a  href="'+href+'" download class="file_archive_link">'+array_files[i]['name']+'</a></td><td class="username_td">'+array_files[i]['utente']+'</td><td>'+array_files[i]['date']+'</td><td>'+array_files[i]['desc']+'</td><td>'+array_files[i]['type']+'</td><td> no </td><td class="status" >'+array_files[i]['status']+'</td><td class="actions"></td><td></td><td class="show_button"></td><td><button type="button" class="delDashBtn delete_file" data-target="#delete-modal" data-toggle="modal">DEL</button></td></tr>');
+									$("#elenco_files").append('<tr><td><a  href="'+href+'" download class="file_archive_link">'+array_files[i]['name']+'</a></td>'+td_user+'<td>'+array_files[i]['date']+'</td><td>'+array_files[i]['desc']+'</td><td>'+array_files[i]['type']+'</td><td> no </td><td class="status" >'+array_files[i]['status']+'</td><td class="actions"></td><td></td><td class="show_button"></td><td><button type="button" class="delDashBtn delete_file" data-target="#delete-modal" data-toggle="modal" value="'+array_files[i]['pub']+'">DEL</button></td></tr>');
 							}
 						}
 					}
+					
+					///
+				
 				}
-				$('#elenco_files').dynatable(
+				
+				var table = $('#elenco_files').DataTable({
+						"searching": true,
+						"paging": true,
+						"ordering": true,
+						"info": false,
+						"responsive": true,
+						"lengthMenu": [5,10,15],
+						"iDisplayLength": 10,
+						"pagingType": "full_numbers",
+						"dom": '<"pull-left"l><"pull-right"f>tip',
+						"language":{"paginate": {
+										"first":      "First",
+										"last":       "Last",
+										"next":       "Next >>",
+										"previous":   "<< Prev"
+										},
+						"lengthMenu":     "Show	_MENU_ ",
+						}
+					});
+				/*$('#elenco_files').dynatable(
 							{
 							features: {
 									paginate: true,
@@ -931,14 +989,15 @@ if (isset($_REQUEST['error'])){
 						  }
 					}
 				
-				);
+				);*/
 				}
 		});
 		
 		
 		//Quando si clicca sul modal di eliminazione
 		$(document).on('click','.delete_file',function(){
-			var ind = $(this).parent().parent().first().children().html();
+			//var ind = $(this).parent().parent().first().children().html();
+			var ind = $(this).val();
 			var valore_el = array_files[ind]['id'];
 			$("#id_file_del").val(valore_el);
 			//ricostruisci path
@@ -964,7 +1023,8 @@ if (isset($_REQUEST['error'])){
 		
 		//Status
 		$(document).on('click','.pubblicato',function(){
-			var ind = $(this).parent().parent().first().children().html();
+			var ind = $(this).val();
+			//var ind = $(this).parent().parent().first().children().html();
 			var valore_el = array_files[ind]['id'];
 			var valolre_pub=array_files[ind]['pub'];
 			var valNat_pub=array_files[ind]['category'];
@@ -986,7 +1046,8 @@ if (isset($_REQUEST['error'])){
 		
 		//QUANDO SI CLICCA SUL MODAL del process type
 		$(document).on('click','.crea_jt',function(){
-			var ind = $(this).parent().parent().first().children().html();
+			//var ind = $(this).parent().parent().first().children().html();
+			var ind = $(this).val();
 			//console.log(ind);
 			$("#titolo_proc").text("CREATE NEW PROCESS TYPE FROM FILE: " + array_files[ind]['name']);
 			$("#file_zip").val(array_files[ind]['name']);
@@ -1010,7 +1071,7 @@ if (isset($_REQUEST['error'])){
 				var data4 = data3.replace(':','-');
 				var data5 = data4.replace(' ','-');
 			if (array_files[ind]['type'] === 'ETL'){
-
+				
 				$("#type").val('Process Executor');
 				$("#url").val('');
 				var typeJt = $("#type").val();
@@ -1023,7 +1084,7 @@ if (isset($_REQUEST['error'])){
 				var file2 = file_n1.split(".");	
 				$("#path").val("<?=$java_path; ?>");
 
-
+				var file_position = us1+'/'+data5+'/'+file2[0];
 				var pathJt = $("#path").val();
 				console.log("path:	" + pathJt);
 				$("#file_position").val(file_position);
@@ -1063,8 +1124,8 @@ if (isset($_REQUEST['error'])){
 		
 		//QUANDO SI CLICCA SUL MODAL di publish    agg da lavorare su questo
 		$(document).on('click','.publish_jt',function(){
-			var ind = $(this).parent().parent().first().children().html();
-
+			//var ind = $(this).parent().parent().first().children().html();
+			var ind = $(this).val();
 			
 			$("#titolo_proc2").text("PUBLISH PROCESS FROM FILE: " + array_files[ind]['name'] );
 			$("#file_zip2").val(array_files[ind]['name']);
@@ -1208,7 +1269,8 @@ if (isset($_REQUEST['error'])){
 				
 		//QUANDO SI CLICCA SUL MODAL di modify    agg da lavorare su questo
 		$(document).on('click','.modify_jt',function(){
-			var ind = $(this).parent().parent().first().children().html();
+			//var ind = $(this).parent().parent().first().children().html();
+			var ind = $(this).val();
 			var id_mic = array_files[ind]['id'];
 			//alert(ind);
 			var type = array_files[ind]['type'];
@@ -1277,8 +1339,6 @@ if (isset($_REQUEST['error'])){
 			
 			$("#titolo_proc3").text("MODIFY METADATA OF PROCESS FROM FILE: " + array_files[ind]['name'] );
 			$("#file_zip3").val(array_files[ind]['name']);
-			//$('#category3 option[value="'+array_files[ind]['category']+'"]').attr('selected','selected');
-			//$('#resource3 option[value="'+array_files[ind]['resource']+'"]').attr('selected','selected');
 			$('#category3').val(array_files[ind]['category']);
 			$('#resource3').val(array_files[ind]['resource']);
 			//
@@ -1315,7 +1375,8 @@ if (isset($_REQUEST['error'])){
 		//MOSTRA JOB TYPE
 		$(document).on('click','.mostra_jt',function(){
 			var array_process = [];
-			var ind = $(this).parent().parent().first().children().html();
+			//var ind = $(this).parent().parent().first().children().html();
+			var ind = $(this).val();
 			$("#mostra_elenco").text("Process Model list:  "+array_files[ind]['name']);
 			$.ajax({
 				url: "getdata.php",
@@ -1364,7 +1425,7 @@ if (isset($_REQUEST['error'])){
 		//CREARE UN AJAX che crei i json
 		$(document).on('click','#Crea_job_type',function(){
 			
-			$('#datamapText').val(dataM);
+			//$('#datamapText').val(dataM);
 			//
 			var NextJ = "";
 			if (id3>0){

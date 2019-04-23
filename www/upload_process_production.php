@@ -81,6 +81,14 @@ if (!isset($_GET['pageTitle'])){
         <!-- Custom CSS -->
         <link href="css/dashboard.css" rel="stylesheet">
         <link href="css/dashboardList.css" rel="stylesheet">
+		<?php //include('functionalities.php'); ?>
+		<!-- Datatable -->
+	    <script type="text/javascript" charset="utf8" src="lib/datatables.js"></script>
+		<script type="text/javascript" src="lib/dataTables.responsive.min.js"></script>
+		<script type="text/javascript" src="lib/dataTables.bootstrap4.min.js"></script>
+		<script type="text/javascript" src="lib/jquery.dataTables.min.js"></script>
+		<link href="lib/responsive.dataTables.css" rel="stylesheet" />
+        
     </head>
 	<body class="guiPageBody">
 	<?php include('functionalities.php'); ?>
@@ -101,23 +109,18 @@ if (!isset($_GET['pageTitle'])){
 			<div class="col-xs-12" id="mainContentCnt" style='background-color: rgba(138, 159, 168, 1); margin-top:45px'>
 			<!--<h2>Upload Process in production Scheduler<span class="fa fa-info-circle" data-toggle="modal" data-target="#info-modal"  style="color:#337ab7;font-size:24px;"></h2>-->
 			
-                <table id="elenco_processi" class="table table-striped table-bordered">
+                <table id="elenco_processi" class="table table-striped table-bordered" style="width:100%">
 						<thead class="dashboardsTableHeader">
-				        <tr>
-						<th hidden>N</th>
-						<th>ip</th>
-                        <th hidden>File</th>
-                        <th hidden>Id Processo</th>
-                        <th>Process Name</th>
-						<!--<th>Process Type</th>-->
-						<th hidden>File</th>
-                        <th>Group</th>
-                        <th>Type</th>
-                        <th>Creation Date</th>
-                        <th>Status</th>
-						<th>Load on production scheduler</th>
-                    </tr>
-					</thead>
+							<tr>
+								<th>ip</th>
+								<th>Process Name</th>
+								<th>Group</th>
+								<th>Type</th>
+								<th>Creation Date</th>
+								<th>Status</th>
+								<th>Load on production scheduler</th>
+							</tr>
+						</thead>
                 </table>
             </div>
 			</div>
@@ -198,7 +201,8 @@ if (!isset($_GET['pageTitle'])){
 		}else if(messaggio == 'error_file_upload'){
 			alert("Error during upload file to Production node");
 		}
-		///
+		
+		//////
 		var titolo_default = "<?=$default_title; ?>";
 				if (titolo_default != ""){
 					$('#headerTitleCnt').text(titolo_default);
@@ -250,6 +254,10 @@ if (!isset($_GET['pageTitle'])){
 						}
 					}
 	////
+	///
+		
+			
+	
 			var array_process = new Array();
             $.ajax({
                 url: "getdata.php",
@@ -259,85 +267,54 @@ if (!isset($_GET['pageTitle'])){
                 dataType: 'json',
                 success: function (data) {
 					console.log(data);
-                    for (var i = 0; i < data.length; i++)
-                    {
-                        array_process[i] = {	
-							id: data[i].test['id'],
-                            name: data[i].test['process_name'],
-                            group: data[i].test['process_group'],
-                            date: data[i].test['creation_date'],
-							status: data[i].test['status'],
-							type: data[i].test['type'],
-							ip: data[i].test['ip']
-                    }
-						if (array_process[i]['status'] == "COMPLETE"){
-						$("#elenco_processi").append('<tr><td>'+i+'</td><td class="ip_job_row">'+array_process[i]['ip']+'</td><td class="name_job_row">'+array_process[i]['name']+'</td><td class="id_job_row" hidden>'+array_process[i]['id']+'</td><td class="group_job_row">'+array_process[i]['group']+'</td><td>'+array_process[i]['type']+'</td><td>'+array_process[i]['date']+'</td><td>'+array_process[i]['status']+'</td><td><button type="button" id="load_menu" class="editDashBtn load_menu" data-toggle="modal" data-target="#load_test">EDIT</button></td></tr>');
+                    for (var i = 0; i < data.length; i++){
+								array_process[i] = {	
+									id: data[i].test['id'],
+									name: data[i].test['process_name'],
+									group: data[i].test['process_group'],
+									date: data[i].test['creation_date'],
+									status: data[i].test['status'],
+									type: data[i].test['type'],
+									ip: data[i].test['ip']
+								}
+								if (array_process[i]['status'] == "COMPLETE"){
+								//$("#elenco_processi").append('<tr><td>'+i+'</td><td class="ip_job_row">'+array_process[i]['ip']+'</td><td class="name_job_row">'+array_process[i]['name']+'</td><td class="id_job_row">'+array_process[i]['id']+'</td><td class="group_job_row">'+array_process[i]['group']+'</td><td>'+array_process[i]['type']+'</td><td>'+array_process[i]['date']+'</td><td>'+array_process[i]['status']+'</td><td><button type="button" id="load_menu" class="editDashBtn load_menu" data-toggle="modal" data-target="#load_test" value="'+i+'" process_id="'+array_process[i]['id']+'">EDIT</button></td></tr>');
+								$("#elenco_processi").append('<tr><td>'+array_process[i]['ip']+'</td><td>'+array_process[i]['name']+'</td><td class="group_job_row">'+array_process[i]['group']+'</td><td>'+array_process[i]['type']+'</td><td>'+array_process[i]['date']+'</td><td>'+array_process[i]['status']+'</td><td><button type="button" id="load_menu" class="editDashBtn load_menu" data-toggle="modal" data-target="#load_test" value="'+i+'" process_id="'+array_process[i]['id']+'">EDIT</button></td></tr>');
+								}
+							}
+							
+					//////////
+					var table = $("#elenco_processi").DataTable({
+						"searching": true,
+						"paging": true,
+						"ordering": true,
+						"info": false,
+						"responsive": true,
+						"lengthMenu": [5,10,15],
+						"iDisplayLength": 10,
+						"pagingType": "full_numbers",
+						"dom": '<"pull-left"l><"pull-right"f>tip',
+						"language":{"paginate": {
+										"first":      "First",
+										"last":       "Last",
+										"next":       "Next >>",
+										"previous":   "<< Prev"
+										},
+						"lengthMenu":     "Show	_MENU_ ",
 						}
-					}
-					$('#elenco_processi').dynatable(
-					{
-							features: {
-									paginate: true,
-									sort: true,
-									pushState: true,
-									search: true,
-									recordCount: true,
-									perPageSelect: true
-								},
-						  table: {
-							defaultColumnIdStyle: 'camelCase',
-							columns: null,
-							headRowSelector: 'thead tr', // or e.g. tr:first-child
-							bodyRowSelector: 'tbody tr',
-							headRowClass: null
-						  },
-						inputs: {
-							queries: null,
-							sorts: null,
-							multisort: ['ctrlKey', 'shiftKey', 'metaKey'],
-							page: null,
-							queryEvent: 'blur change',
-							recordCountTarget: null,
-							recordCountPlacement: 'after',
-							paginationLinkTarget: null,
-							paginationLinkPlacement: 'after',
-							paginationPrev: 'Previous',
-							paginationNext: 'Next',
-							paginationGap: [1,2,2,1],
-							searchTarget: null,
-							searchPlacement: 'before',
-							perPageTarget: null,
-							perPagePlacement: 'before',
-							perPageText: 'Show: ',
-							recordCountText: 'Showing ',
-							processingText: 'Processing...'
-						  },
-						dataset: {
-							ajax: false,
-							ajaxUrl: null,
-							ajaxCache: null,
-							ajaxOnLoad: false,
-							ajaxMethod: 'GET',
-							ajaxDataType: 'json',
-							totalRecordCount: null,
-							queries: null,
-							queryRecordCount: null,
-							page: null,
-							perPageDefault: 10,
-							perPageOptions: [10,20,50,100],
-							sorts: null,
-							sortsKeys: null,
-							sortTypes: {},
-							records: null
-						  }
-					});
-		    	}
-             });                 
+					});	
+					/////////
+				}
+			});
+					
+					
+                         
 	////
 	$(document).on('click','#load_menu',function(){
 		//var ind = ($(this).parent().parent().index())-1;
 		//var ind = ($(this).parent().parent().index());
-		var ind = $(this).parent().parent().first().children().html();
+		//var ind = $(this).parent().parent().first().children().html();
+		var ind = $(this).val();
 		$("#current_scheduler").val(array_process[ind]['ip']);
 		$("#process_name").val(array_process[ind]['name']);
 		$("#modal_title").text("Load process "+array_process[ind]['name']+"	in a Production Scheduler");
@@ -374,6 +351,9 @@ if (!isset($_GET['pageTitle'])){
 		$(document).on('click','#close_menu',function(){
 			$("#prod_sched").empty();
 		});
+	//
+		
+	
 	//
 	});
 </script>

@@ -83,7 +83,14 @@ if (!isset($_GET['pageTitle'])){
         <!-- Custom CSS -->
         <link href="css/dashboard.css" rel="stylesheet">
         <link href="css/dashboardList.css" rel="stylesheet">
-        
+		
+		<!-- Datatable -->
+	    <script type="text/javascript" charset="utf8" src="lib/datatables.js"></script>
+		<script type="text/javascript" src="lib/dataTables.responsive.min.js"></script>
+		<script type="text/javascript" src="lib/dataTables.bootstrap4.min.js"></script>
+		<script type="text/javascript" src="lib/jquery.dataTables.min.js"></script>
+		<link href="lib/responsive.dataTables.css" rel="stylesheet" />
+        <!-- -->
     </head>
 	<body class="guiPageBody">
 	<?php include('functionalities.php'); ?>
@@ -108,10 +115,10 @@ if (!isset($_GET['pageTitle'])){
 </button>
 <br />
 </div>
-			<table id="elenco_sched" class="table table-striped table-bordered">
+			<table id="elenco_sched" class="table table-striped table-bordered" style="width: 100%">
 					<thead class="dashboardsTableHeader">
                     <tr>
-                        <th data-dynatable-column="title_header" hidden>Id Scheduler node</th>
+                        <!--<th data-dynatable-column="title_header" hidden>Id Scheduler node</th>-->
 						<th data-dynatable-column="name">Name</th>
                         <th data-dynatable-column="address">Ip Address</th>  
 						<th data-dynatable-column="path">Repository path</th>
@@ -299,8 +306,29 @@ if (!isset($_GET['pageTitle'])){
                             type: data[i].schedulers['type'],
                             description: data[i].schedulers['description']
 						};
-					$("#elenco_sched").append('<tr><td hidden>'+array_schedulers[i]['id']+'</td><td>'+array_schedulers[i]['name']+'</td><td>'+array_schedulers[i]['address']+'</td><td>'+array_schedulers[i]['repository']+'</td><td>'+array_schedulers[i]['type']+'</td><td>'+array_schedulers[i]['description']+'</td></tr>');
+					$("#elenco_sched").append('<tr><td>'+array_schedulers[i]['name']+'</td><td>'+array_schedulers[i]['address']+'</td><td>'+array_schedulers[i]['repository']+'</td><td>'+array_schedulers[i]['type']+'</td><td>'+array_schedulers[i]['description']+'</td></tr>');
 					}
+					
+					var table =  $('#elenco_sched').DataTable({
+								"searching": true,
+								"paging": true,
+								"ordering": true,
+								"info": false,
+								"responsive": true,
+								"lengthMenu": [5,10,20],
+								"iDisplayLength": 10,
+								"pagingType": "full_numbers",
+								"dom": '<"pull-left"l><"pull-right"f>tip',
+								"language":{"paginate": {
+											"first":      "First",
+											"last":       "Last",
+											"next":       "Next >>",
+											"previous":   "<< Prev"
+										},
+										"lengthMenu":     "Show	_MENU_ ",
+								}
+							});
+					/*
 					$('#elenco_sched').dynatable(
 									{
 							features: {
@@ -358,7 +386,7 @@ if (!isset($_GET['pageTitle'])){
 							records: null
 						  }
 							}
-					);
+					);*/
 				}
 			});
 	

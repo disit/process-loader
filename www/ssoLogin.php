@@ -14,38 +14,34 @@
 
    You should have received a copy of the GNU Affero General Public License
    along with this program.  If not, see <http://www.gnu.org/licenses/>. */
-   
+  
+  include 'config.php';
   require 'sso/autoload.php';
   use Jumbojett\OpenIDConnectClient; 
    
-  include 'config.php';
   
   $ldapPort = 389;
   $ldapRole = null;
   $ldapOk = false;
-  $appUrl = "https://processloader.snap4city.org/processloader";
-   
+
   $page = "page.php";
   if(isset($_REQUEST['redirect'])) {
     $page = $_REQUEST['redirect'];
   }
   
-  $oidc = new OpenIDConnectClient(
-        'https://www.snap4city.org',
-        'php-processloader',
-        'f2517d44-e408-431d-897a-2db1a74d4f90'
-    );
+	$oidc = new OpenIDConnectClient($ssoEndpoint, $ssoClientId, $ssoClientSecret);
 
     $oidc->setVerifyHost(false);
     $oidc->setVerifyPeer(false);
 
-    $oidc->providerConfigParam(array('authorization_endpoint'=>'https://www.snap4city.org/auth/realms/master/protocol/openid-connect/auth'));
-    $oidc->providerConfigParam(array('token_endpoint'=>'https://www.snap4city.org/auth/realms/master/protocol/openid-connect/token'));
-    $oidc->providerConfigParam(array('userinfo_endpoint'=>'https://www.snap4city.org/auth/realms/master/protocol/openid-connect/userinfo'));
-    $oidc->providerConfigParam(array('jwks_uri'=>'https://www.snap4city.org/auth/realms/master/protocol/openid-connect/certs'));
-    $oidc->providerConfigParam(array('issuer'=>'https://www.snap4city.org/auth/realms/master'));
-    $oidc->providerConfigParam(array('end_session_endpoint'=>'https://www.snap4city.org/auth/realms/master/protocol/openid-connect/logout'));
-
+//https://www.disit.org/auth/
+	$oidc->providerConfigParam(array('authorization_endpoint'=>$oicd_address.'/auth/realms/master/protocol/openid-connect/auth'));
+    $oidc->providerConfigParam(array('token_endpoint'=>$oicd_address.'/auth/realms/master/protocol/openid-connect/token'));
+    $oidc->providerConfigParam(array('userinfo_endpoint'=>$oicd_address.'/auth/realms/master/protocol/openid-connect/userinfo'));
+    $oidc->providerConfigParam(array('jwks_uri'=>$oicd_address.'/auth/realms/master/protocol/openid-connect/certs'));
+    $oidc->providerConfigParam(array('issuer'=>$oicd_address.'/auth/realms/master'));
+    $oidc->providerConfigParam(array('end_session_endpoint'=>$oicd_address.'/auth/realms/master/protocol/openid-connect/logout'));
+//
     $oidc->addScope(array('openid','username','profile'));
     $oidc->setRedirectURL($appUrl . '/ssoLogin.php?redirect='.$page);
     try {
@@ -53,41 +49,44 @@
     } catch(Exception $ex) {
       header("Location: ssoLogin.php?exception");
     }
-
-    //Appena Piero te lo dice, cambia il campo reperito in "username"
-    $username = $oidc->requestUserInfo('username');
-    $ldapUsername = "cn=". $username . ",dc=ldap,dc=disit,dc=org";
+    //
+	//echo($oidc->requestUserInfo);
+	//
+    $username = $oidc->requestUserInfo("preferred_username");
+	$ldapUsername = "cn=". $username . ",".$ldapParamters;
+	//echo($ldapUsername);
 
     $ds = ldap_connect($ldapServer, $ldapPort);
     ldap_set_option($ds, LDAP_OPT_PROTOCOL_VERSION, 3);
     $bind = ldap_bind($ds);
-
     if($ds && $bind)
     {
-        if(checkLdapMembership($ds, $ldapUsername, "ProcessLoader"))
+        if(checkLdapMembership($ds, $ldapUsername, "ProcessLoader",$ldapParamters))
         {
-           if(checkLdapRole($ds, $ldapUsername, "RootAdmin"))
+			//
+           if(checkLdapRole($ds, $ldapUsername, "RootAdmin",$ldapParamters))
            {
               $ldapRole = "RootAdmin";
               $ldapOk = true;
            }
-           else if(checkLdapRole($ds, $ldapUsername, "ToolAdmin"))
+           else if(checkLdapRole($ds, $ldapUsername, "ToolAdmin",$ldapParamters))
            {
               $ldapRole = "ToolAdmin";
               $ldapOk = true;
-           } else if(checkLdapRole($ds, $ldapUsername, "AreaManager")) {
+           } else if(checkLdapRole($ds, $ldapUsername, "AreaManager",$ldapParamters)) {
               $ldapRole = "AreaManager";
               $ldapOk = true;
-           } else if(checkLdapRole($ds, $ldapUsername, "Manager")) {
+           } else if(checkLdapRole($ds, $ldapUsername, "Manager",$ldapParamters)) {
               $ldapRole = "Manager";
               $ldapOk = true;
            } else {
-              $msg="user $username does not have a valid role";
+              $msg="user ".$username." does not have a valid role";
            }
         } else {
-          $msg="user $username cannot access to ProcessLoader";
+          $msg="user ".$username." cannot access to ProcessLoader! 	".$ldapUsername;
         }
     } else {
+	  $ldapOk = false;
       $msg="cannot bind to LDAP server";
     }
 
@@ -98,17 +97,18 @@
         $_SESSION['refreshToken']=$oidc->getRefreshToken();
         $_SESSION['accessToken']=$oidc->getAccessToken();
         
-        header("location: $page");
+        header("location: $page");	
     }
     else
     {
         echo $msg;
+
     }
 
       //Definizioni di funzione
-function checkLdapMembership($connection, $userDn, $tool) 
+function checkLdapMembership($connection, $userDn, $tool,$node) 
 {
-	 $result = ldap_search($connection, 'dc=ldap,dc=disit,dc=org', '(&(objectClass=posixGroup)(memberUid=' . $userDn . '))');
+	 $result = ldap_search($connection, $node, '(&(objectClass=posixGroup)(memberUid=' . $userDn . '))');
 	 $entries = ldap_get_entries($connection, $result);
 	 foreach ($entries as $key => $value) 
 	 {
@@ -123,9 +123,9 @@ function checkLdapMembership($connection, $userDn, $tool)
 	 return false;
  }
 
-function checkLdapRole($connection, $userDn, $role) 
+function checkLdapRole($connection, $userDn, $role, $node) 
 {
-  $result = ldap_search($connection, 'dc=ldap,dc=disit,dc=org', '(&(objectClass=organizationalRole)(cn=' . $role . ')(roleOccupant=' . $userDn . '))');
+  $result = ldap_search($connection, $node, '(&(objectClass=organizationalRole)(cn=' . $role . ')(roleOccupant=' . $userDn . '))');
   $entries = ldap_get_entries($connection, $result);
   foreach ($entries as $key => $value) 
   {

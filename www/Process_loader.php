@@ -71,9 +71,10 @@ if (!isset($_GET['pageTitle'])){
         <link href="bootstrapToggleButton/css/bootstrap-toggle.min.css" rel="stylesheet">
         <script src="bootstrapToggleButton/js/bootstrap-toggle.min.js"></script>
        
-       <!-- Dynatable -->
+       <!-- Dynatable
        <link rel="stylesheet" href="dynatable/jquery.dynatable.css">
        <script src="dynatable/jquery.dynatable.js"></script>
+	   -->
         
        <!-- Font awesome icons -->
         <link rel="stylesheet" href="fontAwesome/css/font-awesome.min.css">
@@ -81,6 +82,12 @@ if (!isset($_GET['pageTitle'])){
         <!-- Custom CSS -->
         <link href="css/dashboard.css" rel="stylesheet">
         <link href="css/dashboardList.css" rel="stylesheet">
+		
+		<script type="text/javascript" charset="utf8" src="lib/datatables.js"></script>
+		<script type="text/javascript" src="lib/dataTables.responsive.min.js"></script>
+		<script type="text/javascript" src="lib/dataTables.bootstrap4.min.js"></script>
+		<script type="text/javascript" src="lib/jquery.dataTables.min.js"></script>
+		<link href="lib/responsive.dataTables.css" rel="stylesheet" />
 		
     </head>
 	<body class="guiPageBody">
@@ -103,12 +110,15 @@ if (!isset($_GET['pageTitle'])){
 			<div class="col-xs-12" id="mainContentCnt" style='background-color: rgba(138, 159, 168, 1); margin-top:45px'>
 			<!--<h2>Process In Execution<span class="fa fa-info-circle" data-toggle="modal" data-target="#info-modal"  style="color:#337ab7;font-size:24px;"></h2> -->
 			
-						<table id="elenco_processi" class="table table-striped table-bordered" >
+						<table id="elenco_processi" class="table table-striped table-bordered" style="width: 100%">
 					<thead class="dashboardsTableHeader">
 					<tr>
-						<th hidden>N</th>
 						<th>Ip scheduler</th>
-						<th class="user_creator" hidden>Creator</th>
+							<?php
+							if(($role_att=='RootAdmin')||($role_att=='ToolAdmin')){
+									echo('<th>Creator</th>');
+								}
+							?>
                         <th hidden>File</th>
                         <th hidden>Id Processo</th>
                         <th>Process Name</th>
@@ -135,7 +145,7 @@ if (!isset($_GET['pageTitle'])){
           <h4 class="modal-title">Show Process Execution Details</h4>
         </div>
         <div class="modal-body" style="background-color: white">
-			<table id="mostra_dettagli" class="table table-striped table-bordered">
+			<table id="mostra_dettagli" class="table table-striped table-bordered" >
 						<tr>
 						<th>Trigger Name</th>
 						<th hidden>Trigger Group</th>
@@ -476,7 +486,13 @@ if (!isset($_GET['pageTitle'])){
 							name_sched: data[i].process['name_sched']
 						};
 
-						$("#elenco_processi").append('<tr><td>'+i+'</td><td class="ip_job_row" ><a href="http://'+array_process[i]['ip']+'/sce/" class="file_archive_link" target="_blank">'+array_process[i]['name_sched']+'</a>	('+array_process[i]['type_sched']+')</td><td class="user_creator_td" hidden>'+array_process[i]['username']+'</td><td hidden>'+array_process[i]['file']+'</td><td class="id_job_row" hidden>'+array_process[i]['id']+'</td><td class="name_job_row">'+array_process[i]['name']+'</td><td>'+array_process[i]['jb']+'</td><td>'+array_process[i]['file']+'</td><td class="group_job_row">'+array_process[i]['group']+'</td><td>'+array_process[i]['type']+'</td><td>'+array_process[i]['date']+'</td><td class="status_ref">'+array_process[i]['status']+'</td><td><span class="fa fa-th-list view_det" data-toggle="modal" data-target="#myModaldetails" style="display: inline-block; margin: 2px;"></span><span class="fa fa-play start_pause" data-toggle="modal" data-target="#myModalRunning" style="display: inline-block; margin: 2px;"></span><span class="fa fa-pause start_pause" data-toggle="modal" data-target="#myModalRunning" style="display: inline-block; margin: 2px;"></span><span class="fa fa-remove rem_proc" data-toggle="modal" style="display: inline-block; margin: 2px;" data-target="#myModalRunning"></span></td></tr>');	
+						var td_user='';
+						if(role=='ToolAdmin'|| role=='RootAdmin'){
+							td_user='<td>'+array_process[i]['username']+'</td>';
+						}else{
+							td_user='';
+						}
+						$("#elenco_processi").append('<tr><td class="ip_job_row" ><a href="http://'+array_process[i]['ip']+'/sce/" class="file_archive_link" target="_blank">'+array_process[i]['name_sched']+'</a>	('+array_process[i]['type_sched']+')</td>'+td_user+'<td hidden>'+array_process[i]['file']+'</td><td class="id_job_row" hidden>'+array_process[i]['id']+'</td><td class="name_job_row">'+array_process[i]['name']+'</td><td>'+array_process[i]['jb']+'</td><td>'+array_process[i]['file']+'</td><td class="group_job_row">'+array_process[i]['group']+'</td><td>'+array_process[i]['type']+'</td><td>'+array_process[i]['date']+'</td><td class="status_ref">'+array_process[i]['status']+'</td><td><span class="fa fa-th-list view_det" data-toggle="modal" data-target="#myModaldetails" style="display: inline-block; margin: 2px;" value="'+i+'"></span><span class="fa fa-play start_pause" data-toggle="modal" data-target="#myModalRunning" style="display: inline-block; margin: 2px;" value="'+i+'"></span><span class="fa fa-pause start_pause" data-toggle="modal" data-target="#myModalRunning" style="display: inline-block; margin: 2px;" value="'+i+'"></span><span class="fa fa-remove rem_proc" data-toggle="modal" style="display: inline-block; margin: 2px;" data-target="#myModalRunning" value="'+i+'"></span></td></tr>');	
 
 					}
 				//PANNELLO VUOTO
@@ -485,6 +501,28 @@ if (!isset($_GET['pageTitle'])){
 
 					}
 					//
+					var table = $('#elenco_processi').DataTable({
+						"searching": true,
+						"paging": true,
+						"ordering": true,
+						"info": false,
+						"responsive": true,
+						"lengthMenu": [5,10,15],
+						"iDisplayLength": 10,
+						"pagingType": "full_numbers",
+						"dom": '<"pull-left"l><"pull-right"f>tip',
+						"language":{"paginate": {
+										"first":      "First",
+										"last":       "Last",
+										"next":       "Next >>",
+										"previous":   "<< Prev"
+										},
+						"lengthMenu":     "Show	_MENU_ ",
+						}
+					});	
+					
+					/////////
+					/*
 					$('#elenco_processi').dynatable(
 							{
 							features: {
@@ -542,7 +580,7 @@ if (!isset($_GET['pageTitle'])){
 							records: null
 						  }
 					}
-					);
+					);*/
                 }
                     
                 });
@@ -553,7 +591,8 @@ if (!isset($_GET['pageTitle'])){
 	$(document).on('click','.fa-remove',function(){
 		//var ind = ($(this).parent().parent().index())-1;
 		//var ind = ($(this).parent().parent().index());
-		var ind = $(this).parent().parent().first().children().html();
+		//var ind = $(this).parent().parent().first().children().html();
+		var ind = $(this).attr('value');
 		console.log(ind);
 		$(".operation_run").val("deleteJob");
 		archive_type = "remove";
@@ -568,7 +607,8 @@ if (!isset($_GET['pageTitle'])){
 	
 	$(document).on('click','.fa-play',function(){
 		//var ind = ($(this).parent().parent().index())-1;
-		var ind = ($(this).parent().parent().index());
+		//var ind = ($(this).parent().parent().index());
+		var ind = $(this).attr('value');
 		console.log(ind);
 		//$("#operation_run").val("triggerJob");
 		$(".operation_run").val("resumeJob");
@@ -583,7 +623,8 @@ if (!isset($_GET['pageTitle'])){
 	
 	$(document).on('click','.fa-pause',function(){
 		//var ind = ($(this).parent().parent().index())-1;
-		var ind = ($(this).parent().parent().index());
+		//var ind = ($(this).parent().parent().index());
+		var ind = $(this).attr('value');
 		console.log(ind);
 		$(".operation_run").val("pauseJob");
 		archive_type = "stop";
@@ -598,7 +639,8 @@ if (!isset($_GET['pageTitle'])){
 	
 	$(document).on('click','.fa-th-list',function(){
 		//var ind = ($(this).parent().parent().index())-1;
-		var ind = ($(this).parent().parent().index());
+		//var ind = ($(this).parent().parent().index());
+		var ind = $(this).attr('value');
 		console.log(ind);
 		$("#ip_det").val(array_process[ind].ip);
 		$("#id_det").val(array_process[ind].id);

@@ -161,6 +161,13 @@ if (isset($_GET['error'])){
         <!-- Custom CSS -->
         <link href="css/dashboard.css" rel="stylesheet">
        <link href="css/dashboardList.css" rel="stylesheet">
+	   <!-- -->
+	   <script type="text/javascript" charset="utf8" src="lib/datatables.js"></script>
+		<script type="text/javascript" src="lib/dataTables.responsive.min.js"></script>
+		<script type="text/javascript" src="lib/dataTables.bootstrap4.min.js"></script>
+		<script type="text/javascript" src="lib/jquery.dataTables.min.js"></script>
+		<link href="lib/responsive.dataTables.css" rel="stylesheet" />
+	   <!-- -->
     </head>
 	<body class="guiPageBody">
 	<style>
@@ -186,14 +193,14 @@ if (isset($_GET['error'])){
                             Snap4City
                         </div>
                     </div>
-                    <?php
-				if ($hide_menu != "hide"){
-                    echo ('<div class="row" id="title_row">
-                        <div class="col-xs-10 col-md-12 centerWithFlex" id="headerTitleCnt">'.$_GET['pageTitle'].'</div>
-                        <!--<div class="col-xs-2 hidden-md hidden-lg centerWithFlex" id="headerMenuCnt"></div>-->
-                    </div>');
-				}
-					?>
+                  
+				
+                    <div class="row" id="title_row">
+                        <div class="col-xs-10 col-md-12 centerWithFlex" id="headerTitleCnt"><?php echo urldecode($_GET['pageTitle']); ?></div>
+                        <div class="col-xs-2 hidden-md hidden-lg centerWithFlex" id="headerMenuCnt"><?php include "mobMainMenu.php" ?></div>
+                    </div>
+				
+					
                     <div class="row" id="contenitore_table">
 					<div class="col col-lg-2 panel-group" style="margin-top:35px; width:100%">
 					<div class="btn-group" role="group" aria-label="Basic example">
@@ -282,7 +289,7 @@ if (isset($_GET['error'])){
 				<option value="15">15</option>
 				</select>
 				</div>
-                <table id="DataTypes" class="table table-striped table-bordered">
+                <table id="DataTypes" class="table table-striped table-bordered" style="width: 100%">
 					<thead class="dashboardsTableHeader">
 					<?php 
 					if ($by == 'DESC'){
@@ -297,10 +304,9 @@ if (isset($_GET['error'])){
 					
 					echo('
 					<tr>
-                        <th class="Id" style="display:none;"><div><a href="'.$pagina_attuale.'&orderBy=Id&order='.$by_par.'">Id '.$icon_by .'</a></div><div class="input-group mb-3"><input  class="form-control"type="text" style="color: black;" size="18" id="filterId" placeholder="Search..." /><span class="input-group-btn"><button id="filterId" type="button btn btn-default" class="filter">Search</button></span></div></th>
-                        <th class="Tool"><div><a href="'.$pagina_attuale.'&orderBy=label&order='.$by_par.'">Label '.$icon_by .'</a></div><div class="input-group mb-3"><input type="text" class="form-control" style="color: black;" size="18" id="filterTool" placeholder="Search..." /><span class="input-group-btn"><button id="filterTool" type="button" class="filter btn btn-default">Search</button></span></div></th>
-						<th class="url"><div><a href="'.$pagina_attuale.'&orderBy=url&order='.$by_par.'">Url '.$icon_by .'</a></div><div class="input-group mb-3"><input type="text" class="form-control" style="color: black;" size="36" id="filterUrl" placeholder="Search..." /><span class="input-group-btn"><button id="filterUrl" type="button" class="filter btn btn-default">Search</button></span></div></th>
-                        <th class="click"><div><a href="'.$pagina_attuale.'&orderBy=accesses&order='.$by_par.'">Number of accesses '.$icon_by .'</a></div></th>
+                        <th class="Tool"><div><a href="help_manager.php?showFrame='.$_REQUEST['showFrame'].'&orderBy=label&order='.$by_par.'&limit='.$limit.'&page='.$page.'">Label '.$icon_by .'</a></div><div class="input-group mb-3"><input type="text" class="form-control" style="color: black;" size="18" id="filterTool" placeholder="Search..." /><span class="input-group-btn"><button id="filterTool" type="button" class="filter btn btn-default">Search</button></span></div></th>
+						<th class="url"><div><a href="help_manager.php?showFrame='.$_REQUEST['showFrame'].'&orderBy=url&order='.$by_par.'&limit='.$limit.'&page='.$page.'">Url '.$icon_by .'</a></div><div class="input-group mb-3"><input type="text" class="form-control" style="color: black;" size="36" id="filterUrl" placeholder="Search..." /><span class="input-group-btn"><button id="filterUrl" type="button" class="filter btn btn-default">Search</button></span></div></th>
+                        <th class="click"><div><a href="help_manager.php?showFrame='.$_REQUEST['showFrame'].'&orderBy=accesses&order='.$by_par.'&limit='.$limit.'&page='.$page.'">Number of accesses '.$icon_by .'</a></div></th>
 						<th class="type"><div>Type</div></th>
 						<th class="edit"><div>Edit</div></th>
 						<th class="edit"><div>Delete</div></th>
@@ -313,26 +319,26 @@ if (isset($_GET['error'])){
 					
 					
 					
-					for ($i = 0; $i <= $num_rows; $i++) {	
-						if ($process_list[$i]['Id'] == ""){
-									$edit_button="";
-									$delete_button="";
-								}else{
-									$edit_button="<button type='button' class='editDashBtn modify_jt' data-target='#data-modal3' data-toggle='modal'>EDIT</button>";
-									$delete_button="<button type='button' class='delDashBtn delete_jt' data-target='#delete_link' data-toggle='modal'>DEL</button>";
-								}
-					
-							echo ("<tr>
-										<td style='display:none;'>".$process_list[$i]['Id']."</td>
-									    <td>".$process_list[$i]['label']."</td>
-										<td><a href='".$process_list[$i]['url']."' target='_blank'>".$process_list[$i]['url']."</a></td>
-										<td>".$process_list[$i]['accesses']."</td>
-										<td>".$process_list[$i]['type']."</td>
-										<td>".$edit_button."</td>
-										<td>".$delete_button."</td>
-								</tr>");
-							}
-					
+					for ($i = 0; $i <= $num_rows; $i++) {
+						if($process_list[$i]['Id']){
+							if ($process_list[$i]['Id'] == ""){
+										$edit_button="";
+										$delete_button="";
+									}else{
+										$edit_button="<button type='button' class='editDashBtn modify_jt' data-target='#data-modal3' data-toggle='modal' value='".$process_list[$i]['Id']."' url='".$process_list[$i]['url']."' label='".$process_list[$i]['label']."' type_help='".$process_list[$i]['type']."'>EDIT</button>";
+										$delete_button="<button type='button' class='delDashBtn delete_jt' data-target='#delete_link' data-toggle='modal' value='".$process_list[$i]['Id']."'>DEL</button>";
+									}
+						
+								echo ("<tr>
+											<td>".$process_list[$i]['label']."</td>
+											<td><a href='".$process_list[$i]['url']."' target='_blank'>".$process_list[$i]['url']."</a></td>
+											<td>".$process_list[$i]['accesses']."</td>
+											<td>".$process_list[$i]['type']."</td>
+											<td>".$edit_button."</td>
+											<td>".$delete_button."</td>
+									</tr>");
+						}
+					}
 					?>
 					</tbody>
                 </table>
@@ -396,6 +402,13 @@ if (isset($_GET['error'])){
 
 $(document).ready(function () {
 		//$('#storico').dynatable();
+		var table = $('#DataTypes').DataTable({
+								"searching": false,
+								"paging": false,
+								"ordering": false,
+								"info": false,
+								"responsive": true
+							});
 		//var actual_role = "<?=$role_att;?>";
 		var role="<?=$role_att; ?>";
 					if (role == ""){
@@ -459,18 +472,27 @@ var pagina_corrente="<?=$corr_page; ?>";
 		
 	
 		$(document).on('click','.delete_jt',function(){
-			var ind = $(this).parent().parent().first().children().html();
+			//var ind = $(this).parent().parent().first().children().html();
+			var ind = $(this).val();
 			$('#label_id2').val(ind);
 		});
 	
 	
 		$(document).on('click','.modify_jt',function(){
-			var ind = $(this).parent().parent().first().children().html();
-			var link = $(this).parent().parent().children().eq(2).children().html();
-			var label = $(this).parent().parent().children().eq(1).html();
+			//var ind = $(this).parent().parent().first().children().html();
+			var ind = $(this).val();
+			//
+			console.log(ind);
+			//
+			//var link = $(this).parent().parent().children().eq(2).children().html();
+			//var label = $(this).parent().parent().children().eq(1).html();
+			var label = $(this).attr('label');
+			var link = $(this).attr('url');
+			var type = $(this).attr('type_help');
+			console.log('type:	'+type);
 			//console.log(label);
 			//var type = $(this).parent().parent().children().eq(3).children().html();
-			var type = $(this).parent().parent().children().eq(4).html();
+			//var type = $(this).parent().parent().children().eq(4).html();
 			$('#label_id').val(ind);
 			$('#label_name').val(label);
 			$('#id_link').val(link);

@@ -73,8 +73,15 @@ if (!isset($_GET['pageTitle'])){
         <script src="bootstrapToggleButton/js/bootstrap-toggle.min.js"></script>
        
        <!-- Dynatable -->
+	   <!--
        <link rel="stylesheet" href="dynatable/jquery.dynatable.css">
        <script src="dynatable/jquery.dynatable.js"></script>
+	   -->
+	   <script type="text/javascript" charset="utf8" src="lib/datatables.js"></script>
+		<script type="text/javascript" src="lib/dataTables.responsive.min.js"></script>
+		<script type="text/javascript" src="lib/dataTables.bootstrap4.min.js"></script>
+		<script type="text/javascript" src="lib/jquery.dataTables.min.js"></script>
+		<link href="lib/responsive.dataTables.css" rel="stylesheet" />
         
        <!-- Font awesome icons -->
         <link rel="stylesheet" href="fontAwesome/css/font-awesome.min.css">
@@ -106,11 +113,9 @@ if (!isset($_GET['pageTitle'])){
 			<div class="row" >
 			<div class="col-xs-12" id="mainContentCnt" style='background-color: rgba(138, 159, 168, 1); margin-top:45px'>
 			<!--<h2>Job Type<span class="fa fa-info-circle" data-toggle="modal" data-target="#info-modal"  style="color:#337ab7;font-size:24px;"></h2>-->
-                <table id="elenco_job" class="table table-striped table-bordered" ">
-						<thead class="dashboardsTableHeader">
-				        <tr>
-						<th hidden>N</th>
-                        <th hidden>File</th>
+                <table id="elenco_job" class="table table-striped table-bordered" style="width: 100%">
+					<thead class="dashboardsTableHeader">
+				    <tr>
                         <th>Process Type Name</th>
                         <th>Group</th>
                         <th>Type</th>
@@ -510,9 +515,29 @@ $(document).ready(function () {
 							job_cons: data[i].jobtype['job_cons'],
 							file_position: data[i].jobtype['file_position']
 							};
-					$("#elenco_job").append('<tr><td>'+i+'</td><td hidden>'+array_jobType[i]['file']+'</td><td>'+array_jobType[i]['name']+'</td><td>'+array_jobType[i]['group']+'</td><td>'+array_jobType[i]['type_j']+'</td><td>'+array_jobType[i]['date']+'</td><td><button type="button" class="editDashBtn crea_j" data-target="#data-modal" data-toggle="modal">NEW</button></td><td><button class="viewDashBtn mostra_j" data-target="#show_jobs" data-toggle="modal" type="button">VIEW</button></td></tr>');
+					$("#elenco_job").append('<tr><td>'+array_jobType[i]['name']+'</td><td>'+array_jobType[i]['group']+'</td><td>'+array_jobType[i]['type_j']+'</td><td>'+array_jobType[i]['date']+'</td><td><button type="button" class="editDashBtn crea_j" data-target="#data-modal" data-toggle="modal" value="'+i+'" file="'+array_jobType[i]['file']+'">NEW</button></td><td><button class="viewDashBtn mostra_j" data-target="#show_jobs" data-toggle="modal" type="button" value="'+i+'" file="'+array_jobType[i]['file']+'">VIEW</button></td></tr>');
 					}
-					$('#elenco_job').dynatable(
+					
+					var table = $('#elenco_job').DataTable({
+						"searching": true,
+						"paging": true,
+						"ordering": true,
+						"info": false,
+						"responsive": true,
+						"lengthMenu": [5,10,15],
+						"iDisplayLength": 10,
+						"pagingType": "full_numbers",
+						"dom": '<"pull-left"l><"pull-right"f>tip',
+						"language":{"paginate": {
+										"first":      "First",
+										"last":       "Last",
+										"next":       "Next >>",
+										"previous":   "<< Prev"
+										},
+						"lengthMenu":     "Show	_MENU_ ",
+						}
+					});
+					/*$('#elenco_job').dynatable(
 					{
 							features: {
 									paginate: true,
@@ -570,7 +595,7 @@ $(document).ready(function () {
 						  }
 					}
 					
-					);
+					);*/
                 }
                 });
 				
@@ -580,7 +605,8 @@ $(document).ready(function () {
 			//Dati di default del JOB_TYPE
 			//var ind = ($(this).parent().parent().index())-1;
 			//var ind = ($(this).parent().parent().index());
-			var ind = $(this).parent().parent().first().children().html();
+			//var ind = $(this).parent().parent().first().children().html();
+			var ind = $(this).val();
 			//$("#titolo_proc").text("Parametri processo:  " + array_jobType[ind]['file']);
 			$("#titolo_proc").text("process parameters from:  " + array_jobType[ind]['name']);
 			$("#id").val(array_jobType[ind]['id']);
@@ -670,7 +696,8 @@ $(document).ready(function () {
 			var array_process = [];
 			//var ind = ($(this).parent().parent().index())-1;
 			//var ind = ($(this).parent().parent().index());
-			var ind = $(this).parent().parent().first().children().html();
+			//var ind = $(this).parent().parent().first().children().html();
+			var ind = $(this).val();
 			$("#mostra_elenco").text("Show Jobs:  " + array_jobType[ind]['name']);
 			$.ajax({
                 url: "getdata.php",

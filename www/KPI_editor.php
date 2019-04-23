@@ -150,74 +150,31 @@ if (isset($_GET['error'])){
        <link href="css/dashboardList.css" rel="stylesheet">
 	   <!-- -->
 	<script type="text/javascript" src="js/bootstrap-datetimepicker-master/js/bootstrap-datetimepicker.min.js"></script>
-	<script type="text/javascript" src="js/restables-master/restables.js"></script>
+	<!--<script type="text/javascript" src="js/restables-master/restables.js"></script>-->
 	<!-- 
 	<script type="text/javascript" src="js/Easy-Table-List-Pagination-Plugin-With-jQuery-Paginathing/paginathing.min.js"></script>
 	 -->
     <link href="js/bootstrap-datetimepicker-master/css/bootstrap-datetimepicker.min.css" rel="stylesheet">
 	<!-- -->
+	<script type="text/javascript" charset="utf8" src="lib/datatables.js"></script>
+		<script type="text/javascript" src="lib/dataTables.responsive.min.js"></script>
+		<script type="text/javascript" src="lib/dataTables.bootstrap4.min.js"></script>
+		<script type="text/javascript" src="lib/jquery.dataTables.min.js"></script>
+		<link href="lib/responsive.dataTables.css" rel="stylesheet" />
 	<!-- -->
     </head>
 	<body class="guiPageBody">
 	<style>
-	@media screen and (max-width: 1980px) {
-			.responsive {
-				//display: none;
-				 font-size: 0.8 em;
-			}
-		}
-		
-	@media screen and (max-width: 1400px) {
-			.responsive {
-				display: none;
-				font-size: 0.8 em;
-			}
-		}
-		
-	@media screen and (max-width: 1600px) {
-			.responsive {
-				//display: none;
-				font-size: 0.5 em;
-			}
-		}
-	
-
 	a {color: #337ab7;}
 	td i {text-align:center;}
-	table {table-layout:auto; max-width: 100% min-height: .01%; overflow-x: auto;}
-	td {max-width: 100px; border:1px solid #000000; word-wrap:break-word;}
-	th {max-width: 100px; word-wrap:break-word;}
 	
-	@media screen and (max-width: 767px){
-    #DataTypes {
-        width: 100%;
-        margin-bottom: 15px;
-        overflow-y: hidden;
-        -ms-overflow-style: -ms-autohiding-scrollbar;
-        border: 1px solid #ddd;
+.hidden {
+            display: none;
+        }
 		
+		.paginate_button{
+			padding: 2px;
 		}
-	}
-
-	table.restables-clone {
-    display: none;
-}
-
-@media (max-width: 750px) {
-    table.restables-origin {
-        display: none;
-    }
-	
-	.responsive {
-				display: visible;
-			}
-    
-    table.restables-clone {
-        display: table;
-    }
-}
-
-	
 </style>
 	<?php include('functionalities.php'); ?>
         <div class="container-fluid">
@@ -236,15 +193,11 @@ if (isset($_GET['error'])){
                             Snap4City
                         </div>
                     </div>
-                    <?php
-				if ($hide_menu != "hide"){
-                    echo ('<div class="row" id="title_row">
-                        <div class="col-xs-10 col-md-12 centerWithFlex" id="headerTitleCnt">'.$_GET['pageTitle'].'</div>
+                    <div class="row" id="title_row">
+                        <div class="col-xs-10 col-md-12 centerWithFlex" id="headerTitleCnt"><?php echo urldecode($_GET['pageTitle']); ?></div>
                         <!--<div class="col-xs-2 hidden-md hidden-lg centerWithFlex" id="headerMenuCnt"></div>-->
 						<div class="col-xs-2 hidden-md hidden-lg centerWithFlex" id="headerMenuCnt"><?php include "mobMainMenu.php" ?></div>
-                    </div>');
-				}
-					?>
+                    </div>
                     <div class="row" id="contenitore_table">
 					<div class="col col-lg-2 panel-group" style="margin-top:35px; width:100%">
 					<button id="edit" class="btn btn-warning" data-toggle="modal"  type="reset" value="" data-target="#myModal">Add New</button>
@@ -397,7 +350,7 @@ if (isset($_GET['error'])){
 														<select name="limit" id="limit_select2" onchange="myFunction()">
 															<option value="5">5</option>
 															<option value="10">10</option>
-															<!--<option value="20">20</option>-->
+															<option value="15">15</option>
 														</select>
 													</div>
 													
@@ -433,10 +386,10 @@ if (isset($_GET['error'])){
 				<select name="limit" id="limit_select">
 				<option value="5">5</option>
 				<option value="10">10</option>
-				<!--<option value="15">15</option>-->
+				<option value="15">15</option>
 				</select>
 				</div>
-                <table id="DataTypes" class="table table-striped table-bordered">
+                <table id="DataTypes" class="table table-striped table-bordered" style="width: 100%">
 					<thead class="dashboardsTableHeader">
 					<?php 
 					if ($by == 'DESC'){
@@ -450,21 +403,21 @@ if (isset($_GET['error'])){
 				
 					echo('
 					<tr>
-                        <th class="Id" style="display:none;"><a href="'.$pagina_attuale.'&orderBy=Id&order='.$by_par.'">Id '.$icon_by.'</a></th>
-						<th class="click"><a href="'.$pagina_attuale.'&order='.$by_par.'&orderBy=datetime_of_insert">Datetime of insert '.$icon_by.'</a></th>
-						<th><a href="'.$pagina_attuale.'&order='.$by_par.'&orderBy=last_date">Last Date '.$icon_by.'</a></th>
-                        <th class="Tool"><a href="'.$pagina_attuale.'&order='.$by_par.'&orderBy=nature">Nature '.$icon_by.'</a></th>
-						<th class="url"><a href="'.$pagina_attuale.'&order='.$by_par.'&orderBy=sub_nature">Sub Nature '.$icon_by.'</a></th>
-                        <th class="click"><a href="'.$pagina_attuale.'&order='.$by_par.'&orderBy=low_level_type">Value Type '.$icon_by.'</a></th>
-						<th class="click"><a href="'.$pagina_attuale.'&order='.$by_par.'&orderBy=unique_name_id">Value Name '.$icon_by.'</a></th>
-						<th class="click"><a href="'.$pagina_attuale.'&order='.$by_par.'&orderBy=unit">Data Type '.$icon_by.'</a></th>
-						<th><a href="'.$pagina_attuale.'&order='.$by_par.'&orderBy=last_value">Last Value '.$icon_by.'</a></th>
-						<th><a href="'.$pagina_attuale.'&order='.$by_par.'&orderBy=ownership">Ownership '.$icon_by.'</a></th>
-						<th class="responsive"><a href="'.$pagina_attuale.'&order='.$by_par.'&orderBy=Description">Description '.$icon_by.'</a></th>
-						<th class="responsive"><a href="'.$pagina_attuale.'&order='.$by_par.'&orderBy=Info">Info '.$icon_by.'</a></th>
-						<th class="responsive"><a href="'.$pagina_attuale.'&order='.$by_par.'&orderBy=latitudes">latitudes '.$icon_by.'</a></th>
-						<th class="responsive"><a href="'.$pagina_attuale.'&order='.$by_par.'&orderBy=longitudes">longitudes '.$icon_by.'</a></th>
-						<th class="responsive"><a href="'.$pagina_attuale.'&order='.$by_par.'&orderBy=parameters">parameters '.$icon_by.'</a></th>
+                        <!--<th class="Id"><a href="href="KPI_editor.php?showFrame='.$_REQUEST['showFrame'].'&page='.$page.'&limit='.$limit.'&orderBy=Id&order='.$by_par.'">Id '.$icon_by.'</a></th>-->
+						<th class="click"><a href="KPI_editor.php?showFrame='.$_REQUEST['showFrame'].'&page='.$page.'&limit='.$limit.'&order='.$by_par.'&orderBy=datetime_of_insert">Datetime of insert '.$icon_by.'</a></th>
+						<th><a href="KPI_editor.php?showFrame='.$_REQUEST['showFrame'].'&page='.$page.'&limit='.$limit.'&order='.$by_par.'&orderBy=last_date">Last Date '.$icon_by.'</a></th>
+                        <th class="Tool"><a href="KPI_editor.php?showFrame='.$_REQUEST['showFrame'].'&page='.$page.'&limit='.$limit.'&order='.$by_par.'&orderBy=nature">Nature '.$icon_by.'</a></th>
+						<th class="url"><a href="KPI_editor.php?showFrame='.$_REQUEST['showFrame'].'&page='.$page.'&limit='.$limit.'&order='.$by_par.'&orderBy=sub_nature">Sub Nature '.$icon_by.'</a></th>
+                        <th class="click"><a href="KPI_editor.php?showFrame='.$_REQUEST['showFrame'].'&page='.$page.'&limit='.$limit.'&order='.$by_par.'&orderBy=low_level_type">Value Type '.$icon_by.'</a></th>
+						<th class="click"><a href="KPI_editor.php?showFrame='.$_REQUEST['showFrame'].'&page='.$page.'&limit='.$limit.'&order='.$by_par.'&orderBy=unique_name_id">Value Name '.$icon_by.'</a></th>
+						<th class="click"><a href="KPI_editor.php?showFrame='.$_REQUEST['showFrame'].'&page='.$page.'&limit='.$limit.'&order='.$by_par.'&orderBy=unit">Data Type '.$icon_by.'</a></th>
+						<th><a href="KPI_editor.php?showFrame='.$_REQUEST['showFrame'].'&page='.$page.'&limit='.$limit.'&order='.$by_par.'&orderBy=last_value">Last Value '.$icon_by.'</a></th>
+						<th><a href="KPI_editor.php?showFrame='.$_REQUEST['showFrame'].'&page='.$page.'&limit='.$limit.'&order='.$by_par.'&orderBy=ownership">Ownership '.$icon_by.'</a></th>
+						<th class="responsive"><a href="KPI_editor.php?showFrame='.$_REQUEST['showFrame'].'&page='.$page.'&limit='.$limit.'&order='.$by_par.'&orderBy=Description">Description '.$icon_by.'</a></th>
+						<th class="responsive"><a href="KPI_editor.php?showFrame='.$_REQUEST['showFrame'].'&page='.$page.'&limit='.$limit.'&order='.$by_par.'&orderBy=Info">Info '.$icon_by.'</a></th>
+						<th class="responsive"><a href="KPI_editor.php?showFrame='.$_REQUEST['showFrame'].'&page='.$page.'&limit='.$limit.'&order='.$by_par.'&orderBy=latitudes">latitudes '.$icon_by.'</a></th>
+						<th class="responsive"><a href="KPI_editor.php?showFrame='.$_REQUEST['showFrame'].'&page='.$page.'&limit='.$limit.'&order='.$by_par.'&orderBy=longitudes">longitudes '.$icon_by.'</a></th>
+						<th class="responsive"><a href="KPI_editor.php?showFrame='.$_REQUEST['showFrame'].'&page='.$page.'&limit='.$limit.'&order='.$by_par.'&orderBy=parameters">parameters '.$icon_by.'</a></th>
 						<th class="edit"><div>Edit</div></th>
 						<th class="add_value"><div>Value</div></th>
 						<th class="view"><div>View</div></th>
@@ -483,31 +436,32 @@ if (isset($_GET['error'])){
 									$delete_button="";
 									$view_button="";
 								}else{
-									$edit_button="<button type='button' class='editDashBtn modify_jt' data-target='#data-modal3' data-toggle='modal'>EDIT</button>";
-									$delete_button="<button type='button' class='editDashBtn delete_jt' data-target='#data-modal_rt' data-toggle='modal'>ADD</button>";
-									$view_button="<button type='button' class='viewDashBtn mostra_jt' data-target='#data-modal_rt2' data-toggle='modal'>VIEW</button>";
+									$edit_button="<button type='button' class='editDashBtn modify_jt' data-target='#data-modal3' value='".$process_list[$i]['id']."' data-toggle='modal' link='".$process_list[$i]['last_date']."' insert_date='".$process_list[$i]['datetime_of_insert']."' sub_nature='".$process_list[$i]['sub_nature']."' nature='".$process_list[$i]['nature']."' value_name='".$process_list[$i]['unique_name_id']."' id_link='".$process_list[$i]['unit']."' id_own='".$process_list[$i]['ownership']."' id_des='".$process_list[$i]['Description']."' id_info='".$process_list[$i]['Info']."' latitude='".$process_list[$i]['latitudes']."' value_type='".$process_list[$i]['low_level_type']."' longitude='".$process_list[$i]['longitudes']."' id_par='".$process_list[$i]['parameters']."'>EDIT</button>";
+									$delete_button="<button type='button' class='editDashBtn delete_jt' data-target='#data-modal_rt' value=".$process_list[$i]['id']." insert_date='".$process_list[$i]['datetime_of_insert']."' id_link='".$process_list[$i]['unit']."' data-toggle='modal'>ADD</button>";
+									$view_button="<button type='button' class='viewDashBtn mostra_jt' data-target='#data-modal_rt2' value=".$process_list[$i]['id']."  data-toggle='modal'>VIEW</button>";
 								}
-					
-							echo ("<tr>
-										<td style='display:none;'>".$process_list[$i]['id']."</td>
-									    <td>".$process_list[$i]['datetime_of_insert']."</td>
-										<td>".$process_list[$i]['last_date']."</td>
-										<td>".$process_list[$i]['nature']."</td>
-										<td>".$process_list[$i]['sub_nature']."</td>
-										<td>".$process_list[$i]['low_level_type']."</td>
-										<td>".$process_list[$i]['unique_name_id']."</td>
-										<td>".$process_list[$i]['unit']."</td>
-										<td>".$process_list[$i]['last_value']."</td>
-										<td>".$process_list[$i]['ownership']."</td>
-										<td class='responsive'>".$process_list[$i]['Description']."</td>
-										<td class='responsive'>".$process_list[$i]['Info']."</td>
-										<td class='responsive'>".$process_list[$i]['latitudes']."</td>
-										<td class='responsive'>".$process_list[$i]['longitudes']."</td>
-										<td class='responsive'>".$process_list[$i]['parameters']."</td>
-										<td>".$edit_button."</td>
-										<td>".$delete_button."</td>
-										<td>".$view_button."</td>
-								</tr>");
+									if($process_list[$i]['id']){
+										echo ("<tr>
+													<!--<td>".$process_list[$i]['id']."</td>-->
+													<td>".$process_list[$i]['datetime_of_insert']."</td>
+													<td>".$process_list[$i]['last_date']."</td>
+													<td>".$process_list[$i]['nature']."</td>
+													<td>".$process_list[$i]['sub_nature']."</td>
+													<td>".$process_list[$i]['low_level_type']."</td>
+													<td>".$process_list[$i]['unique_name_id']."</td>
+													<td>".$process_list[$i]['unit']."</td>
+													<td>".$process_list[$i]['last_value']."</td>
+													<td>".$process_list[$i]['ownership']."</td>
+													<td class='responsive'>".$process_list[$i]['Description']."</td>
+													<td class='responsive'>".$process_list[$i]['Info']."</td>
+													<td class='responsive'>".$process_list[$i]['latitudes']."</td>
+													<td class='responsive'>".$process_list[$i]['longitudes']."</td>
+													<td class='responsive'>".$process_list[$i]['parameters']."</td>
+													<td>".$edit_button."</td>
+													<td>".$delete_button."</td>
+													<td>".$view_button."</td>
+											</tr>");
+									}
 							}
 					
 					?>
@@ -522,7 +476,8 @@ if (isset($_GET['error'])){
 								$corr_page= $_GET["page"];
 								$array_link = array ();
 								/////
-							if ($prev_page >=1){
+								if ($prev_page >=1){
+							echo ('	<div class="pagination" value="'.$suc_page.'">&#09;<a href="KPI_editor.php?showFrame='.$_REQUEST['showFrame'].'&elementTool='.$_GET['elementTool'].'&elementUrl='.$_GET['elementUrl'].'&page=1&limit='.$_GET['limit'].'&orderBy='.$order.'&order='.$by.'">First   	</a></div>');
 							echo ('	<div class="pagination" value="'.$prev_page.'">&#09;<a href="KPI_editor.php?elementTool='.$_GET['elementTool'].'&elementUrl='.$_GET['elementUrl'].'&page='.$prev_page.'&limit='.$_GET['limit'].'&showFrame='.$_REQUEST['showFrame'].'&orderBy='.$order.'&order='.$by.'"><< 	Prev</a></div>');
 							}
 										if ($corr_page >11){
@@ -548,13 +503,14 @@ if (isset($_GET['error'])){
 							if (($suc_page <=$total_pages)&&($total_pages > 1)){
 									echo ('	<div class="pagination" value="'.$suc_page.'">&#09;<a href="KPI_editor.php?elementTool='.$_GET['elementTool'].'&elementUrl='.$_GET['elementUrl'].'&page='.$suc_page.'&limit='.$_GET['limit'].'&showFrame='.$_REQUEST['showFrame'].'&orderBy='.$order.'&order='.$by.'">Next 	>></a></div>');
 							}
+							echo ('	<div class="pagination" value="'.$suc_page.'">&#09;<a href="KPI_editor.php?showFrame='.$_REQUEST['showFrame'].'&elementTool='.$_GET['elementTool'].'&elementUrl='.$_GET['elementUrl'].'&page='.$total_pages.'&limit='.$_GET['limit'].'&orderBy='.$order.'&order='.$by.'">   	Last</a></div>');
 						?>
                  <!----->
 						<?php 
-				if ($num_rows == 0){
-					echo ('<div class="panel panel-default"><div class="panel-body">There are not KPI elements</div></div>');
-				}
-				?>
+							if ($num_rows == 0){
+								echo ('<div class="panel panel-default"><div class="panel-body">There are not KPI elements</div></div>');
+							}
+							?>
                 </div>
 				</div>
 				
@@ -569,13 +525,21 @@ if (isset($_GET['error'])){
 <script type='text/javascript'>
 
 $(document).ready(function () {
+	
+	var table = $('#DataTypes').DataTable({
+								"searching": false,
+								"paging": false,
+								"ordering": false,
+								"info": false,
+								"responsive": true
+							});
 	//
 	var error = "<?=$error; ?>";
 	if (error !=""){
 		alert('UNIQUE KEY yet used');
 	}
 	//
-	$('#DataTypes').resTables();	
+	//$('#DataTypes').resTables();	
 	/////
 	$(function(){	
 			var dateNow = new Date();
@@ -583,8 +547,12 @@ $(document).ready(function () {
 				dateFormat: 'yyyy-mm-dd',
 				timeFormat:  "HH:mm:ss",
 				language: 'it',
+				 width: '500px',
+				height: '500px',
 				use24hours: true
 			});
+			
+			
 		});
 		//
 		$('#select0').change(function() {
@@ -730,16 +698,20 @@ var pagina_corrente="<?=$corr_page; ?>";
 		
 	
 		$(document).on('click','.delete_jt',function(){
-			var ind = $(this).parent().parent().first().children().html();
-			var date = $(this).parent().parent().children().eq(2).html();
+			//var ind = $(this).parent().parent().first().children().html();
+			var ind = $(this).val();
+			//var date = $(this).parent().parent().children().eq(2).html();
+			var date = $(this).attr('insert_date');
 			var id_link = $(this).parent().parent().children().eq(7).html();
+			var id_link = $(this).attr('id_link');
 			$('#label_id_rt').val(ind);
 			$('#type_val').val(id_link);
 			$('#last_value').attr('type',id_link);
 		});
 	
 		$(document).on('click','.mostra_jt',function(){
-			var ind = $(this).parent().parent().first().children().html();
+			//var ind = $(this).parent().parent().first().children().html();
+			var ind = $(this).val();
 			$('#filter').val();
 			$('#currente_page').val(0);
 			var limit = $('#limit_select2').val();
@@ -839,22 +811,37 @@ var pagina_corrente="<?=$corr_page; ?>";
 			});
 	//////
 		$(document).on('click','.modify_jt',function(){
-			var ind = $(this).parent().parent().first().children().html();
-			var link = $(this).parent().parent().children().eq(2).html();
-			var insert = $(this).parent().parent().children().eq(1).html();
-			var sub_nature = $(this).parent().parent().children().eq(4).html();
-			var nature = $(this).parent().parent().children().eq(3).html();
-			var value_name = $(this).parent().parent().children().eq(6).html();
-			var id_link = $(this).parent().parent().children().eq(7).html();
-			var id_own =  $(this).parent().parent().children().eq(9).html();
-			var id_des =  $(this).parent().parent().children().eq(10).html();
-			var id_info = $(this).parent().parent().children().eq(11).html();
+			//var ind = $(this).parent().parent().first().children().html();
+			//var link = $(this).parent().parent().children().eq(2).html();
+			//var insert = $(this).parent().parent().children().eq(1).html();
+			//var sub_nature = $(this).parent().parent().children().eq(4).html();
+			//var nature = $(this).parent().parent().children().eq(3).html();
+			//var value_name = $(this).parent().parent().children().eq(6).html();
+			//var id_link = $(this).parent().parent().children().eq(7).html();
+			//var id_own =  $(this).parent().parent().children().eq(9).html();
+			//var id_des =  $(this).parent().parent().children().eq(10).html();
+			//var id_info = $(this).parent().parent().children().eq(11).html();
 			//
-			var id_lat =  $(this).parent().parent().children().eq(12).html();
-			var id_lon =  $(this).parent().parent().children().eq(13).html();
-			var id_par = $(this).parent().parent().children().eq(14).html();
-			var value_type = $(this).parent().parent().children().eq(5).html();
-			//	
+			//var id_lat =  $(this).parent().parent().children().eq(12).html();
+			//var id_lon =  $(this).parent().parent().children().eq(13).html();
+			//var id_par = $(this).parent().parent().children().eq(14).html();
+			//var value_type = $(this).parent().parent().children().eq(5).html();
+			//
+			var ind = $(this).val();
+			var insert = $(this).attr('insert_date');
+			var link = $(this).attr('link');
+			var sub_nature = $(this).attr('sub_nature');
+			var nature = $(this).attr('nature');
+			var value_name = $(this).attr('value_name');
+			var id_link = $(this).attr('id_link');
+			var id_own = $(this).attr('id_own');
+			var id_des = $(this).attr('id_des');
+			var id_info = $(this).attr('id_info');
+			var id_lat =  $(this).attr('latitude');
+			var id_lon = $(this).attr('longitude');
+			var id_par = $(this).attr('id_par');
+			var value_type = $(this).attr('value_type');
+			//
 			//
 			$('#label_id').val(ind);
 			//

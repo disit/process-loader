@@ -83,6 +83,12 @@ if (!isset($_GET['pageTitle'])){
         <link href="css/dashboard.css" rel="stylesheet">
         <link href="css/dashboardList.css" rel="stylesheet">
 		<?php //include('functionalities.php'); ?>
+		<!-- Datatable -->
+	    <script type="text/javascript" charset="utf8" src="lib/datatables.js"></script>
+		<script type="text/javascript" src="lib/dataTables.responsive.min.js"></script>
+		<script type="text/javascript" src="lib/dataTables.bootstrap4.min.js"></script>
+		<script type="text/javascript" src="lib/jquery.dataTables.min.js"></script>
+		<link href="lib/responsive.dataTables.css" rel="stylesheet" />
         
     </head>
 	<body class="guiPageBody">
@@ -105,11 +111,9 @@ if (!isset($_GET['pageTitle'])){
 			
 					<!--<h2>Transfer File Property<span class="fa fa-info-circle" data-toggle="modal" data-target="#info-modal"  style="color:#337ab7;font-size:24px;"></h2>-->
 						<div>
-				<table id="elenco_files" class="table table-striped table-bordered" >
+				<table id="elenco_files" class="table table-striped table-bordered" style="width: 100%">
 				<thead class="dashboardsTableHeader">
 					<tr>
-						<th hidden>N</th>
-						<th hidden>id</th>
 						<th>file Name</th>
 						<th>Upload Date</th>
 						<th>Description</th>
@@ -310,12 +314,32 @@ $(document).ready(function () {
 					var file1 = file_n.split(".");
 					var stato =array_files[i]['status'];
 					if (array_files[i]['type'] == 'ETL'||array_files[i]['type'] == 'R'||array_files[i]['type']=='Java'){
-					$("#elenco_files").append('<tr><td>'+i+'</td><td class="file_id" hidden>'+array_files[i]['id']+'</td><td><a href="uploads/'+us+'/'+data4+'/'+file1[0]+'/'+array_files[i]['name']+'" class="file_archive_link" download>'+array_files[i]['name']+'</a></td><td>'+array_files[i]['date']+'</td><td>'+array_files[i]['desc']+'</td><td>'+us+'</td><td>'+array_files[i]['type']+'</td><td>'+pubblicato+'</td><td><button type="button" class="editDashBtn transfer" data-toggle="modal" data-target="#transfer-modal">EDIT</button></td></tr>');
+					$("#elenco_files").append('<tr><td><a href="uploads/'+us+'/'+data4+'/'+file1[0]+'/'+array_files[i]['name']+'" class="file_archive_link" download>'+array_files[i]['name']+'</a></td><td>'+array_files[i]['date']+'</td><td>'+array_files[i]['desc']+'</td><td>'+us+'</td><td>'+array_files[i]['type']+'</td><td>'+pubblicato+'</td><td><button type="button" class="editDashBtn transfer" data-toggle="modal" data-target="#transfer-modal" value="'+i+'">EDIT</button></td></tr>');
 					}else{
-						$("#elenco_files").append('<tr><td>'+i+'</td><td class="file_id" hidden>'+array_files[i]['id']+'</td><td><a href="uploads/'+us+'/'+data4+'/'+array_files[i]['name']+'" class="file_archive_link" download>'+array_files[i]['name']+'</a></td><td>'+array_files[i]['date']+'</td><td>'+array_files[i]['desc']+'</td><td>'+us+'</td><td>'+array_files[i]['type']+'</td><td>'+pubblicato+'</td><td><button type="button" class="editDashBtn transfer" data-toggle="modal" data-target="#transfer-modal">EDIT</button></td></tr>');
+						$("#elenco_files").append('<tr><td><a href="uploads/'+us+'/'+data4+'/'+array_files[i]['name']+'" class="file_archive_link" download>'+array_files[i]['name']+'</a></td><td>'+array_files[i]['date']+'</td><td>'+array_files[i]['desc']+'</td><td>'+us+'</td><td>'+array_files[i]['type']+'</td><td>'+pubblicato+'</td><td><button type="button" class="editDashBtn transfer" data-toggle="modal" data-target="#transfer-modal" value="'+i+'">EDIT</button></td></tr>');
 					}
 				}
-				$('#elenco_files').dynatable(
+				
+				var table =  $('#elenco_files').DataTable({
+								"searching": true,
+								"paging": true,
+								"ordering": true,
+								"info": false,
+								"responsive": true,
+								"lengthMenu": [5,10,15],
+								"iDisplayLength": 10,
+								"pagingType": "full_numbers",
+								"dom": '<"pull-left"l><"pull-right"f>tip',
+								"language":{"paginate": {
+											"first":      "First",
+											"last":       "Last",
+											"next":       "Next >>",
+											"previous":   "<< Prev"
+										},
+										"lengthMenu":     "Show	_MENU_ ",
+								}
+							});
+				/*$('#elenco_files').dynatable(
 							{
 							features: {
 									paginate: true,
@@ -372,7 +396,7 @@ $(document).ready(function () {
 							records: null
 						  }
 					}
-				);
+				);*/
 				
 				}
 		});
@@ -394,7 +418,8 @@ $(document).ready(function () {
 			$(document).on('click','.transfer',function(){
 				//var ind = ($(this).parent().parent().index())-1;
 				//var ind = ($(this).parent().parent().index());
-				var ind = $(this).parent().parent().first().children().html();
+				//var ind = $(this).parent().parent().first().children().html();
+				var ind = $(this).val();
 				var id= array_files[ind]['id'];
 				var us= array_files[ind]['utente'];
 				var file_n =array_files[ind]['name'];

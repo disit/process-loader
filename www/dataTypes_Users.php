@@ -19,7 +19,7 @@
 //include('config.php'); // Includes Login Script
 //include('control.php');
 include ('external_service.php');
-session_start();
+
 if (isset ($_SESSION['username'])){
   $utente_att = $_SESSION['username'];	
 }else{
@@ -246,6 +246,14 @@ $num_tipi = $result_tipi->num_rows;
         <!-- Custom CSS -->
         <link href="css/dashboard.css" rel="stylesheet">
        <link href="css/dashboardList.css" rel="stylesheet">
+	   
+	   <!-- Datatable -->
+	    <script type="text/javascript" charset="utf8" src="lib/datatables.js"></script>
+		<script type="text/javascript" src="lib/dataTables.responsive.min.js"></script>
+		<script type="text/javascript" src="lib/dataTables.bootstrap4.min.js"></script>
+		<script type="text/javascript" src="lib/jquery.dataTables.min.js"></script>
+		<link href="lib/responsive.dataTables.css" rel="stylesheet" />
+		<!-- -->
     </head>
 	<body class="guiPageBody">
 	<style>
@@ -272,14 +280,12 @@ $num_tipi = $result_tipi->num_rows;
                             Snap4City
                         </div>
                     </div>
-                    <?php
-				if ($hide_menu != "hide"){
-                    echo ('<div class="row" id="title_row">
-                        <div class="col-xs-10 col-md-12 centerWithFlex" id="headerTitleCnt">'.$_GET['pageTitle'].'</div>
-                        <!--<div class="col-xs-2 hidden-md hidden-lg centerWithFlex" id="headerMenuCnt"></div>-->
-                    </div>');
-				}
-					?>
+
+                   <div class="row" id="title_row">
+                        <div class="col-xs-10 col-md-12 centerWithFlex" id="headerTitleCnt"><?php echo urldecode($_GET['pageTitle']); ?></div>
+                        <div class="col-xs-2 hidden-md hidden-lg centerWithFlex" id="headerMenuCnt"><?php include "mobMainMenu.php" ?></div>
+                    </div>
+					
                     <div class="row" id="contenitore_table">
 					<div class="col col-lg-2 panel-group" style="margin-top:35px">
 						<button id="reset" class="btn cancelBtn" type="reset" value="">Reset Filters</button>
@@ -295,7 +301,7 @@ $num_tipi = $result_tipi->num_rows;
 				<!--<option value="50">50</option>-->
 				</select>
 				</div>
-                <table id="DataTypes" class="table table-striped table-bordered">
+                <table id="DataTypes" class="table table-striped table-bordered" style="width:100%">
 					<thead class="dashboardsTableHeader">
 					<?php 
 					if ($by == 'DESC'){
@@ -310,9 +316,9 @@ $num_tipi = $result_tipi->num_rows;
 					//$num_tipi
 						echo ('					
                     <tr>
-                        <th class="username"><div><a href="'.$pagina_attuale.'&orderBy=username&order='.$by_par.'">Username '.$icon_by .'</a></div><div class="input-group mb-3"><input type="text" style="color: black;" size="15"  id="filterUser" placeholder="Search..." /><button id="filterUserBtn" type="button" class="filter">Search</button></div></th>
-                        <th class="elementId"><div><a href="'.$pagina_attuale.'&orderBy=elementId&order='.$by_par.'">Element ID '.$icon_by .'</a></div><div class="input-group mb-3"><input type="text" style="color: black;" size="18"  id="filterElId" placeholder="Search..." /><button id="filterElIdBtn" type="button" class="filter">Search</button></div></th>
-						<th class="elementType"><div><a href="'.$pagina_attuale.'&orderBy=elementType&order='.$by_par.'">Element Type '.$icon_by .'</a></div><div class="input-group mb-3"></a><select class="selectpicker form-control titleCol" id="filterelementType"><option style="color: black; width:auto;"></option>');
+                        <th class="username"><div><a href="dataTypes_Users.php?showFrame='.$_REQUEST['showFrame'].'&limit='.$limit.'&page='.$page.'&orderBy=username&order='.$by_par.'">Username '.$icon_by .'</a></div><div class="input-group mb-3"><input type="text" style="color: black;" size="15"  id="filterUser" placeholder="Search..." /><button id="filterUserBtn" type="button" class="filter">Search</button></div></th>
+                        <th class="elementId"><div><a href="dataTypes_Users.php?showFrame='.$_REQUEST['showFrame'].'&limit='.$limit.'&page='.$page.'&orderBy=elementId&order='.$by_par.'">Element ID '.$icon_by .'</a></div><div class="input-group mb-3"><input type="text" style="color: black;" size="18"  id="filterElId" placeholder="Search..." /><button id="filterElIdBtn" type="button" class="filter">Search</button></div></th>
+						<th class="elementType"><div><a href="dataTypes_Users.php?showFrame='.$_REQUEST['showFrame'].'&limit='.$limit.'&page='.$page.'&orderBy=elementType&order='.$by_par.'">Element Type '.$icon_by .'</a></div><div class="input-group mb-3"></a><select class="selectpicker titleCol" id="filterelementType"><option style="color: black; width:auto;"></option>');
 						for ($z = 0; $z <= $num_tipi; $z++){
 							if (($list_types[$z][elementType] != null)|| ($list_types[$z][elementType] != "")){
 							echo ('<option style="color: black;">'.$list_types[$z][elementType].'</option>');
@@ -320,8 +326,8 @@ $num_tipi = $result_tipi->num_rows;
 						}
 						//<input type="text" style="color: black;" size="18"  id="filterelementType" placeholder="Search..." />
 					echo ('</select><button id="filterelementTypeBtn" type="button" class="filter">Search</button></div></th>
-                        <th class="elementUrl"><div><a href="'.$pagina_attuale.'&orderBy=elementUrl&order='.$by_par.'">Element Url '.$icon_by .'</a></div><div class="input-group mb-3"><input type="text" style="color: black;" size="18"  id="filterelementUrl" placeholder="Search..." /><button id="filterelementUrlBtn" type="button" class="filter">Search</button></div></th>
-						<!--<th class="lastCheck"><div><a href="'.$pagina_attuale.'&orderBy=lastCheck&order='.$by_par.'">LastCheck</a></div></th>-->
+                        <th class="elementUrl"><div><a href="dataTypes_Users.php?showFrame='.$_REQUEST['showFrame'].'&limit='.$limit.'&page='.$page.'&orderBy=elementUrl&order='.$by_par.'">Element Url '.$icon_by .'</a></div><div class="input-group mb-3"><input type="text" style="color: black;" size="18"  id="filterelementUrl" placeholder="Search..." /><button id="filterelementUrlBtn" type="button" class="filter">Search</button></div></th>
+						<!--<th class="lastCheck"><div><a href="dataTypes_Users.php?showFrame='.$_REQUEST['showFrame'].'&limit='.$limit.'&page='.$page.'&orderBy=lastCheck&order='.$by_par.'">LastCheck</a></div></th>-->
 						<th class="healthiness"><div>Healthiness</div></th>
                     </tr>
 					'); ?>
@@ -385,6 +391,7 @@ $num_tipi = $result_tipi->num_rows;
 								$healthiness="";
 							}
 					////
+					if ($process_list[$i]['elementId']){
 							echo ("<tr>
 										<td>".$process_list[$i]['username']."</td>
 									    <td>".$process_list[$i]['elementId']."</td>
@@ -394,7 +401,7 @@ $num_tipi = $result_tipi->num_rows;
 										<td class='mx-auto'><div style='text-align: center;'>".$healthiness."</div></td>
 								</tr>");
 							}
-					
+						}
 					?>
 					</tbody>
                 </table>
@@ -483,6 +490,16 @@ $(document).ready(function () {
 			$('.ellipsis').css("width","150 px");
 			
 		}
+		
+		///
+		var table = $('#DataTypes').DataTable({
+								"searching": false,
+								"paging": false,
+								"ordering": false,
+								"info": false,
+								"responsive": true
+							});
+		///
 		
 		var limit_default= "<?=$limit; ?>";
 		//console.log(limit_default);

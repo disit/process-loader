@@ -110,11 +110,27 @@ if (isset($_REQUEST['microServ'])){
 		
 		 <!-- CKEditor --> 
     <!--<script src="http://cdn.ckeditor.com/4.5.10/standard/ckeditor.js"></script>-->
-	<script src="ckeditor/ckeditor.js"></script>
-	
+	<!-- -->
+		<script type="text/javascript" charset="utf8" src="lib/datatables.js"></script>
+		<script type="text/javascript" src="lib/dataTables.responsive.min.js"></script>
+		<script type="text/javascript" src="lib/dataTables.bootstrap4.min.js"></script>
+		<script type="text/javascript" src="lib/jquery.dataTables.min.js"></script>
+		<link href="lib/responsive.dataTables.css" rel="stylesheet" />
+	<!-- -->
 		<!-- -->
+		<script src="ckeditor/ckeditor.js"></script>
 		<!-- -->
     </head>
+	<style>
+        .hidden {
+            display: none;
+        }
+		
+		.paginate_button{
+			padding: 2px;
+		}
+		
+	</style>
 <body class="guiPageBody">
 <?php include('functionalities.php'); ?>
         <div class="container-fluid">
@@ -331,11 +347,9 @@ if (isset($_REQUEST['microServ'])){
 			  <!-- -->
 			<!-- -->
 			<div id="collapse_table">
-				<table id="elenco_files" class="table table-striped table-bordered">
+				<table id="elenco_files" class="table table-striped table-bordered" style="width: 100%">
 					<thead class="dashboardsTableHeader">
 					<tr>
-						<th hidden>N</th>
-						<th hidden>id</th>
 						<th>File Name</th>
 						<th class="username_td" hidden>Username</th>
 						<th>Upload Date</th>
@@ -347,6 +361,8 @@ if (isset($_REQUEST['microServ'])){
 						<th>Delete</th>
 					</tr>
 					</thead>
+					<tbody>
+                    </tbody>
 			   </table>
 		
 			</div>
@@ -365,7 +381,7 @@ if (isset($_REQUEST['microServ'])){
 				<h4 class="modal-title" id="mostra_elenco">Process Model List</h4>
 			</div>
 			<div id="contenuto_elenco">
-				<table id="elenco" class="table table-striped table-bordered">
+				<table id="elenco" class="table table-striped table-bordered" style="width: 100%">
 					<tr>
 						<th>Process Model Id</th>
 						<th>Name</th>
@@ -601,11 +617,13 @@ if (isset($_REQUEST['microServ'])){
 		}
 	
 	$(document).ready(function () {
+	
 		$(document).on('click','#Add_par',function(){
 		var cont = $('.paramItem').length;
 		var cont2 = cont -1; 
 		var attuale = $(".contatore_param").val();
 		//
+		
 		//
 		$("#param_container").append('<div class="input-group" id="par_'+cont+'"><span class="input-group-addon">parameter '+cont+': </span><input type="Text" class="form-control paramItem" name="paramList['+cont2+']"></input></div>');
 		$(".contatore_param").text(attuale +' 1');		
@@ -918,7 +936,7 @@ if (isset($_REQUEST['microServ'])){
 						var publish_text = 'Yes';				
 					}
 					//
-					$("#elenco_files").append('<tr><td>'+i+'</td><td class="file_id" value="'+array_files[i]['id']+'">'+array_files[i]['id']+'</td><td><a href="'+href+'" class="file_archive_link" download>'+array_files[i]['name']+'</a></td><td class="username_td">'+array_files[i]['utente']+'</td><td>'+array_files[i]['date']+'</td><td>'+array_files[i]['desc']+'</td><td class="status" >'+array_files[i]['status']+'</td><td><button type="button" class="viewDashBtn viewHelp" data-target="#view_help" data-toggle="modal">VIEW</button></td><td><button type="button" class="editDashBtn modify_jt" data-target="#data-modal3" data-toggle="modal">EDIT</button></td><td><button type="button" value="0" data-toggle="modal" class="pubDashBtn pubblicato" data-target="#publish">'+publish_text+'</button></td><td><button type="button" class="delDashBtn delete_file" data-target="#delete-modal" data-toggle="modal">DEL</button></td></tr>');	
+					$("#elenco_files tbody").append('<tr><td><a href="'+href+'" class="file_archive_link" download>'+array_files[i]['name']+'</a></td><td class="username_td hidden">'+array_files[i]['utente']+'</td><td>'+array_files[i]['date']+'</td><td>'+array_files[i]['desc']+'</td><td class="status" >'+array_files[i]['status']+'</td><td><button type="button" class="viewDashBtn viewHelp" data-target="#view_help" data-toggle="modal" value="'+i+'">VIEW</button></td><td><button type="button" class="editDashBtn modify_jt" data-target="#data-modal3" value="'+i+'" data-toggle="modal">EDIT</button></td><td><button type="button" data-toggle="modal" class="pubDashBtn pubblicato" data-target="#publish" value="'+i+'">'+publish_text+'</button></td><td><button type="button" class="delDashBtn delete_file" data-target="#delete-modal" data-toggle="modal" value="'+i+'">DEL</button></td></tr>');	
 					if (microServ != ""){
 						if (array_files[i]['id'] == microServ){	
 						index_m = i;
@@ -999,7 +1017,29 @@ if (isset($_REQUEST['microServ'])){
 							}		
 				}
 				///FINE OPEN MICROSERVICE
-				/////
+				////////////
+							var table = $('#elenco_files').DataTable({
+								"searching": true,
+								"paging": true,
+								"ordering": true,
+								"info": false,
+								"responsive": true,
+								"lengthMenu": [5,10,20],
+								"iDisplayLength": 10,
+								"pagingType": "full_numbers",
+								"dom": '<"pull-left"l><"pull-right"f>tip',
+								"language":{"paginate": {
+											"first":      "First",
+											"last":       "Last",
+											"next":       "Next >>",
+											"previous":   "<< Prev"
+										},
+										"lengthMenu":     "Show	_MENU_ ",
+								}
+							});
+				
+				///////////
+				/*
 				$('#elenco_files').dynatable(
 							{
 							features: {
@@ -1059,12 +1099,18 @@ if (isset($_REQUEST['microServ'])){
 					}
 				
 				);
+				*/
 				}
+				
+				
 		});
 		
 		
+		
+		
 		$(document).on('click','.delete_file',function(){
-			var ind = $(this).parent().parent().first().children().html();
+			//var ind = $(this).parent().parent().first().children().html();
+			var ind = $(this).val();
 			var valore_el = array_files[ind]['id'];
 			$("#id_file_del").val(valore_el);
 			var data1 = array_files[ind]['date'];
@@ -1081,7 +1127,8 @@ if (isset($_REQUEST['microServ'])){
 		
 		//View 
 		$(document).on('click','.viewHelp',function(){
-			var ind = $(this).parent().parent().first().children().html();
+			//var ind = $(this).parent().parent().first().children().html();
+			var ind = $(this).val();
 			//view_help_content
 			$('#title_view_Help').text("VIEW HELP: "+ array_files[ind]['name']);
 			$('#view_help_content').append(array_files[ind]['help']);
@@ -1097,7 +1144,8 @@ if (isset($_REQUEST['microServ'])){
 		
 		//Status
 		$(document).on('click','.pubblicato',function(){
-			var ind = $(this).parent().parent().first().children().html();
+			//var ind = $(this).parent().parent().first().children().html();
+			var ind = $(this).val();
 			var valore_el = array_files[ind]['id'];
 			var valolre_pub=array_files[ind]['pub'];
 			var valNat_pub=array_files[ind]['category'];
@@ -1120,8 +1168,8 @@ if (isset($_REQUEST['microServ'])){
 		
 		//QUANDO SI CLICCA SUL MODAL di publish    agg da lavorare su questo
 		$(document).on('click','.publish_jt',function(){
-			var ind = $(this).parent().parent().first().children().html();
-			
+			//var ind = $(this).parent().parent().first().children().html();
+			var ind = $(this).val();
 			$("#titolo_proc2").text("PUBLISH PROCESS FROM FILE: " + array_files[ind]['name'] );
 			$("#file_zip2").val(array_files[ind]['name']);
 			$("#category2").val(array_files[ind]['category']);
@@ -1185,7 +1233,8 @@ if (isset($_REQUEST['microServ'])){
 			$('.edit_microserv').show();
 			$('#collapse_table').hide();
 			$('#view-menu').hide();
-			var ind = $(this).parent().parent().first().children().html();
+			//var ind = $(this).parent().parent().first().children().html();
+			var ind = $(this).val();
 			var type = array_files[ind]['type'];
 				$("#div-url3").show();
 				$("#div-method3").show();
@@ -1284,7 +1333,8 @@ if (isset($_REQUEST['microServ'])){
 		//MOSTRA JOB TYPE
 		$(document).on('click','.mostra_jt',function(){
 			var array_process = [];
-			var ind = $(this).parent().parent().first().children().html();
+			//var ind = $(this).parent().parent().first().children().html();
+			var ind = $(this).val();
 			$("#mostra_elenco").text("Process Model list:  "+array_files[ind]['name']);
 			$.ajax({
 				url: "getdata.php",
