@@ -179,8 +179,10 @@ $corr_page0     = $page0;
         <script src="bootstrapToggleButton/js/bootstrap-toggle.min.js"></script>
        
        <!-- Dynatable -->
+	   <!--
        <link rel="stylesheet" href="dynatable/jquery.dynatable.css">
        <script src="dynatable/jquery.dynatable.js"></script>
+	   -->
         
        <!-- Font awesome icons -->
         <link rel="stylesheet" href="fontAwesome/css/font-awesome.min.css">
@@ -342,7 +344,7 @@ include "mobMainMenu.php";
 	var markerGroupPhoto = [];
 	var markerGroupComment = [];
 			
-			
+		
 
 	function ruota1(id,grado){
 		deg=grado - 90;
@@ -527,6 +529,15 @@ include "mobMainMenu.php";
 					}
 					//
 					var string_file = n_api.replace("thumbs/","");
+					var color_fly = '#cc3333';
+					var tooltip_text = 'Position not found';
+								if ((array[i].lat != null)&&(array[i].lon != null)){
+									color_fly = '#33cc33';
+									tooltip_text = 'View on map';
+								}else{
+									color_fly = '#cc3333';
+									tooltip_text = 'Position not found';
+								}
 					//
 					var cardModal = '<div id="myModal'+i+'" class="modal fade" role="dialog" >';
 						cardModal = cardModal + '<div class="modal-dialog" ><div class="modal-content" id="modal_content'+i+'">';
@@ -540,6 +551,7 @@ include "mobMainMenu.php";
 						cardDiv = cardDiv +'<img placeholder="img'+i+'" id="left_'+i+'"  src="img/rotate2.svg" class="card-img-rot1" alt="Card image rotation" grado="0" onclick="ruota1('+i+',0);"> 	';
 						cardDiv = cardDiv +'<select id="'+array[i].id+'" name="status" onchange="changeStatus(id,value)"> <option value="submitted">submitted</option> <option value="validated" >validated</option> <option value="rejected" selected="selected">rejected</option> </select>	';
 						cardDiv = cardDiv +'<img placeholder="img'+i+'" id="right_'+i+'"  src="img/rotate1.svg" grado="0" class="card-img-rot2" alt="Card image rotation" onclick="ruota2('+i+',0);"> </fieldset></form>';
+						cardDiv = cardDiv +'<a href="#"><i class="fa fa-circle" style="font-size:12px; color:'+color_fly+'; vertical-align: top; margin-top: 10px; float:left;" onclick="func_fly('+array[i].lat+','+array[i].lon+','+i+')" data-toggle="tooltip" data-placement="bottom" title="'+tooltip_text+'"></i></a>';
 						if(n_api !=""){
 						cardDiv = cardDiv + '<a data-toggle="modal" href="#myModal'+i+'" class="click_image" value="'+i+'">';
 						cardDiv = cardDiv +'<img id="img'+i+'" class="card-img-top" src="'+n_api+'" alt="Card image"></a>';												
@@ -548,7 +560,7 @@ include "mobMainMenu.php";
 					$('#cards').append($(cardDiv));
 
 					if ((array[i].lat != null)&&(array[i].lon != null)){
-						var marker = L.marker([array[i].lat,array[i].lon]);
+						var marker = L.marker([array[i].lat,array[i].lon],{id:i});
 							marker.bindPopup('<center><img class="pop_image" src="'+api_img+array[i].file+'"></img></center><br/><b>Comment:</b>'+array[i].comment+'<br/><b>Location:</b>'+array[i].serviceName+'<br>'+'<b>Address:</b>'+array[i].address+'<br>'+'<b>City:</b>'+array[i].city+'('+array[i].district+')');
 							markerGroupPhoto.push(marker);
 					}
@@ -798,6 +810,16 @@ include "mobMainMenu.php";
 											var n_api = api_img+array[i].file;
 										}
 								//
+								var color_fly = '#cc3333';
+								var tooltip_text = 'Position not found';
+											if ((array[i].lat != null)&&(array[i].lon != null)){
+												color_fly = '#33cc33';
+												tooltip_text = 'View on map';
+											}else{
+												color_fly = '#cc3333';
+												tooltip_text = 'Position not found';
+											}
+								//
 								var string_file = n_api.replace("thumbs/","");
 								var cardModal = '<div id="myModal'+i+'" class="modal fade" role="dialog" ><div class="modal-dialog" ><div class="modal-content" id="modal_content'+i+'"><div class="modal-body" id="modal_body'+i+'"><img id="img'+i+'_popup" src="'+string_file+'" class="modal_image" alt="Card image"></div><div class="modal-footer"><button type="button" class="btn btn-default" data-dismiss="modal" >Close</button></div></div></div></div>';				
 								var cardDiv = '<div class="row_card"> <div class="card col-md-4">';
@@ -807,6 +829,7 @@ include "mobMainMenu.php";
 								cardDiv = cardDiv +'<img placeholder="img'+i+'" id="left_'+i+'"  src="img/rotate2.svg" class="card-img-rot1" alt="Card image rotation" grado="0" onclick="ruota1('+i+',0);"> 	';
 								cardDiv = cardDiv +'<select id="'+array[i].id+'" name="status" onchange="changeStatus(id,value)"> <option value="submitted">submitted</option> <option value="validated" >validated</option> <option value="rejected" selected="selected">rejected</option> </select>	';
 								cardDiv = cardDiv +'<img placeholder="img'+i+'" id="right_'+i+'"  src="img/rotate1.svg" grado="0" class="card-img-rot2" alt="Card image rotation" onclick="ruota2('+i+',0);"> </fieldset></form>';
+								cardDiv = cardDiv +'<a href="#"><i class="fa fa-circle" style="font-size:12px; color:'+color_fly+'; vertical-align: top; margin-top: 10px; float:left;" onclick="func_fly('+array[i].lat+','+array[i].lon+','+i+')" data-toggle="tooltip" data-placement="bottom" title="'+tooltip_text+'"></i></a>';
 								if(n_api !=""){
 								cardDiv = cardDiv + '<a data-toggle="modal" href="#myModal'+i+'" class="click_image" value="'+i+'">';
 								cardDiv = cardDiv +'<img id="img'+i+'" class="card-img-top"  src="'+n_api+'" alt="Card image"></a>';
@@ -816,7 +839,7 @@ include "mobMainMenu.php";
 								//	
 							
 								if ((array[i].lat != null)&&(array[i].lon != null)){
-									var marker = L.marker([array[i].lat,array[i].lon]);
+									var marker = L.marker([array[i].lat,array[i].lon],{id:i});
 									
 										marker.bindPopup('<center><img src="'+api_img+array[i].file+'" class="pop_image"></img></center><br/><b>Comment:</b>'+array[i].comment+'<br/><b>Location:</b>'+array[i].serviceName+'<br>'+'<b>Address:</b>'+array[i].address+'<br>'+'<b>City:</b>'+array[i].city+'('+array[i].district+')');
 										markerGroupPhoto.push(marker);
@@ -964,7 +987,19 @@ include "mobMainMenu.php";
 		}
 		
 	}
+	
+	function func_fly(lat,lon,index){
+				var pos = [lat,lon];
+				mymap.flyTo(pos, 14);
+				var marker = markerGroupPhoto[index];
+				marker.openPopup();
+		}
+		
+	
+       
+	   
 setTimeout(mymap.invalidateSize.bind(mymap));
+
 </script>
 </body>
 </html>

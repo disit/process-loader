@@ -87,7 +87,7 @@ if ($action == 'get_photo_data') {
         while ($row1 = mysqli_fetch_array($result)) {
             $url    = $row1['serviceUri'];
             $url    = $url . '&format=json';
-            $preUrl = 'https://servicemap.disit.org/WebAppGrafo/api/v1/?serviceUri=';
+            $preUrl = $default_serviceUri;
             $url    = $preUrl . $url;
 			if (($row1['latitude'] == Null) && ($row1['longitude'] == Null)) {
                 //echo ('Trovato');
@@ -103,19 +103,22 @@ if ($action == 'get_photo_data') {
                 if (isset($jsonfinale['Service'])) {
                     $coord[1] = $jsonfinale['Service']['features']['0']['geometry']['coordinates']['0'];
                     $coord[0] = $jsonfinale['Service']['features']['0']['geometry']['coordinates']['1'];
-                    $city     = $jsonfinale['Service']['features']['0']['properties']['city'];
-                    $province = $jsonfinale['Service']['features']['0']['properties']['province'];
-                    $address  = $jsonfinale['Service']['features']['0']['properties']['address'];
+                    //$city     = $jsonfinale['Service']['features']['0']['properties']['city'];
+                    //$province = $jsonfinale['Service']['features']['0']['properties']['province'];
+                    //$address  = $jsonfinale['Service']['features']['0']['properties']['address'];
+					$city       = "";
+                    $province   = "";
+                    $address    = "Not Found";
                 } else {
-                    $coord[0] = 43.773;
-                    $coord[1] = 11.252;
+                    $coord[0] = $default_latitude;
+                    $coord[1] = $default_longitude;
                     $city     = "";
                     $province = "";
-                    $address  = "";
+                    $address  = "Not Found";
                 }
                 
                 //
-                $query0 = "UPDATE ServicePhoto SET latitude = '" . $coord[0] . "', longitude = '" . $coord[1] . "', city='" . $city . "', province='" . $province . "', address='" . $address . "' WHERE id='" . $row1['id'] . "'";
+                $query0 = "UPDATE ServicePhoto SET latitude = '" . $coord[0] . "', longitude = '" . $coord[1] . "', city='" . mysqli_real_escape_string($link, $city) . "', province='" . mysqli_real_escape_string($link, $province) . "', address='" . mysqli_real_escape_string($link, $address) . "' WHERE id='" . $row1['id'] . "'";
                 $result0 = mysqli_query($link, $query0) or die(mysqli_error($link));
                 //                    
                 
@@ -269,7 +272,7 @@ if ($action == 'get_photo_data') {
             
             $url    = $row1['serviceUri'];
             $url    = $url . '&format=json';
-            $preUrl = 'https://servicemap.disit.org/WebAppGrafo/api/v1/?serviceUri=';
+            $preUrl = $default_serviceUri;
             $url    = $preUrl . $url;
             if (($row1['latitude'] == Null) && ($row1['longitude'] == Null)) {
                 $ch = curl_init();
@@ -284,22 +287,25 @@ if ($action == 'get_photo_data') {
                 if (isset($jsonfinale['Service'])) {
                     $coord[1] = $jsonfinale['Service']['features']['0']['geometry']['coordinates']['0'];
                     $coord[0] = $jsonfinale['Service']['features']['0']['geometry']['coordinates']['1'];
-                    $city     = $jsonfinale['Service']['features']['0']['properties']['city'];
-                    $province = $jsonfinale['Service']['features']['0']['properties']['province'];
-                    $address  = $jsonfinale['Service']['features']['0']['properties']['address'];
+                    //$city     = $jsonfinale['Service']['features']['0']['properties']['city'];
+                    //$province = $jsonfinale['Service']['features']['0']['properties']['province'];
+                    //$address  = $jsonfinale['Service']['features']['0']['properties']['address'];
+					$city       = "";
+                    $province   = "";
+                    $address    = "Not Found";
                 } else {
                     $value_rand = rand(0, 15);
-                    $coord[0]   = '43.77' . $value_rand;
-                    $coord[1]   = '11.252' . $value_rand;
+                    $coord[0]   = $default_latitude  . $value_rand;
+                    $coord[1]   = $default_longitude . $value_rand;
                     $city       = "";
                     $province   = "";
-                    $address    = "";
+                    $address    = "Not Found";
                     
                 }
                 $coord0 = $coord[0];
                 $coord1 = $coord[1];
                 //
-                $query0 = "UPDATE ServiceComment SET latitude = '" . $coord[0] . "', longitude = '" . $coord[1] . "', city='" . $city . "', province='" . $province . "', address='" . $address . "' WHERE id='" . $row1['id'] . "'";
+				$query0 = "UPDATE ServiceComment SET latitude = '" . $coord[0] . "', longitude = '" . $coord[1] . "', city='" . mysqli_real_escape_string($link, $city) . "', province='" . mysqli_real_escape_string($link, $province) . "', address='" . mysqli_real_escape_string($link, $address) . "' WHERE id='" . $row1['id'] . "'";
                 $result0 = mysqli_query($link, $query0) or die(mysqli_error($link));
                 //
             } else {

@@ -69,7 +69,8 @@ $result = mysqli_query($link, $query) or die(mysqli_error($link));
 													//$(element).show();
 													$(element).css('display','block');
 													//$(element).css('display','inline');
-										});
+													//
+										});									
 								</script>
 								<?php
 							}else{
@@ -89,11 +90,25 @@ $result = mysqli_query($link, $query) or die(mysqli_error($link));
 								</script>
 								<?php
 							}
+
 						//}
 				}
 		}
 		}
 		json_encode($function_list);
+		
+		if (isset($_REQUEST['showFrame'])){
+					if ($_REQUEST['showFrame'] == 'false'){
+						$header = '#mobHeaderClaimCnt';
+						?>
+							<style type="text/css">
+								<?=$header; ?> {display: none;}
+							</style>
+						<?php
+					}	
+				}else{$hide_menu= "";} 
+
         mysqli_close($link);
+		
 ?>
 

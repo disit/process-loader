@@ -31,7 +31,7 @@ $total_list = 0;
 $array_del = array();
 $array_delegator = array();
 $utente = $_SESSION['username'];
-
+$sum_own = 0;
 ///INIZIO ERRORE /////
 
 if (isset($_SESSION['accessToken'])){
@@ -46,6 +46,7 @@ if(($json_api == null)||($json_api == "")){
             $_SESSION['refreshToken'] = $tkn->refresh_token;
 			$url_api =($personalDataApiBaseUrl.'/v1/list/?type=HeatmapID&accessToken='.$accessToken);
 			//DELEGATION PUBBLICHE + DELEGATION ALL'UTENTE
+			//
 			$json_api = file_get_contents($url_api);
 	}else{
 		    $url_api =($personalDataApiBaseUrl.'/v1/list/?type=HeatmapID&accessToken='.$token);
@@ -53,7 +54,9 @@ if(($json_api == null)||($json_api == "")){
 	}
 	
 	$list_api = json_decode($json_api);
+	//print_r($list_api);
 	$total_list = count($list_api);
+	$sum_own = $total_list;
 	
 		for($c=0; $c<$total_list; $c++){
 			//echo($c);
@@ -144,7 +147,8 @@ $start_from = ($page-1) * $limit;
 				data.date AS 'data_date'
 				FROM heatmap.data 
 				GROUP BY map_name, date) t1 group by map_name ORDER BY ".$order." ".$by." LIMIT " . $start_from . ", " . $limit;
-	*/			
+	*/
+	/*	
 	if($role_att == "RootAdmin"){			
 	$query_n = "SELECT metadata.map_name AS 'name', 
 					  (SELECT metadata.metric_name FROM heatmap.metadata where heatmap.metadata.map_name=name order by date desc limit 1) as metric_name,
@@ -156,7 +160,22 @@ $start_from = ($page-1) * $limit;
 					  (SELECT metadata.org FROM heatmap.metadata where heatmap.metadata.map_name=name order by date desc limit 1) as org
 					  FROM metadata GROUP BY map_name ORDER BY ".$order." ".$by;
 	}
-				
+	*/
+/*	
+	$query_n =	"SELECT DISTINCT metadata.map_name AS 'name', 
+								               stats.metric_name, 
+									           metadata.org, 
+									           stats.min_date, 
+									           stats.max_date, 
+									           stats.num AS 'count_number' 
+				FROM heatmap.metadata, heatmap.stats 
+				WHERE metadata.map_name = stats.map_name
+				ORDER BY metadata.".$order." ".$by." LIMIT " . $start_from . ", " . $limit;
+				*/
+	$query_n =	"SELECT DISTINCT map_name AS 'name' FROM metadata ORDER BY metadata.".$order." ".$by." LIMIT " . $start_from . ", " . $limit;
+	//
+	//SELECT metadata.org, metadata.metric_name FROM heatmap.metadata where heatmap.metadata.map_name='AirTemperatureAverage2HourHelsinki' order by date desc limit 1
+
 ///
 	$count_number = 0;
     $result = mysqli_query($link, $query_n) or die(mysqli_error($link));
@@ -167,6 +186,9 @@ $start_from = ($page-1) * $limit;
 ////////////
 	$service_url2 = $delegationDataApiUrl .'/v1/username/'.$utente.'/delegated?sourceRequest=ProcessLoader&accessToken='.$accessToken;
 	$json_api2 = file_get_contents($service_url2);
+	//
+	//print_r($json_api2);
+	//	
 	$a_pub2 = json_decode($json_api2);
 
 		//
@@ -190,19 +212,41 @@ $start_from = ($page-1) * $limit;
 					$visibility = '';
 					$map_name = $row['name'];
 				/***QUERY PER OTTENERE I DATI***/
+				/*
 					if(isset($row['org'])){
 										$organization = $row['org'];
 								}else{
 										$organization = '';
 								}
+					*/
+					$organization = '';
 				
+					$count_number = $row['count_number'];
+					$min_date = $row['min_date'];
+					$max_date = $row['max_date'];
+					
+					$query_istances = "SELECT metric_name, min_date, max_date, num AS count_number FROM heatmap.stats WHERE map_name='".$map_name."'";
+					$result_istances = mysqli_query($link, $query_istances) or die(mysqli_error($link));
+					//
+					$query_mt = "SELECT metadata.org, metadata.metric_name FROM heatmap.metadata where heatmap.metadata.map_name='".$map_name."' order by date desc limit 1";
+					$result_mt = mysqli_query($link, $query_mt) or die(mysqli_error($link));
+					//
+						while ($row2 = mysqli_fetch_assoc($result_istances)) {
+											$count_number = $row2['count_number'];
+											$min_date = $row2['min_date'];
+											$max_date = $row2['max_date'];
+										}
+						while ($row3 = mysqli_fetch_assoc($result_mt)) {
+											$organization = $row3['org'];
+											$metric_name = $row3['metric_name'];
+										}
+					/*
 					$query_istances = "SELECT DISTINCT map_name, max(date) as 'max_date', min(date) as 'min_date', count(distinct date)as 'count_number' FROM heatmap.data WHERE map_name='".$map_name."'";
 					$result_istances = mysqli_query($link, $query_istances) or die(mysqli_error($link));
 							while ($row2 = mysqli_fetch_assoc($result_istances)) {
-								$count_number = $row2['count_number'];
-								$min_date = $row2['min_date'];
-								$max_date = $row2['max_date'];
-							}	
+								
+							}
+					*/	
 					//////
 						
 						$idDash = $map_name;
@@ -252,12 +296,13 @@ $start_from = ($page-1) * $limit;
 
 															$listFile = array(
 																"map_name" => $row['name'],
-																"metric_name" => $row['metric_name'],
+																//"metric_name" => $row['metric_name'],
+																"metric_name" => $metric_name,
 																"min_date" => $min_date,
 																"max_date" => $max_date,
 																"count_number" => $count_number,
 																"username" => $utente_ownership,
-																"organization" =>$row['org'],
+																"organization" =>$organization,
 																"visibility" => $visibility,
 																"delegated" => $del,
 																"group_delegated"=> $gd
@@ -268,11 +313,8 @@ $start_from = ($page-1) * $limit;
 																$process_list[$num_r] = $listFile;
 																$num_r++;
 															}
-																
-																
-																
-														
-											}	
+
+													}	
 										
 										//}
 									
@@ -294,7 +336,8 @@ $start_from = ($page-1) * $limit;
 														$deleg_val='no';
 													}
 												$listFile = array("map_name" => $row['name'],
-																  "metric_name" => $row['metric_name'],
+																  //"metric_name" => $row['metric_name'],
+																  "metric_name" => $metric_name,
 																  "min_date" => $min_date,
 																  "max_date" => $max_date,
 																  "count_number" => $count_number,
@@ -312,12 +355,21 @@ $start_from = ($page-1) * $limit;
     }
 	//
 	if($role_att =='RootAdmin'){
-			$query_count = "SELECT count(DISTINCT map_name) as count FROM heatmap.metadata;";
+			/*$query_count = "SELECT count(DISTINCT map_name) as count FROM heatmap.metadata;";
 			$result_count = mysqli_query($link, $query_count) or die(mysqli_error($link));
 					while ($row_count  = mysqli_fetch_assoc($result_count)) {	
 							$total_rows = $row_count['count'];
+						}*/
+		//
+			$query_count =	"SELECT count(distinct map_name) as count FROM metadata";
+			$result_count = mysqli_query($link, $query_count) or die(mysqli_error($link));
+			while ($row_count  = mysqli_fetch_assoc($result_count)) {	
+							$total_rows = $row_count['count'];
 						}
+						//
+		//$total_rows = $result->num_rows;
 	}else{
+		
 		$total_rows = $num_r;	
 	}
 	/*******/
@@ -844,7 +896,7 @@ $result_cm = mysqli_query($link, $query_cm) or die(mysqli_error($link));
                                                     <!-- -->
                                                     <div class="input-group" id="description_status"><span class="input-group-addon">Status: </span>
                                                         <select class="form-control" id="status">
-                                                            <option value='-1'>Error</option>
+                                                            <option value='-1'>Not in GeoServer</option>
                                                             <option value='1'>Completed</option>
                                                             <option value='0'>Not Completed</option>
                                                         </select>
@@ -1729,8 +1781,8 @@ $result_cm = mysqli_query($link, $query_cm) or die(mysqli_error($link));
                                     } else if (status == '0') {
                                         status_text = 'Not Completed';
                                     } else {
-                                        status_text = 'Error';
-                                        style = 'Style="color:red"';
+                                        status_text = 'Not in GeoServer';
+                                        //style = 'Style="color:red"';
                                     }
 
                                     //var a1= $('.current_link').text();

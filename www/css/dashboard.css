@@ -15,6 +15,9 @@
    along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
 
+th {
+	background-color:#337ab7;
+}
 
 @font-face {
     font-family: Montserrat;
@@ -34,12 +37,14 @@ html
 
 .modal-body {
 	height: auto;
+	padding-bottom: 0px;
 }
+
 
 body 
 {
-   //width: 100%;
-   //min-height: 100%;
+   /*width: 100%;
+   min-height: 100%;*/
    font-family: 'Montserrat', 'Verdana', sans-serif;
    font-weight: 400;
    background-color: #8a9fa8; 
@@ -72,7 +77,7 @@ body
     height: auto;
     max-height: 100px;
     overflow-y: auto;   /* prevent horizontal scrollbar */
-    //overflow-x: hidden; /* add padding to account for vertical scrollbar */
+    /*overflow-x: hidden; *//* add padding to account for vertical scrollbar */
 	overflow-x: auto; /* add padding to account for vertical scrollbar */
     z-index:1000 !important;
 }
@@ -1614,7 +1619,7 @@ body.guiPageBody
     width: 100vw;
     height: 100vh;
     overflow-x: hidden;
-    overflow-y: hidden;
+    overflow-y: auto;
     font-family: 'Montserrat';
     background-color: rgb(138, 159, 168);
     
@@ -1750,10 +1755,10 @@ body.dashboardViewBodyAuth
 
 @media(min-width:992px) 
 {
-    #headerTitleCnt
-    {
+    #headerTitleCnt{
         height: 50px;
     }
+	
 }
 
 #headerMenuCnt
@@ -2047,6 +2052,12 @@ a.moduleLink:hover
 .editDashBtnCard:hover
 {
     background-color: rgba(0, 162, 211, 1);
+    color: white;
+}
+
+.editDashBtnCard:target
+{
+    color: white;
 }
 
 .editDashBtnCard_modify
@@ -2063,6 +2074,13 @@ a.moduleLink:hover
 .editDashBtnCard_modify:hover
 {
     background-color: rgba(0, 162, 211, 1);
+ 	color: white;
+}
+
+.editDashBtnCard_modify:target
+{
+    color: white;
+	
 }
 
 .editDashBtnCard_publish
@@ -2079,6 +2097,12 @@ a.moduleLink:hover
 .editDashBtnCard_publish:hover
 {
     background-color: rgba(0, 162, 211, 1);
+	color: white;
+}
+
+.editDashBtnCard_publish:target
+{
+    color: white;
 }
 
 .editDashBtnCard_owner
@@ -2095,6 +2119,12 @@ a.moduleLink:hover
 .editDashBtnCard_owner:hover
 {
     background-color: rgba(0, 162, 211, 1);
+    color: white;
+}
+
+.editDashBtnCard_owner:target
+{
+    color: white;
 }
 
 .viewDashBtn

@@ -830,7 +830,8 @@ $(document).on('change','.mod_max',function(){
 	console.log('mySubString: '+mySubString);
 	var count =  Number(mySubString)+1;
 	console.log('val: '+val);
-	var el = document.getElementsByName("paramMin["+count+"]");
+	//var el = document.getElementsByName("paramMin["+count+"]");
+	 var el = document.getElementsByName("paramMinMod["+count+"]");
 	$(el).val(val);
 	//console.log('el:'+el);
 	

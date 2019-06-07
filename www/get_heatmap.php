@@ -61,8 +61,8 @@ $query_count = "SELECT t1.*,
 					SELECT DISTINCT
 							map_name,
 							MIN(latitude) AS 'min_lat',
-							MIN(longitude) AS 'max_lat',
-							MAX(latitude) AS 'min_lon',
+							MAX(latitude) AS 'max_lat',
+							MIN(longitude) AS 'min_lon',
 							MAX(longitude) AS 'max_lon',
 							date AS 'data_date',
 							COUNT(date) AS 'number'
@@ -108,7 +108,7 @@ JOIN (
     if ($result_count->num_rows > 0) {
         while ($row0 = mysqli_fetch_assoc($result_count)) {
             
-            $bbox     = '{"min_lat":"' . $row0['min_lat'] . '", "min_lon":"' . $row0['min_lon'] . '", "max_lat":"' . $row0['max_lat'] . '", "max_lon":"' . $row0['max_lon'] . '"}';
+            $bbox     = '{"min_lat":"' . $row0['min_lat'] . '", "max_lat":"' . $row0['max_lat'] . '", "min_lon":"' . $row0['min_lon'] . '", "max_lon":"' . $row0['max_lon'] . '"}';
             $listFile = array(
                 "value" => $row0['number'],
                 "description" => $row0['description'],
