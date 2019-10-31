@@ -17,17 +17,17 @@
    
 include("config.php");
 include("curl.php");
-
+if (isset ($_SESSION['username'])&& isset($_SESSION['role'])){  
 
 
 
 if(isset($_REQUEST['Publish_process'])){
 	//ID del Job Type
-	$job_type_id = $_POST['id2'];
+	$job_type_id = mysqli_real_escape_string($connessione_al_server,$_POST['id2']);
 	echo $job_type_id;
 
 	//
-	$tipo_zip=$_POST['tipo_zip2'];
+	$tipo_zip=mysqli_real_escape_string($connessione_al_server,$_POST['tipo_zip2']);
 /* 	var_dump($_FILES); */
 
 
@@ -118,32 +118,32 @@ if(isset($_REQUEST['Publish_process'])){
 	
 	
 	
-   $cat = $_POST['category2'];
-   $res = $_POST['resource'];
-      $url = $_POST['url2'];
-   $method = $_POST['method2'];
-      $os = $_POST['os2'];
+   $cat = mysqli_real_escape_string($connessione_al_server,$_POST['category2']);
+   $res = mysqli_real_escape_string($connessione_al_server,$_POST['resource']);
+      $url = mysqli_real_escape_string($connessione_al_server,$_POST['url2']);
+   $method = mysqli_real_escape_string($connessione_al_server,$_POST['method2']);
+      $os = mysqli_real_escape_string($connessione_al_server,$_POST['os2']);
    $opensource = $_POST['opensource2'];
-      $help = $_POST['help2'];
+      $help = mysqli_real_escape_string($connessione_al_server,$_POST['help2']);
    echo $cat;
-   $for=$_POST['format2'];
+   $for=mysqli_real_escape_string($connessione_al_server,$_POST['format2']);
    if (($for==Null)||($for=="")){
 	   $for = "Other";
    }
    echo $for;
-   $prot=$_POST['protocol2'];
+   $prot=mysqli_real_escape_string($connessione_al_server,$_POST['protocol2']);
    //$file_zip_jb=$_POST['file_zip'];
-   $lic = $_POST['licence2'];
+   $lic = mysqli_real_escape_string($connessione_al_server,$_POST['licence2']);
    echo $lic;
-   $desc=$_POST['desc2'];
-   $rt=$_POST['realtime'];
-   $per=$_POST['periodic'];
-   $file_zip_jb=$_POST['file_zip'];
+   $desc=mysqli_real_escape_string($connessione_al_server,$_POST['desc2']);
+   $rt=mysqli_real_escape_string($connessione_al_server,$_POST['realtime']);
+   $per=mysqli_real_escape_string($connessione_al_server,$_POST['periodic']);
+   $file_zip_jb=mysqli_real_escape_string($connessione_al_server,$_POST['file_zip']);
    //$creation_date_jb=$_POST['data_zip'];
    $creation_date_jb=date("Y-m-d H:i:s");
 
 	//posizione file//
-	$file_position = $_POST['file_position'];
+	$file_position = mysqli_real_escape_string($connessione_al_server,$_POST['file_position']);
 	//
    
 	 $query="UPDATE `uploaded_files` SET `Date_of_publication` = '".$creation_date_jb."', `Description` = '".$desc."',`Category`='".$cat."', `Resource_input` = '".$res."', `Img`='".$new_img."',`Protocol`='".$prot."',`License`='".$lic."', `Format` = '".$for."', `Public` = 1, `Periodic` = '".$per."', `Realtime` = '".$rt."',`Url` = '".$url."',`Method` = '".$method."',`OpenSource` = '".$opensource."',`OS` = '".$os."',`Help` = '".$help."' WHERE `Id` = '".$job_type_id."'" ;
@@ -157,4 +157,7 @@ if(isset($_REQUEST['Publish_process'])){
    header("location:file_archive.php");
 }else{
   echo ("Errore nella creazione del jobtype".mysqli_error($connessione_al_server));
+}
+}else{
+	header ("location:page.php");
 }

@@ -353,8 +353,53 @@ include "mobMainMenu.php";
 		left="left_"+id;
 		modal= 'modal_body'+id;
 		modal_content = 'modal_content'+id;
-		document.getElementById(idimg).style = ' margin-bottom:15px; margin-top:15px; transform: rotate(' + deg + 'deg); vertical-align: middle;';
-		$("#"+left).attr("onclick","ruota1("+id+","+deg+")");
+		//document.getElementById(idimg).style = ' margin-bottom:15px; margin-top:15px; transform: rotate(' + deg + 'deg); vertical-align: middle;';
+		/////
+			var id_file = document.getElementById(idimg);
+			var file_img = id_file.getAttribute('src');
+			var elem_pop = document.getElementById(idimg_popup);
+			var pop_img = elem_pop.getAttribute('src');
+			var res = file_img.split("/");
+			var l = res.length;
+			var res2 = res[l-1].split("?");
+			var image = res2[0];
+			$.ajax({
+				url: "get_data_photo_service.php",
+				data: {direction:'left', image_name:image, action:'rotate-image'},
+				success: function (data) {
+						console.log(data);
+						if (data.indexOf('OK') >= 0){
+							var id_pop = idimg+'_popup';
+							var id_modal = "modal_body"+id;
+							//$('#'+idimg).attr('src',file_img);
+							$('#'+idimg_popup).attr('src', pop_img +'?' + new Date().getTime());
+							$("#"+left).attr("onclick","ruota1("+id+","+deg+")");
+							$('#'+idimg).attr('src',file_img +'?' + new Date().getTime());
+							//
+							var marker = markerGroupPhoto[id];
+							var popup = marker.getPopup();
+							var content = popup.getContent();
+							//MODIFICA
+							var mySubString = content.substring(
+													content.lastIndexOf("<center>"), 
+													content.lastIndexOf("</center>")
+												);
+							console.log(mySubString);
+							var new_string = ('<center><img class="pop_image" src="'+file_img+'?' + new Date().getTime() + '"></center>');
+							var content2 = content.replace(mySubString, new_string);
+							marker.bindPopup(content2);
+							$('.pop_image').attr('src',file_img +'?' + new Date().getTime());
+							//
+						}else{
+							console.log("ERROR");
+						}
+					}
+			});
+			////
+			$('.pop_image').load(location.href + '.pop_image');
+			//$('#'+idimg).load();
+
+		
 	}
 
 	function changeStatus(id,new_status) {
@@ -391,8 +436,53 @@ include "mobMainMenu.php";
 			modal= 'modal_body'+id;
 			modal_content = 'modal_content'+id;
 			right="right_"+id;		
-			document.getElementById(idimg).style = ' margin-bottom:15px; margin-top:15px; transform: rotate(' + deg + 'deg); vertical-align: middle;';
-			$("#"+right).attr("onclick","ruota2("+id+","+deg+")");
+			//document.getElementById(idimg).style = ' margin-bottom:15px; margin-top:15px; transform: rotate(' + deg + 'deg); vertical-align: middle;';
+			/////
+			var id_file = document.getElementById(idimg);
+			var file_img = id_file.getAttribute('src');
+			var elem_pop = document.getElementById(idimg_popup);
+			var pop_img = elem_pop.getAttribute('src');
+			var res = file_img.split("/");
+			var l = res.length;
+			var res2 = res[l-1].split("?");
+			var image = res2[0];
+			$.ajax({
+				url: "get_data_photo_service.php",
+				data: {direction:'right', image_name:image, action:'rotate-image'},
+				success: function (data) {
+						console.log(data);
+						if (data.indexOf('OK') >= 0){
+							var id_pop = idimg+'_popup';
+							var id_modal = "modal_body"+id;
+							//
+							$('#'+idimg_popup).attr('src', pop_img +'?' + new Date().getTime());
+							$("#"+right).attr("onclick","ruota2("+id+","+deg+")");
+							$('#'+idimg).attr('src',file_img +'?' + new Date().getTime());
+							//
+							var marker = markerGroupPhoto[id];
+							var popup = marker.getPopup();
+							var content = popup.getContent();
+							marker.bindPopup(content);
+							//MODIFICA
+							var mySubString = content.substring(
+													content.lastIndexOf("<center>"), 
+													content.lastIndexOf("</center>")
+												);
+							console.log(mySubString);
+							var new_string = ('<center><img class="pop_image" src="'+file_img+'?' + new Date().getTime() + '"></center>');
+							var content2 = content.replace(mySubString, new_string);
+							marker.bindPopup(content2);
+							$('.pop_image').attr('src',file_img +'?' + new Date().getTime());
+							//marker.closePopup();
+							//
+						}else{
+							console.log("ERROR");
+						}
+					}
+			});
+			////
+			$('.pop_image').load(location.href + '.pop_image');
+			//$('#'+idimg).load();
 	}	
 	var pagina="<?= $page; ?>";
 			$("a.page_n[value='"+pagina+"']").css("text-decoration","underline");		
@@ -539,7 +629,7 @@ include "mobMainMenu.php";
 									tooltip_text = 'Position not found';
 								}
 					//
-					var cardModal = '<div id="myModal'+i+'" class="modal fade" role="dialog" >';
+					var cardModal = '<div id="myModal'+i+'" class="modal fade" role="dialog" style="max-height:100%; height: auto;">';
 						cardModal = cardModal + '<div class="modal-dialog" ><div class="modal-content" id="modal_content'+i+'">';
 						cardModal = cardModal +'<div class="modal-body" id="modal_body'+i+'"><img id="img'+i+'_popup" src="'+string_file+'" class="modal_image" alt="Card image" ></div>';
 						cardModal = cardModal +'<div class="modal-footer"><button type="button" class="btn btn-default" data-dismiss="modal" >Close</button></div></div></div></div>';
@@ -821,7 +911,7 @@ include "mobMainMenu.php";
 											}
 								//
 								var string_file = n_api.replace("thumbs/","");
-								var cardModal = '<div id="myModal'+i+'" class="modal fade" role="dialog" ><div class="modal-dialog" ><div class="modal-content" id="modal_content'+i+'"><div class="modal-body" id="modal_body'+i+'"><img id="img'+i+'_popup" src="'+string_file+'" class="modal_image" alt="Card image"></div><div class="modal-footer"><button type="button" class="btn btn-default" data-dismiss="modal" >Close</button></div></div></div></div>';				
+								var cardModal = '<div id="myModal'+i+'" class="modal fade" role="dialog" style="max-height:100%; height: auto;"><div class="modal-dialog" ><div class="modal-content" id="modal_content'+i+'"><div class="modal-body" id="modal_body'+i+'"><img id="img'+i+'_popup" src="'+string_file+'" class="modal_image" alt="Card image"></div><div class="modal-footer"><button type="button" class="btn btn-default" data-dismiss="modal" >Close</button></div></div></div></div>';				
 								var cardDiv = '<div class="row_card"> <div class="card col-md-4">';
 								cardDiv = cardDiv +'<div class="card-body">';	
 								cardDiv = cardDiv +' <p class="card-text-card">'+array[i].timestamp+'</p>';
@@ -992,7 +1082,15 @@ include "mobMainMenu.php";
 				var pos = [lat,lon];
 				mymap.flyTo(pos, 14);
 				var marker = markerGroupPhoto[index];
+				var popup = marker.getPopup();
+				var content = popup.getContent();
 				marker.openPopup();
+				var elem_pop = document.getElementsByClassName('pop_image');
+				var file_img = elem_pop[0].getAttribute('src');
+				$('.pop_image').attr('src',file_img +'?' + new Date().getTime());
+				//
+				
+				
 		}
 		
 	

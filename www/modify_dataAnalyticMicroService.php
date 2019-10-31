@@ -17,31 +17,72 @@
    
 include("config.php");
 include("curl.php");
-
+if (isset ($_SESSION['username'])&& isset($_SESSION['role'])){
 ////PARAMETRI ////
 
 //ID del Job Type
-$job_type_id = $_POST['id3'];
-$res = $_POST['resource3'];
-$desc=$_POST['desc3'];
-$cat = $_POST['category3'];
-$file_position = $_POST['file_position'];	
-$file_zip_jb=$_POST['file_zip3'];
-$for=$_POST['format3'];
-$prot=$_POST['protocol3'];
+$job_type_id0 = $_POST['id3'];
+$job_type_id = filter_var($job_type_id0, FILTER_SANITIZE_STRING);
+//
+$res0 = $_POST['resource3'];
+$res = filter_var($res0, FILTER_SANITIZE_STRING);
+//
+$desc0=$_POST['desc3'];
+$desc = filter_var($desc0, FILTER_SANITIZE_STRING);
+//
+$cat0 = $_POST['category3'];
+$cat = filter_var($cat0, FILTER_SANITIZE_STRING);
+//
+$file_position0 = $_POST['file_position'];
+$file_position = filter_var($file_position0, FILTER_SANITIZE_STRING);
+//
+$file_zip_jb0=$_POST['file_zip3'];
+$file_zip_jb = filter_var($file_zip_jb0, FILTER_SANITIZE_STRING);
+//
+$for0=$_POST['format3'];
+$for = filter_var($for0, FILTER_SANITIZE_STRING);
+//
+$prot0=$_POST['protocol3'];
+$prot = filter_var($prot0, FILTER_SANITIZE_STRING);
+//
 $_POST['realtime3'] = isset($_POST['realtime3']) ? $_POST['realtime3'] : 0;
 $_POST['periodic3'] = isset($_POST['periodic3']) ? $_POST['periodic3'] : 0;
 $_POST['opensource3'] = isset($_POST['opensource3']) ? $_POST['opensource3'] : 0;
-$rt=$_POST['realtime3'];
-$per=$_POST['periodic3'];
-$lic = $_POST['licence3'];
-$url_nuovo = $_POST['url3'];
-$method = $_POST['method3'];
-$os = $_POST['os3'];
-$opensource = $_POST['opensource3'];
-$help = $_POST['help3'];
+//
+$rt0=$_POST['realtime3'];
+$rt = filter_var($rt0, FILTER_SANITIZE_STRING);
+//
+$per0=$_POST['periodic3'];
+$per = filter_var($per0, FILTER_SANITIZE_STRING);
+//
+$lic0 = $_POST['licence3'];
+$lic= filter_var($lic0, FILTER_SANITIZE_STRING);
+//
+$url_nuovo0 = $_POST['url3'];
+$url_nuovo= filter_var($url_nuovo0, FILTER_SANITIZE_STRING);
+//
+$method0 = $_POST['method3'];
+$method = filter_var($method0, FILTER_SANITIZE_STRING);
+//
+$os0 = $_POST['os3'];
+$os = filter_var($os0, FILTER_SANITIZE_STRING);
+//
+$opensource0 = $_POST['opensource3'];
+$opensource = filter_var($opensource0, FILTER_SANITIZE_STRING);
+//
+$help0 = $_POST['help3'];
+//$help = filter_var($help0, FILTER_SANITIZE_STRING);
+if (strpos($help0, '<script') !== false) {
+			echo 'true';
+			$help = filter_var($help0 , FILTER_SANITIZE_STRING);
+		}else{
+			$help = $help0;
+		}
+//
 $creation_date_jb=date("Y-m-d H:i:s");
-$file_position = $_POST['file_position'];
+//
+$file_position0 = $_POST['file_position'];
+$file_position = filter_var($file_position0, FILTER_SANITIZE_STRING);
 ///function RESIZE ///
 function resize_image($file, $width, $height) {
 		list($w, $h) = getimagesize($file);
@@ -61,13 +102,21 @@ function resize_image($file, $width, $height) {
 //////
 ///////////////////MODIFCA FILE MISCROSERVIZI//////////////
 ////////////////////////////////////////////
-$tipo = $_POST['tipo_zip3'];
+$tipo0 = $_POST['tipo_zip3'];
+$tipo = filter_var($tipo0, FILTER_SANITIZE_STRING);
+//
 if (($tipo == 'DataAnalyticMicroService')&&(isset($_REQUEST['editor']))){
-	$nuovo_help = $_POST['help3'];
-	echo ("Nuovo Help:	".$nuovo_help);
-	$nuovo_url = $_POST['url3'];
-	$parameters = $_POST['paramList3'];
-	$parameters_vecchi = $_POST['paramList_vecchi3'];
+	$nuovo_help0 = $_POST['help3'];
+	$nuovo_help  = filter_var($nuovo_help0, FILTER_SANITIZE_STRING);
+	//echo ("Nuovo Help:	".$nuovo_help);
+	$nuovo_url0 = $_POST['url3'];
+	$nuovo_url  = filter_var($nuovo_url0, FILTER_SANITIZE_STRING);
+	//
+	$parameters0 = $_POST['paramList3'];
+	$parameters  = filter_var_array($parameters0, FILTER_SANITIZE_STRING);
+	//
+	$parameters_vecchi0 = $_POST['paramList_vecchi3'];
+	$parameters_vecchi  = filter_var_array($parameters_vecchi0, FILTER_SANITIZE_STRING);
 	//Selezionare tutto dal db
 	$query_micro = "SELECT * FROM processloader_db.uploaded_files WHERE Id='".$job_type_id."';";
 	$link = mysqli_connect($host, $username, $password) or die("failed to connect to server !!");
@@ -435,5 +484,7 @@ if (isset($_REQUEST['editor'])){
 				}
 		
 		}
-
+}else{
+	header ("location:page.php");
+}
 

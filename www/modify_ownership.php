@@ -1,19 +1,31 @@
 <?php
 include("config.php");
 include("curl.php");
-
+if (isset ($_SESSION['username'])&& isset($_SESSION['role'])){  
 
 	//$link = mysqli_connect($host, $username, $password) or die("failed to connect to server !!");
 	$link = mysqli_connect($host, $username, $password);
 	mysqli_set_charset($link, 'utf8');
 	mysqli_select_db($link, $dbname);
 
-	$id=$_POST['id'];
-	$user_vecchio=$_POST['user_old'];
-	$user_nuovo=$_POST['user_new'];
-	$creation_date=$_POST['date'];
-	$file_name=$_POST['file_name'];
-	$stato=$_POST['type'];
+	$id0 = mysqli_real_escape_string($link, $_POST['id']);
+	$id = filter_var($id0, FILTER_SANITIZE_STRING);
+	//
+	$user_vecchio0 = mysqli_real_escape_string($link, $_POST['user_old']);
+	$user_vecchio = filter_var($user_vecchio0, FILTER_SANITIZE_STRING);
+	//
+	$user_nuovo0 = mysqli_real_escape_string($link,$_POST['user_new']);
+	$user_nuovo = filter_var($user_nuovo0, FILTER_SANITIZE_STRING);
+	//
+	$creation_date0 = mysqli_real_escape_string($link, $_POST['date']);
+	$creation_date = filter_var($creation_date0, FILTER_SANITIZE_STRING);
+	//
+	$file_name0 = mysqli_real_escape_string($link, $_POST['file_name']);
+	$file_name = filter_var($file_name0, FILTER_SANITIZE_STRING);
+	//
+	$stato0 = mysqli_real_escape_string($link, $_POST['type']);
+	$stato = filter_var($stato0 , FILTER_SANITIZE_STRING);
+	//
 	$data_C_mod4 = $creation_date;
 	//
 	//
@@ -154,5 +166,7 @@ include("curl.php");
 				header ("location:page.php?message=error");
 			   }
 			}
-
+}else{
+	header ("location:page.php");
+}
    ?>

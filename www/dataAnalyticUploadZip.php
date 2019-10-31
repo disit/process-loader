@@ -15,18 +15,35 @@
    You should have received a copy of the GNU Affero General Public License
    along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
-include('config.php'); 
+include('config.php');
+if (isset ($_SESSION['username'])&& isset($_SESSION['role'])){ 
 ini_set('upload-max-filesize', '100M');
 ini_set('post_max_size', '100M');
-$descrizione = $_POST['filedesc'];
-$tipo = $_POST['filetype'];
+//
+$descrizione0 = mysqli_real_escape_string($connessione_al_server,$_POST['filedesc']);
+$descrizione = filter_var($descrizione0, FILTER_SANITIZE_STRING);
+//
+$tipo0 = mysqli_real_escape_string($connessione_al_server,$_POST['filetype']);
+$tipo = filter_var($tipo0, FILTER_SANITIZE_STRING);
+//
 $percorso = $_FILES['userfile']['tmp_name'];
 $nome = $_FILES['userfile']['name'];
-$nature= $_POST['filenat'];
-$subnat=$_POST['filesubN'];
-$fileLic=$_POST['fileLic'];
-$fileacc=$_POST['fileacc'];
-$fileform=$_POST['fileform'];
+//
+$nature0= mysqli_real_escape_string($connessione_al_server,$_POST['filenat']);
+$nature = filter_var($nature0, FILTER_SANITIZE_STRING);
+//
+$subnat0= mysqli_real_escape_string($connessione_al_server,$_POST['filesubN']);
+$subnat = filter_var($subnat0, FILTER_SANITIZE_STRING);
+//
+$fileLic0= mysqli_real_escape_string($connessione_al_server,$_POST['fileLic']);
+$fileLic = filter_var($fileLic0, FILTER_SANITIZE_STRING);
+//
+$fileacc0= mysqli_real_escape_string($connessione_al_server,$_POST['fileacc']);
+$fileacc = filter_var($fileacc0, FILTER_SANITIZE_STRING);
+//
+$fileform0= mysqli_real_escape_string($connessione_al_server,$_POST['fileform']);
+$fileform = filter_var($fileform0, FILTER_SANITIZE_STRING);
+//
 if ($nature =="" || $nature == null){$nature = 'ToBeDefined';}
 if ($subnat =="" || $subnat == null){$subnat = 'ToBeDefined';}
 if ($fileLic == ""|| $fileLic == null){$fileLic = 'Private';}
@@ -39,12 +56,21 @@ $utente_us = $_SESSION['username'];
 $ext = explode(".", $nome);
 $ext = $ext[count($ext)-1];
 if (isset($_POST['help'])){
-$help = $_POST['help'];
+$help0 = $_POST['help'];
+//
+if (strpos($help0, '<script') !== false) {
+			echo 'true';
+			$help = filter_var($help0 , FILTER_SANITIZE_STRING);
+		}else{
+			$help = $help0;
+		}
+//
 }else{
 $help = null;	
 }
 if (isset($_POST['url'])){
-$url = $_POST['url'];
+$url0 = mysqli_real_escape_string($connessione_al_server,$_POST['url']);
+$url = filter_var($url0, FILTER_SANITIZE_STRING);
 ////Manipolazione ULR//
 /*
 			$check = strstr($url,'http:');
@@ -142,19 +168,22 @@ if (($tipo == 'MicroService')||($tipo == 'DataAnalyticMicroService')){
 	$fileacc = "http";
 	
 	if (isset($_POST['metod'])){
-		$method = $_POST['metod'];
+		$method0 = mysqli_real_escape_string($connessione_al_server,$_POST['metod']);
+		$method = filter_var($method0, FILTER_SANITIZE_STRING);
 	}else{
 		$method = "GET";
 	}
 	
 	
 	if (isset($_POST['paramList'])){
-		$array_parametri = $_POST['paramList'];
+		$array_parametri0 = $_POST['paramList'];
+		$array_parametri = filter_var_array($array_parametri0, FILTER_SANITIZE_STRING);
 	}else{
 		$array_parametri = array();
 	}
 	if (isset($_POST['micro_name'])){
-			$micro_name = $_POST['micro_name'];
+			$micro_name0 = $_POST['micro_name'];
+			$micro_name = filter_var($micro_name0, FILTER_SANITIZE_STRING);
 			}else{
 			$micro_name = "GenericMicroService";	
 		}
@@ -520,7 +549,9 @@ if (($tipo == 'MicroService')||($tipo == 'DataAnalyticMicroService')){
 
 
 //////ELSE//////
-
+}else{
+	header ("location:page.php");
+}
 
 
 

@@ -33,7 +33,7 @@ $url_accessToken = $access_token_userinfo;
 $userToken ="";
 $public =0;	
 if(isset($_GET['id'])) {
-	$query_public = "SELECT public FROM processloader_db.uploaded_files WHERE Id=".$_GET['id'];
+	$query_public = "SELECT public FROM processloader_db.uploaded_files WHERE Id=".mysqli_real_escape_string($link,$_GET['id']);
 	$result_public = mysqli_query($link, $query_public) or die(mysqli_error($link));
 	$list_public = 0;
 	 $num = $result_public->num_rows;
@@ -111,7 +111,7 @@ else
 		// qui invece del get[resource_type] si può metter un ciclo su tutti i parametri del get e costruire una stringa da attaccare nel where della query, del tipo WHERE category=$_GET['nature'] and resource_type=$GET['resource_type'] and ....
 		if(isset($_GET['id']))
 		{
-						$id_query=$_GET['id'];
+						$id_query=mysqli_real_escape_string($link,$_GET['id']);
 			if ($userToken !=""){
 			//$query = "SELECT * FROM processloader_db.uploaded_files WHERE Username='".$userToken."' and Id='".$id_query."'";	
 				$query = "SELECT * FROM processloader_db.uploaded_files WHERE Id='".$id_query."' AND ((Username='".$userToken."' AND public=0) OR (public=1))";	

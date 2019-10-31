@@ -39,71 +39,83 @@ if (isset($_REQUEST['other_nature'])&&($_REQUEST['nature']=='Other...')){
 	$nature = $_REQUEST['other_nature'];	
 }else{
 	if (isset($_REQUEST['nature'])){
-	$nature = $_REQUEST['nature'];	
+	$nature0 = mysqli_real_escape_string($link,$_REQUEST['nature']);
+	$nature = filter_var($nature0, FILTER_SANITIZE_STRING);
 	}else{
 		$nature = "";
 	}
 }
 //
 if (isset($_REQUEST['other_subnature'])&&($_REQUEST['subnature'] =='Other...')){
-	$subnature = $_REQUEST['other_subnature'];
+	$subnature0 = mysqli_real_escape_string($link, $_REQUEST['other_subnature']);
+	$subnature = filter_var($subnature0, FILTER_SANITIZE_STRING);
 }else{
 		if (isset($_REQUEST['subnature'])){
-		$subnature = $_REQUEST['subnature'];
+		$subnature0 = mysqli_real_escape_string($link, $_REQUEST['subnature']);
+		$subnature = filter_var($subnature0, FILTER_SANITIZE_STRING);
 		}else{
 		$subnature = "";	
 		}
 }
 //
 if (isset($_REQUEST['valuename'])){
-$valuename = $_REQUEST['valuename'];	
+$valuename0 = mysqli_real_escape_string($link, $_REQUEST['valuename']);
+$valuename = filter_var($valuename0, FILTER_SANITIZE_STRING);	
 }else{
 $valuename = "";	
 }
 
 if (isset($_REQUEST['valuetype'])){
-$valuetype = $_REQUEST['valuetype'];	
+$valuetype0 = mysqli_real_escape_string($link, $_REQUEST['valuetype']);
+$valuetype = filter_var($valuetype0, FILTER_SANITIZE_STRING);	
 }else{
 $valuetype = "";	
 }
 
 if(isset($_REQUEST['datatype'])){
-$datatype = $_REQUEST['datatype'];	
+$datatype0 = mysqli_real_escape_string($link, $_REQUEST['datatype']);
+$datatype  = filter_var($datatype0, FILTER_SANITIZE_STRING);		
 }else{
 $datatype = "";	
 }
 
 if(isset($_REQUEST['ownership'])){
-$ownership = $_REQUEST['ownership'];
+$ownership0 = mysqli_real_escape_string($link, $_REQUEST['ownership']);
+$ownership  = filter_var($ownership0, FILTER_SANITIZE_STRING);	
 }else{
 $ownership = "";
 }
 
 if (isset($_REQUEST['description'])){
-	$description = $_REQUEST['description'];
+	$description0 = mysqli_real_escape_string($link, $_REQUEST['description']);
+	$description  = filter_var($description0, FILTER_SANITIZE_STRING);
 }else{
 	$description = "";
 }
 
 if(isset($_REQUEST['info'])){
-	$info = $_REQUEST['info'];
+	$info0 = mysqli_real_escape_string($link, $_REQUEST['info']);
+	$info  = filter_var($info0, FILTER_SANITIZE_STRING);
 }else{
 	$info = "";
 }
 
 if (isset($_REQUEST['latitudes'])){
-	$latitude = $_REQUEST['latitudes'];
+	$latitude0 = mysqli_real_escape_string($link, $_REQUEST['latitudes']);
+	$latitude  = filter_var($latitude0, FILTER_SANITIZE_STRING);
 }else{
 	$latitude = "";
 }
 
 if(isset($_REQUEST['longitudes'])){
-	$longitudes = $_REQUEST['longitudes'];
+	$longitudes0 = mysqli_real_escape_string($link, $_REQUEST['longitudes']);
+	$longitudes  = filter_var($longitudes0, FILTER_SANITIZE_STRING);
 }else{
 	$longitudes = "";
 }
 if(isset($_REQUEST['paramters'])){
-	$parameters = $_REQUEST['paramters'];
+	$parameters0 = mysqli_real_escape_string($link, $_REQUEST['paramters']);
+	$parameters  = filter_var($parameters0, FILTER_SANITIZE_STRING);
 }else{
 	$parameters = "";
 }

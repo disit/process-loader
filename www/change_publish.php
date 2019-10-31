@@ -17,6 +17,7 @@
 
 include("config.php");
 include("curl.php");
+if (isset ($_SESSION['username'])&& isset($_SESSION['role'])){
 $link = mysqli_connect($host, $username, $password) or die("failed to connect to server !!");
 mysqli_set_charset($link, 'utf8');
 mysqli_select_db($link, $dbname);
@@ -143,5 +144,8 @@ else {
 			header ("location:file_archive.php");
 		}
 	}
+}
+}else{
+	header ("location:page.php");
 }
 ?>

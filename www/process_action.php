@@ -16,16 +16,17 @@
    along with this program.  If not, see <http://www.gnu.org/licenses/>. */
    
 include("config.php");
+if (isset ($_SESSION['username'])&& isset($_SESSION['role'])){
 $link = mysqli_connect($host, $username, $password) or die("failed to connect to server !!");
 mysqli_set_charset($link, 'utf8');
 mysqli_select_db($link, $dbname);
 //error_reporting(E_ERROR | E_NOTICE);
 $ip_run=$_REQUEST['ip_run'];	
 //
-$operation_run=$_REQUEST['operation_run'];
-$id_run=$_REQUEST['id_run'];
-$n_run=$_REQUEST['n_run'];
-$g_run=$_REQUEST['g_run'];
+$operation_run=mysqli_real_escape_string($link,$_REQUEST['operation_run']);
+$id_run=mysqli_real_escape_string($link,$_REQUEST['id_run']);
+$n_run=mysqli_real_escape_string($link,$_REQUEST['n_run']);
+$g_run=mysqli_real_escape_string($link,$_REQUEST['g_run']);
 //echo ("ip_run: ".$ip_run."<br>");
 //echo ("operation_run: ".$operation_run."<br>");
 //echo ("id_run: ".$id_run."<br>");
@@ -50,6 +51,7 @@ if ($result1->num_rows > 0) {
 				"trigger_name" => $row1['trigger_name'],
 				"trigger_group" => $row1['trigger_group'],
 				"ip" => $row1['id_disces'],
+				"Start_time" => $row1['Start_time']
 			);
 	array_push($list, $listFile);
 	}
@@ -61,6 +63,13 @@ if ($result1->num_rows > 0) {
 	echo $val_group =  $list[0]['group'];
 	echo $val_trg_name = $list[0]['trigger_name'];
 	echo $val_trg_group = $list[0]['trigger_group'];
+	echo $val_trg_start = $list[0]['Start_time'];
+	$opening_date = $val_trg_start;
+	$current_date = date("Y-m-d H:i:s");
+		if ($opening_date > $current_date){
+			$operation_run ="triggerJob";
+			}
+	//
 	if ($list[0]['ip'] ==""){
 		$ip_SCE1 = explode(":", $ip_SCE1);
 		$val_ip = $ip_SCE1[0];
@@ -123,7 +132,7 @@ $options = array(
 		$date_run = date("Y-m-d H:i:s");
 
 							//if ($operation_run == 'triggerJob'){
-									if ($operation_run == 'resumeJob'){
+									if ($operation_run == 'resumeJob'|| $operation_run == "triggerJob"){
 								//$sql = "UPDATE  `processes` SET `processes`.`Status`='RUNNING' WHERE `id`='".$id_run."'";
 								//
 								$sql = "UPDATE  `processes` SET `processes`.`Status`='".$stato_att."' WHERE `id`='".$id_run."'";
@@ -214,5 +223,7 @@ $options = array(
 											}
 		///////////		
 	}
-
+}else{
+	header ("location:page.php");
+}	
 ?>

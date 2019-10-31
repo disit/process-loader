@@ -23,15 +23,21 @@ require 'sso/autoload.php';
 
 use Jumbojett\OpenIDConnectClient; 
 
-
+if (isset ($_SESSION['username'])&& isset($_SESSION['role'])){
 if(isset($_REQUEST['action'])){
 	$action = $_REQUEST['action'];
 	$response = [];
 if($action == 'addDelegation'){
 			//
-			$heatmap= $_REQUEST['heatmap'];
-			$newDelegated= $_REQUEST['newDelegation'];
-			$user= $_REQUEST['user'];
+			$heatmap0= $_REQUEST['heatmap'];
+			$heatmap = filter_var($heatmap0, FILTER_SANITIZE_STRING);
+			//
+			$newDelegated0= $_REQUEST['newDelegation'];
+			$newDelegated = filter_var($newDelegated0, FILTER_SANITIZE_STRING);
+			//
+			$user0= $_REQUEST['user'];
+			$user = filter_var($user0, FILTER_SANITIZE_STRING);
+			//
 			$callBody = [];
 				
 						$dashboardAuthor = $user;
@@ -75,11 +81,16 @@ if($action == 'addDelegation'){
 			echo $response;
 			
 }else if ($action == 'changePublic'){
-		//
-	$heatmap=$_REQUEST['heatmap'];
-    $newVisibility=$_REQUEST['newVisibility'];
-	$dashboardAuthor = $_REQUEST['user'];
-	
+	//
+	$heatmap0= $_REQUEST['heatmap'];
+	$heatmap = filter_var($heatmap0, FILTER_SANITIZE_STRING);
+	//
+    $newVisibility0=$_REQUEST['newVisibility'];
+	$newVisibility = filter_var($newVisibility0, FILTER_SANITIZE_STRING);
+	//
+	$user0= $_REQUEST['user'];
+	$dashboardAuthor = filter_var($user0, FILTER_SANITIZE_STRING);
+	//
 	if ($newVisibility == 'private'){
 		$dbVisibility = 'author';
 		} else{
@@ -183,9 +194,16 @@ if($action == 'addDelegation'){
 
 	echo json_encode($response);
 }else if ($action == 'changeOwnership'){
-		$heatmap = $_REQUEST['heatmap'];
-		$user = $_REQUEST['user'];
-		$newOwner = $_REQUEST['newOwner'];	
+		//
+		$heatmap0= $_REQUEST['heatmap'];
+		$heatmap = filter_var($heatmap0, FILTER_SANITIZE_STRING);
+		//
+		$user0 = $_REQUEST['user'];
+		$user = filter_var($user0, FILTER_SANITIZE_STRING);
+		//
+		$newOwner0 = $_REQUEST['newOwner'];	
+		$newOwner = filter_var($newOwner0, FILTER_SANITIZE_STRING);
+		//
 		//$ldapUsername = "cn=" . $newOwner . "," . $ldapParamters;
 		$ldapUsername = "cn=". $user .  ",".$ldapParamters;
 		if (isset($_SESSION['refreshToken'])){
@@ -232,12 +250,22 @@ if($action == 'addDelegation'){
 
 		}else if ($action == 'delegateGroup'){
 					//echo ('Delegete Group');
-					$newDelegationOrg = $_REQUEST['newDelegationOrg'];
-					$newDelegated = $_REQUEST['newDelegationGroup'];
-					$user = $_REQUEST['user'];
-					$heatmap = $_REQUEST['heatmap'];
+					$newDelegationOrg0 = $_REQUEST['newDelegationOrg'];
+					$newDelegationOrg = filter_var($newDelegationOrg0, FILTER_SANITIZE_STRING);
+					//
+					$newDelegated0 = $_REQUEST['newDelegationGroup'];
+					$newDelegated = filter_var($newDelegated0, FILTER_SANITIZE_STRING);
+					//
+					$user0 = $_REQUEST['user'];
+					$user = filter_var($user0, FILTER_SANITIZE_STRING);
+					//
+					$heatmap0 = $_REQUEST['heatmap'];
+					$heatmap = filter_var($heatmap0, FILTER_SANITIZE_STRING);
+					//
 					$role = $_REQUEST['role'];
-					$oldDelegationGroup = $REQUEST['oldDelegationGroup'];
+					//
+					$oldDelegationGroup0 = $REQUEST['oldDelegationGroup'];
+					$oldDelegationGroup = filter_var($oldDelegationGroup0, FILTER_SANITIZE_STRING);
 					
 					////
 							if(isset($_SESSION['refreshToken'])){
@@ -522,5 +550,8 @@ if($action == 'addDelegation'){
 
 }else{
 	echo('ERROR');	
+}
+}else{
+	header ("location:page.php");
 }
 ?>

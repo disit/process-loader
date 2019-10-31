@@ -17,16 +17,31 @@
 
 include('config.php'); // Includes Login Script
 include('control.php');
+if (isset ($_SESSION['username'])&& isset($_SESSION['role'])){
 if(isset($_REQUEST['add_scheduler'])){
-	$address_sc = $_POST['address'];
-	$repository_sc=$_POST['repository'];
-	$desc_sc=$_POST['desc'];
-	$type_sc=$_POST['type'];
+	$address_sc0 = mysqli_real_escape_string($connessione_al_server,$_POST['address']);
+	$address_sc = filter_var($address_sc0, FILTER_SANITIZE_STRING);
 	//
-	$name=$_POST['name'];
-	$path=$_POST['path'];
-	$home=$_POST['home'];
-	$data_integration=$_POST['data_integration_path'];
+	$repository_sc0=mysqli_real_escape_string($connessione_al_server,$_POST['repository']);
+	$repository_sc = filter_var($repository_sc0, FILTER_SANITIZE_STRING);
+	//
+	$desc_sc0=mysqli_real_escape_string($connessione_al_server,$_POST['desc']);
+	$desc_sc = filter_var($desc_sc0, FILTER_SANITIZE_STRING);
+	//
+	$type_sc0=mysqli_real_escape_string($connessione_al_server,$_POST['type']);
+	$type_sc = filter_var($type_sc0, FILTER_SANITIZE_STRING);
+	//
+	$name0=mysqli_real_escape_string($connessione_al_server,$_POST['name']);
+	$name = filter_var($name0, FILTER_SANITIZE_STRING);
+	//
+	$path0=mysqli_real_escape_string($connessione_al_server,$_POST['path']);
+	$path = filter_var($path0, FILTER_SANITIZE_STRING);
+	//
+	$home0=mysqli_real_escape_string($connessione_al_server,$_POST['home']);
+	$home = filter_var($home0, FILTER_SANITIZE_STRING);
+	//
+	$data_integration0=mysqli_real_escape_string($connessione_al_server,$_POST['data_integration_path']);
+	$data_integration = filter_var($data_integration0, FILTER_SANITIZE_STRING);
    //
    $query='INSERT INTO `schedulers` (`Id`,`Ip_address`,`repository`,`type`,`Description`,`name`,`data_integration_path`,`process_path`,`DDI_HOME`)VALUES (NULL,"'.$address_sc.'","'.$repository_sc.'","'.$type_sc.'","'.$desc_sc.'","'.$name.'","'.$data_integration.'","'.$path.'","'.$home.'")';
    $query_job_type = mysqli_query($connessione_al_server,$query) or die ("query di creazione del job type non riuscita    ".mysqli_error($connessione_al_server));
@@ -56,5 +71,7 @@ if(isset($_REQUEST['add_scheduler'])){
 	
 	/////
 }
-
+}else{
+	header ("location:page.php");
+}	
 ?>

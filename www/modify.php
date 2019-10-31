@@ -19,29 +19,72 @@ include("config.php");
 include("curl.php");
 
 ////PARAMETRI ////
-
+if (isset ($_SESSION['username'])&& isset($_SESSION['role'])){ 
 //ID del Job Type
-$job_type_id = $_POST['id3'];
-$res = $_POST['resource3'];
-$desc=$_POST['desc3'];
-$cat = $_POST['category3'];
-$file_position = $_POST['file_position'];	
-$file_zip_jb=$_POST['file_zip3'];
-$for=$_POST['format3'];
-$prot=$_POST['protocol3'];
+$link = mysqli_connect($host, $username, $password) or die("failed to connect to server !!");
+	mysqli_set_charset($link, 'utf8');
+	mysqli_select_db($link, $dbname);
+//
+$job_type_id_test = mysqli_real_escape_string($link, $_POST['id3']);
+$job_type_id = filter_var($job_type_id_test, FILTER_SANITIZE_STRING);
+//
+$res_test = mysqli_real_escape_string($link,$_POST['resource3']);
+$res = filter_var($res_test, FILTER_SANITIZE_STRING);
+//
+$desc_test=mysqli_real_escape_string($link,$_POST['desc3']);
+$desc = filter_var($desc_test, FILTER_SANITIZE_STRING);
+//
+$cat_test = mysqli_real_escape_string($link,$_POST['category3']);
+$cat = filter_var($cat_test, FILTER_SANITIZE_STRING);
+//
+$file_position = mysqli_real_escape_string($link,$_POST['file_position']);	
+$file_zip_jb=mysqli_real_escape_string($link,$_POST['file_zip3']);
+//
+$for_test=mysqli_real_escape_string($link,$_POST['format3']);
+$for = filter_var($for_test, FILTER_SANITIZE_STRING);
+//
+$prot_test=mysqli_real_escape_string($link,$_POST['protocol3']);
+$prot = filter_var($prot_test, FILTER_SANITIZE_STRING);
+//
 $_POST['realtime3'] = isset($_POST['realtime3']) ? $_POST['realtime3'] : 0;
 $_POST['periodic3'] = isset($_POST['periodic3']) ? $_POST['periodic3'] : 0;
 $_POST['opensource3'] = isset($_POST['opensource3']) ? $_POST['opensource3'] : 0;
-$rt=$_POST['realtime3'];
-$per=$_POST['periodic3'];
-$lic = $_POST['licence3'];
-$url_nuovo = $_POST['url3'];
-$method = $_POST['method3'];
-$os = $_POST['os3'];
-$opensource = $_POST['opensource3'];
-$help = $_POST['help3'];
+//
+$rt_test =mysqli_real_escape_string($link,$_POST['realtime3']);
+$rt = filter_var($rt_test , FILTER_SANITIZE_STRING);
+//
+$per_test=mysqli_real_escape_string($link,$_POST['periodic3']);
+$per = filter_var($per_test, FILTER_SANITIZE_STRING);
+//
+$lic_test = mysqli_real_escape_string($link,$_POST['licence3']);
+$lic = filter_var($lic_test, FILTER_SANITIZE_STRING);
+//
+$url_nuovo_test = mysqli_real_escape_string($link,$_POST['url3']);
+$url_nuovo = filter_var($url_nuovo_test, FILTER_SANITIZE_STRING);
+//
+$method_test = mysqli_real_escape_string($link,$_POST['method3']);
+$method = filter_var($method_test, FILTER_SANITIZE_STRING);
+//
+$os_test = mysqli_real_escape_string($link,$_POST['os3']);
+$os = filter_var($os_test, FILTER_SANITIZE_STRING);
+//
+$opensource_test = mysqli_real_escape_string($link,$_POST['opensource3']);
+$opensource = filter_var($opensource_test, FILTER_SANITIZE_STRING);
+//
+$help_test = mysqli_real_escape_string($link,$_POST['help3']);
+//$help = filter_var($help_test, FILTER_SANITIZE_STRING);
+if (strpos($help_test, '<script') !== false) {
+			echo 'true';
+			$help = filter_var($help_test, FILTER_SANITIZE_STRING);
+		}else{
+			$help = $help_test;
+		}
+//
 $creation_date_jb=date("Y-m-d H:i:s");
-$file_position = $_POST['file_position'];
+//
+$file_position_test = mysqli_real_escape_string($link,$_POST['file_position']);
+$file_position = filter_var($file_position_test, FILTER_SANITIZE_STRING);
+//
 ///function RESIZE ///
 function resize_image($file, $width, $height) {
 		list($w, $h) = getimagesize($file);
@@ -63,16 +106,16 @@ function resize_image($file, $width, $height) {
 ////////////////////////////////////////////
 $tipo = $_POST['tipo_zip3'];
 if (($tipo == 'MicroService')&&(isset($_REQUEST['editor']))){
-	$nuovo_help = $_POST['help3'];
+	$nuovo_help = mysqli_real_escape_string($link, $_POST['help3']);
 	echo ("Nuovo Help:	".$nuovo_help);
-	$nuovo_url = $_POST['url3'];
-	$paramteri = $_POST['paramList3'];
-	$paramteri_vecchi = $_POST['paramList_vecchi3'];
+	$nuovo_url = mysqli_real_escape_string($link, $_POST['url3']);
+	//$paramteri = mysqli_real_escape_string($link, $_POST['paramList3']);
+	$paramteri0= $_POST['paramList3'];
+	$paramteri = filter_var_array($paramteri0, FILTER_SANITIZE_STRING);
+	//$paramteri_vecchi = mysqli_real_escape_string($link, $_POST['paramList_vecchi3']);
 	//Selezionare tutto dal db
 	$query_micro = "SELECT * FROM processloader_db.uploaded_files WHERE Id='".$job_type_id."';";
-	$link = mysqli_connect($host, $username, $password) or die("failed to connect to server !!");
-	mysqli_set_charset($link, 'utf8');
-	mysqli_select_db($link, $dbname);
+	
 
 			$result_micro = mysqli_query($link, $query_micro) or die(mysqli_error($link));
 			$process_list = array();
@@ -314,5 +357,7 @@ if (isset($_REQUEST['editor'])){
 				}
 		
 		}
-
+}else{
+	header ("location:page.php");
+}
 

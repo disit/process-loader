@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 include("config.php");
 include("curl.php");  
 
-
+if (isset ($_SESSION['username'])&& isset($_SESSION['role'])){  
 $control = 0;
 /*if (isset($_POST['protocol'])){
 	//ok
@@ -28,7 +28,7 @@ $control = 0;
 
 if (isset($_POST['lic'])){
 	//ok
-	$lic_pub=$_POST['lic'];
+	$lic_pub=mysqli_real_escape_string($connessione_al_server,$_POST['lic']);
 	if (($lic_pub=="Private")||($lic_pub=="")||($lic_pub==null)){
 	$control = 1;
 	}
@@ -36,18 +36,18 @@ if (isset($_POST['lic'])){
 
 if (isset($_POST['form'])){
 	//ok
-	$format_pub=$_POST['form'];
+	$format_pub=mysqli_real_escape_string($connessione_al_server,$_POST['form']);
 	if (($format_pub=="Others")||($format_pub=="")||($format_pub==null)||($format_pub=="ToBeDefined")){
 	$control = 1;
 	}
 }
 
 if (isset($_POST['id'])){
-$id=$_POST['id'];
+$id=mysqli_real_escape_string($connessione_al_server,$_POST['id']);
 }
 
 if (isset($_POST['status'])){
-$status=$_POST['status'];
+$status=mysqli_real_escape_string($connessione_al_server,$_POST['status']);
 }
 
 if ($status == 'false'){
@@ -96,5 +96,8 @@ if ($control == 1){
 							header ("location:page.php?modified_status=ok");
 							die();
 			}
+}
+}else{
+	header ("location:page.php");
 }
 ?>

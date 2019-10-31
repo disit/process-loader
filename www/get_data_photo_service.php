@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 include('config.php');
 include('curl.php');
 include('external_service.php');
+if (isset ($_SESSION['username'])&& isset($_SESSION['role'])){
 $link = mysqli_connect($host_photo, $username_photo, $password_photo) or die("failed to connect to server !!");
 mysqli_set_charset($link, 'utf8');
 mysqli_select_db($link, $dbname_photo);
@@ -184,7 +185,8 @@ if ($action == 'get_photo_data') {
                 "address" => $address,
                 "district" => $province,
                 "city" => $city,
-                "comment_status" => $comment_status
+                "comment_status" => $comment_status,
+				"url_check" => $url_check,
             );
             
             array_push($list, $listFile);
@@ -343,8 +345,38 @@ if ($action == 'get_photo_data') {
     $query3     = "UPDATE ServiceComment SET status = '" . $new_status . "' WHERE id='" . $id . "'";
     $result = mysqli_query($link, $query3) or die(mysqli_error($link));
     echo ($id);
+} elseif($action == 'rotate-image'){
+	$image_name = $_REQUEST['image_name'];
+	$directions =  $_REQUEST['direction'];
+	//
+	$query = "SELECT id, ip FROM ServicePhoto WHERE file='".$image_name."';";
+	$result = mysqli_query($link, $query) or die(mysqli_error($link));
+	$num  = $result->num_rows;
+	$list = array();
+	$ip = '';
+	$id = '';
+    if ($num > 0) {
+			while ($row1 = mysqli_fetch_array($result)) {
+				//$listFile = array(
+						$id = $row1['id'];
+						$ip = $row1['ip'];
+						//);
+				//array_push($list, $listFile);
+			}
+	}
+	$url = $photo_service_api.'update-photo.jsp?id='.$id.'&rotate='.$directions;
+	//echo ($url);
+		
+		$ch = curl_init();
+		curl_setopt($ch, CURLOPT_URL, $url);
+		curl_setopt($ch, CURLOPT_HEADER, 0);
+		curl_exec($ch);
+		curl_close($ch);
 } else {
     //nothing
     echo ('ERROR');
+}
+}else{
+	header ("location:page.php");
 }
 ?>

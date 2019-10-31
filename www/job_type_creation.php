@@ -16,50 +16,90 @@
    along with this program.  If not, see <http://www.gnu.org/licenses/>. */
    
 include("config.php");
-
+if (isset ($_SESSION['username'])&& isset($_SESSION['role'])){
 if(isset($_REQUEST['Crea_job_type'])){
 	//ID del Job Type
-	$job_type_id = $_POST['id'];
-	echo $job_type_id;
+	$job_type_id = mysqli_real_escape_string($connessione_al_server,$_POST['id']);
+	$job_type_id = filter_var($job_type_id, FILTER_SANITIZE_STRING);
 	//
-	$user_zip=$_POST['user_zip'];
-	$tipo_zip = $_POST['tipo_zip'];
-   $name_jb = $_POST['nome'];
-   $group_jb=$_POST['gruppo'];
-   $desc_jb=$_POST['descrizione'];
-   $file_zip_jb=$_POST['file_zip'];
-   $data_zip=$_POST['data_zip'];
+	$user_zip= mysqli_real_escape_string($connessione_al_server,$_POST['user_zip']);
+	$user_zip = filter_var($user_zip, FILTER_SANITIZE_STRING);
+	//
+	$tipo_zip = mysqli_real_escape_string($connessione_al_server,$_POST['tipo_zip']);
+	$tipo_zip = filter_var($tipo_zip, FILTER_SANITIZE_STRING);
+	//
+   $name_jb = mysqli_real_escape_string($connessione_al_server,$_POST['nome']);
+   $name_jb = filter_var($name_jb, FILTER_SANITIZE_STRING);
+   //
+   $group_jb= mysqli_real_escape_string($connessione_al_server,$_POST['gruppo']);
+   $group_jb= filter_var($group_jb, FILTER_SANITIZE_STRING);
+   //
+   $desc_jb= mysqli_real_escape_string($connessione_al_server,$_POST['descrizione']);
+   $desc_jb= filter_var($desc_jb, FILTER_SANITIZE_STRING);
+   //
+   $file_zip_jb= mysqli_real_escape_string($connessione_al_server,$_POST['file_zip']);
+   $file_zip_jb= filter_var($file_zip_jb, FILTER_SANITIZE_STRING);
+   //
+   $data_zip= mysqli_real_escape_string($connessione_al_server,$_POST['data_zip']);
+   $data_zip= filter_var($data_zip, FILTER_SANITIZE_STRING);
+   //
    $creation_date_jb=date("Y-m-d H:i:s");
-   $url_jb=$_POST['url'];
-   $path_jb=$_POST['path'];
-   $type_jb=$_POST['type'];
-   $email_jb=$_POST['email'];
-   $nome_trig_jb=$_POST['nome_trig'];
-   $descrizione_trig_jb=$_POST['descrizione_trig'];
-   $gruppo_trig_jb=$_POST['gruppo_trig'];
-   $interval_trig_jb=$_POST['interval_trig'];
-   $start_jb=$_POST['start'];
-   $end_jb=$_POST['end'];
-   $misfire_jb=$_POST['misfire'];
+   //
+   $url_jb= mysqli_real_escape_string($connessione_al_server,$_POST['url']);
+   $url_jb= filter_var($url_jb, FILTER_SANITIZE_STRING);
+   //
+   $path_jb= mysqli_real_escape_string($connessione_al_server,$_POST['path']);
+   $path_jb= filter_var($path_jb, FILTER_SANITIZE_STRING);
+   //
+   $type_jb= mysqli_real_escape_string($connessione_al_server,$_POST['type']);
+   $type_jb= filter_var($type_jb, FILTER_SANITIZE_STRING);
+   //
+   $email_jb= mysqli_real_escape_string($connessione_al_server,$_POST['email']);
+   $email_jb= filter_var($email_jb, FILTER_SANITIZE_STRING);
+   //
+   $nome_trig_jb= mysqli_real_escape_string($connessione_al_server,$_POST['nome_trig']);
+   $nome_trig_jb= filter_var($nome_trig_jb, FILTER_SANITIZE_STRING);
+   //
+   $descrizione_trig_jb=mysqli_real_escape_string($connessione_al_server,$_POST['descrizione_trig']);
+   $descrizione_trig_jb= filter_var($descrizione_trig_jb, FILTER_SANITIZE_STRING);
+   //
+   $gruppo_trig_jb= mysqli_real_escape_string($connessione_al_server,$_POST['gruppo_trig']);
+   $gruppo_trig_jb= filter_var($gruppo_trig_jb, FILTER_SANITIZE_STRING);
+   //
+   $interval_trig_jb= mysqli_real_escape_string($connessione_al_server,$_POST['interval_trig']);
+   $interval_trig_jb= filter_var($interval_trig_jb, FILTER_SANITIZE_STRING);
+   //
+   $start_jb= mysqli_real_escape_string($connessione_al_server,$_POST['start']);
+   $start_jb= filter_var($start_jb, FILTER_SANITIZE_STRING);
+   //
+   $end_jb= mysqli_real_escape_string($connessione_al_server,$_POST['end']);
+   $end_jb= filter_var($end_jb, FILTER_SANITIZE_STRING);
+   //
+   $misfire_jb= mysqli_real_escape_string($connessione_al_server,$_POST['misfire']);
+   $misfire_jb= filter_var($misfire_jb, FILTER_SANITIZE_STRING);
+   //
    
    //priority
        if (isset($_POST['priority'])){
-	$priority_jb=$_POST['priority'];
+	$priority_jb=mysqli_real_escape_string($connessione_al_server,$_POST['priority']);
+	$priority_jb= filter_var($priority_jb, FILTER_SANITIZE_STRING);
 	}else {
 		$priority_jb=0;
 	}  
    
-   
+   //echo('TIPO ZIP: '.$tipo_zip.'	!!!	');
    //repeat_trig
         if (isset($_POST['repeat_trig'])){
-		$repeat_trig_jb=$_POST['repeat_trig'];
+		$repeat_trig_jb=mysqli_real_escape_string($connessione_al_server,$_POST['repeat_trig']);
+		$repeat_trig_jb= filter_var($repeat_trig_jb, FILTER_SANITIZE_STRING);
 		}else {
 			$repeat_trig_jb=0;
 		}  
    
    //time_out
       if (isset($_POST['time_out']) && $_POST['time_out'] != ""){
-	$time_out_jb=$_POST['time_out'];
+	$time_out_jb=mysqli_real_escape_string($connessione_al_server,$_POST['time_out']);
+	$time_out_jb= filter_var($time_out_jb, FILTER_SANITIZE_STRING);
 	$DataMap_jb = '{"#timeout":"'.$time_out_jb.'"}';
 	}else {
 		$time_out_jb= "";
@@ -68,32 +108,38 @@ if(isset($_REQUEST['Crea_job_type'])){
    
    //check
         if (isset($_POST['conc'])){
-			$conc_jb=$_POST['conc'];
+			$conc_jb=mysqli_real_escape_string($connessione_al_server,$_POST['conc']);
+			$conc_jb= filter_var($conc_jb, FILTER_SANITIZE_STRING);
 		}else {
 			$conc_jb=0;
 		}
 
 		if (isset($_POST['store'])){
-		$store_jb=$_POST['store'];
+		$store_jb=mysqli_real_escape_string($connessione_al_server,$_POST['store']);
+		$store_jb= filter_var($store_jb, FILTER_SANITIZE_STRING);
 		}else {
 			$store_jb=0;
 		}
   
 		if (isset($_POST['recovery'])){
-			$recovery_jb=$_POST['recovery'];
+			$recovery_jb=mysqli_real_escape_string($connessione_al_server,$_POST['recovery']);
+			$recovery_jb= filter_var($recovery_jb, FILTER_SANITIZE_STRING);
 		}else {
 			$recovery_jb=0;
 		}
 	//posizione file//
-	$file_position = $_POST['file_position'];
+	$file_position = mysqli_real_escape_string($connessione_al_server,$_POST['file_position']);
+	$file_position= filter_var($file_position, FILTER_SANITIZE_STRING);
 	//
    
    //I PARAMETRI AVANZATI SONO ANCORA DA DEFINIRE - vengono passati al db come dei json.
 	//$DataMap_jb = $_POST['datamapText'];
 	//
-	$NextJob_jb= $_POST['NextJobText'];
+	$NextJob_jb= mysqli_real_escape_string($connessione_al_server,$_POST['NextJobText']);
+	$NextJob_jb= filter_var($NextJob_jb, FILTER_SANITIZE_STRING);
 	
-	$JobConstraint_jb= $_POST['JobConstraintText'];
+	$JobConstraint_jb= mysqli_real_escape_string($connessione_al_server,$_POST['JobConstraintText']);
+	$JobConstraint_jb= filter_var($JobConstraint_jb, FILTER_SANITIZE_STRING);
    //////
    ///////PROCESS PARAMETER
 		$data_zip2 = str_replace(":","-", $data_zip);
@@ -143,6 +189,7 @@ if(isset($_REQUEST['Crea_job_type'])){
 		  $found = true;
 	 }
 	 
+	 //echo('$path_file:	'.$path_file);
 	 /*
 	if ($found == false) {
 		$m = count($array_scan);
@@ -175,10 +222,18 @@ if(isset($_REQUEST['Crea_job_type'])){
    //next job
    
    if ((isset($_POST['par_next_job_cond1']))&&(isset($_POST['next_job_result1']))&&(isset($_POST['next_job_n1']))&&(isset($_POST['next_job_g1']))){
-   $par_next_job_cond=$_POST['par_next_job_cond1'];
-   $next_job_result=$_POST['next_job_result1'];
-   $next_job_n=$_POST['next_job_n1'];
-   $next_job_g=$_POST['next_job_g1'];
+   $par_next_job_cond=mysqli_real_escape_string($connessione_al_server,$_POST['par_next_job_cond1']);
+   $par_next_job_cond= filter_var($par_next_job_cond, FILTER_SANITIZE_STRING);
+   
+   $next_job_result=mysqli_real_escape_string($connessione_al_server,$_POST['next_job_result1']);
+   $next_job_result= filter_var($next_job_result, FILTER_SANITIZE_STRING);
+   
+   $next_job_n=mysqli_real_escape_string($connessione_al_server,$_POST['next_job_n1']);
+   $next_job_n= filter_var($next_job_n, FILTER_SANITIZE_STRING);
+   
+   $next_job_g=mysqli_real_escape_string($connessione_al_server,$_POST['next_job_g1']);
+   $next_job_g= filter_var($next_job_g, FILTER_SANITIZE_STRING);
+   
    $NextJob = array('condition' =>$par_next_job_cond,'result'=>$next_job_result,'name'=>$next_job_n,'group'=>$next_job_g);
    $NextJob_jb = json_encode($NextJob);
    echo ("NEXT_JOB:  ".$NextJob_jb);
@@ -188,9 +243,15 @@ if(isset($_REQUEST['Crea_job_type'])){
    
    //Job Constraint
    if((isset($_POST['job_cons_cond1']))&&(isset($_POST['job_cons_v1']))){
-   $job_cons_k=$_POST['job_cons_k1'];
-   $job_cons_cond=$_POST['job_cons_cond1'];
-   $job_cons_v=$_POST['job_cons_v1'];
+   $job_cons_k=mysqli_real_escape_string($connessione_al_server,$_POST['job_cons_k1']);
+   $job_cons_k= filter_var($job_cons_k, FILTER_SANITIZE_STRING);
+   
+   $job_cons_cond=mysqli_real_escape_string($connessione_al_server,$_POST['job_cons_cond1']);
+   $job_cons_cond= filter_var($job_cons_cond, FILTER_SANITIZE_STRING);
+   
+   $job_cons_v=mysqli_real_escape_string($connessione_al_server,$_POST['job_cons_v1']);
+   $job_cons_v= filter_var($job_cons_v, FILTER_SANITIZE_STRING);
+   
    $JobConstraint=array('key'=>$job_cons_k,'condition'=>$job_cons_cond,'value'=>$job_cons_v);
    $JobConstraint_jb=json_encode($JobConstraint);
    }else{
@@ -216,4 +277,8 @@ if(isset($_REQUEST['Crea_job_type'])){
 		//
 }else{
     echo ("Errore nella creazione del jobtype".mysqli_error($connessione_al_server));
+}
+
+}else{
+	header ("location:page.php");
 }

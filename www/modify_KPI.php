@@ -6,6 +6,7 @@ $link = mysqli_connect($host_kpi $username_kpi, $password_kpi);
 	mysqli_set_charset($link, 'utf8');
 	mysqli_select_db($link, $dbname_kpi);
 	*/
+if (isset ($_SESSION['username'])&& isset($_SESSION['role'])){	
 $link = mysqli_connect($host_kpi, $username_kpi, $password_kpi) or die("failed to connect to server !!");
 mysqli_set_charset($link, 'utf8');
 mysqli_select_db($link, $dbname_kpi);	
@@ -18,21 +19,25 @@ if (isset($_REQUEST['type'])){
 if ($type=='st'){
 	//NOTHING
 	//
-					if (isset($_REQUEST['other_nature'])&&($_REQUEST['nature']=='Other...')){
-				$nature = $_REQUEST['other_nature'];	
+			if (isset($_REQUEST['other_nature'])&&($_REQUEST['nature']=='Other...')){
+						$nature0 = mysqli_real_escape_string($link, $_REQUEST['other_nature']);
+						$nature = filter_var($nature0, FILTER_SANITIZE_STRING);
 			}else{
 				if (isset($_REQUEST['nature'])){
-				$nature = $_REQUEST['nature'];	
+						$nature0 = mysqli_real_escape_string($link, $_REQUEST['nature']);
+						$nature = filter_var($nature0, FILTER_SANITIZE_STRING);				
 				}else{
 					$nature = "";
 				}
 			}
 			//
 			if (isset($_REQUEST['other_subnature'])&&($_REQUEST['subnature'] =='Other...')){
-				$subnature = $_REQUEST['other_subnature'];
+				    $subnature0 = mysqli_real_escape_string($link, $_REQUEST['other_subnature']);
+					$subnature = filter_var($subnature0, FILTER_SANITIZE_STRING);
 			}else{
 					if (isset($_REQUEST['subnature'])){
-					$subnature = $_REQUEST['subnature'];
+					$subnature0 = mysqli_real_escape_string($link, $_REQUEST['subnature']);
+					$subnature = filter_var($subnature0, FILTER_SANITIZE_STRING);
 					}else{
 					$subnature = "";	
 					}
@@ -73,9 +78,14 @@ if ($type=='st'){
 	
 	//FARE UN CHECK DEL TIPO DEL LAST VALUE
 	
-	$var = $_POST['last_value'];
+	$var0 = mysqli_real_escape_string($link, $_POST['last_value']);
+	$var = filter_var($var0, FILTER_SANITIZE_STRING);
+	//
 	$value = gettype ($var);
-	$type_value = $_POST['type_val'];
+	//
+	$type_value0 = mysqli_real_escape_string($link, $_POST['type_val']);
+	$type_value = filter_var($type_value0, FILTER_SANITIZE_STRING);
+	//
 	$check = 0;
 	//
 	
@@ -116,7 +126,9 @@ if (isset($_REQUEST['showFrame'])){
 }else{
 	header ("location:KPI_editor.php?showFrame=true");
 }
-
+}else{
+	header ("location:page.php");
+}
 
 
 

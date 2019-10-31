@@ -16,15 +16,16 @@
    along with this program.  If not, see <http://www.gnu.org/licenses/>. */
    
 include'config.php';
+if (isset ($_SESSION['username'])&& isset($_SESSION['role'])){  
 $link = mysqli_connect($host, $username, $password) or die("failed to connect to server !!");
 mysqli_set_charset($link, 'utf8');
 mysqli_select_db($link, $dbname);
-$utente_us = $_SESSION['username'];
-$process_id = $_REQUEST['process_id'];
-$process_name = $_REQUEST['process_name'];
-$current_scheduler = $_REQUEST['current_scheduler'];
+$utente_us = mysqli_real_escape_string($link,$_SESSION['username']);
+$process_id = mysqli_real_escape_string($link,$_REQUEST['process_id']);
+$process_name = mysqli_real_escape_string($link,$_REQUEST['process_name']);
+$current_scheduler = mysqli_real_escape_string($link,$_REQUEST['current_scheduler']);
 //$prod_sched = $_REQUEST['prod_sched'];
-$name_prod=$_REQUEST['name_sched'];
+$name_prod=mysqli_real_escape_string($link,$_REQUEST['name_sched']);
 $prod_sched="";
 $prod_path="";
 $prod_home="";
@@ -468,5 +469,7 @@ $result = mysqli_query($link, $query) or die(mysqli_error($link));
 			
 			///////////
 		}
-
+}else{
+	header ("location:page.php");
+}
 ?>

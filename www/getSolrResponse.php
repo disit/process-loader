@@ -15,11 +15,31 @@
    You should have received a copy of the GNU Affero General Public License
    along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
-	$utente_att = $_REQUEST['utente_att'];
+   //**//
+   /* at the top of 'check.php' */
+    if ( $_SERVER['REQUEST_METHOD']=='GET' && realpath(__FILE__) == realpath( $_SERVER['SCRIPT_FILENAME'] ) ) {
+        /* 
+           Up to you which header to send, some prefer 404 even if 
+           the files does exist for security
+        */
+        header( 'HTTP/1.0 403 Forbidden', TRUE, 403 );
+
+        /* choose the appropriate page to redirect users */
+        die( header( 'location: page.php' ) );
+
+    }
+	//$utente_att = $_REQUEST['utente_att'];
 	$role_att1 = $_REQUEST['role_att'];
 
 	//View all resources///
 	include 'config.php';
+	//
+	if (isset ($_SESSION['username'])){
+  $utente_att = $_SESSION['username'];	
+}else{
+ $utente_att= "Login";	
+}
+	//
 	$link = mysqli_connect($host, $username, $password) or die("failed to connect to server !!");
 	mysqli_set_charset($link, 'utf8');
 	mysqli_select_db($link, $dbname);

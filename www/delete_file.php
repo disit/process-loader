@@ -17,12 +17,13 @@
 
 include("config.php");
 include("curl.php");
+if (isset ($_SESSION['username'])&& isset($_SESSION['role'])){
 $link = mysqli_connect($host, $username, $password) or die("failed to connect to server !!");
 mysqli_set_charset($link, 'utf8');
 mysqli_select_db($link, $dbname);
 
-$id_file=$_POST["id_file_del"];
-$path_del=$_POST["path_del"];
+$id_file=mysqli_real_escape_string($link,$_POST["id_file_del"]);
+$path_del=mysqli_real_escape_string($link,$_POST["path_del"]);
 echo $id_file;
 echo $path_del;
 //DELETE FILE
@@ -74,5 +75,7 @@ if (isset($_REQUEST['editor'])){
 				header ("location:file_archive.php");
 			}
 }
-
+}else{
+	header ("location:page.php");
+}
 ?>

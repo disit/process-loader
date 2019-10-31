@@ -16,7 +16,7 @@
    along with this program.  If not, see <http://www.gnu.org/licenses/>. */
    
 include'config.php';
-
+if (isset ($_SESSION['username'])&& isset($_SESSION['role'])){
 if (isset($_REQUEST['n_det'])){
 $n_det = $_REQUEST['n_det'];
 }else{
@@ -70,5 +70,7 @@ $detail_list = array();
         }
 		echo json_encode($detail_list);
         mysqli_close($linkQ);
-		
+}else{
+	header ("location:page.php");
+}			
 ?>

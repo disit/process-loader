@@ -20,13 +20,19 @@
 	$link = mysqli_connect($host, $username, $password) or die("failed to connect to server !!");
 	mysqli_set_charset($link, 'utf8');
 	mysqli_select_db($link, $dbname);
-
-	$id=$_POST['file_id'];
-	$user_vecchio=$_POST['user_vecchio'];
-	$user_nuovo=$_POST['user_nuovo'];
-	$creation_date=$_POST['creation_date'];
-	$file_name=$_POST['file_name'];
-	$stato=$_POST['file_type'];
+if (isset ($_SESSION['username'])&& isset($_SESSION['role'])){  
+	$id0=mysqli_real_escape_string($link,$_POST['file_id']);
+	$id = filter_var($id0, FILTER_SANITIZE_STRING);
+	//
+	$user_vecchio0=mysqli_real_escape_string($link,$_POST['user_vecchio']);
+	$user_vecchio = filter_var($user_vecchio0, FILTER_SANITIZE_STRING);
+	//
+	$user_nuovo0=mysqli_real_escape_string($link,$_POST['user_nuovo']);
+	$user_nuovo = filter_var($user_nuovo0, FILTER_SANITIZE_STRING);
+	//
+	$creation_date=mysqli_real_escape_string($link,$_POST['creation_date']);
+	$file_name=mysqli_real_escape_string($link,$_POST['file_name']);
+	$stato=mysqli_real_escape_string($link,$_POST['file_type']);
 	$data_C_mod = $creation_date;
 	$data_C_mod2 = str_replace(":","-",$data_C_mod);
 	$data_C_mod3 = str_replace(":","-",$data_C_mod2);
@@ -157,5 +163,7 @@
 				header ("location:transfer_file_property.php?message=error");
 			   }
 			}
-
+}else{
+	header ("location:page.php");
+}
    ?>

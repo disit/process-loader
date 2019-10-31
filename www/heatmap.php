@@ -134,47 +134,9 @@ if (isset($_REQUEST["page"])) {
 		$page=1; 
 	};  
 $start_from = ($page-1) * $limit; 
-////
-/*
-	$query_n="SELECT DISTINCT t1.map_name,
-				count(t1.data_date) as 'count_number', 
-				max(t1.data_date) as 'max_date', 
-				min(t1.data_date) as 'min_date',
-				(SELECT metadata.metric_name FROM heatmap.metadata where heatmap.metadata.map_name=t1.map_name order by date desc limit 1) as metric_name,
-				(SELECT metadata.org FROM heatmap.metadata where heatmap.metadata.map_name=t1.map_name order by date desc limit 1) as org
-				FROM (SELECT DISTINCT
-				data.map_name,	
-				data.date AS 'data_date'
-				FROM heatmap.data 
-				GROUP BY map_name, date) t1 group by map_name ORDER BY ".$order." ".$by." LIMIT " . $start_from . ", " . $limit;
-	*/
-	/*	
-	if($role_att == "RootAdmin"){			
-	$query_n = "SELECT metadata.map_name AS 'name', 
-					  (SELECT metadata.metric_name FROM heatmap.metadata where heatmap.metadata.map_name=name order by date desc limit 1) as metric_name,
-					  (SELECT metadata.org FROM heatmap.metadata where heatmap.metadata.map_name=name order by date desc limit 1) as org
-					  FROM metadata GROUP BY map_name ORDER BY ".$order." ".$by." LIMIT " . $start_from . ", " . $limit;
-	}else{
-		$query_n = "SELECT metadata.map_name AS 'name', 
-					  (SELECT metadata.metric_name FROM heatmap.metadata where heatmap.metadata.map_name=name order by date desc limit 1) as metric_name,
-					  (SELECT metadata.org FROM heatmap.metadata where heatmap.metadata.map_name=name order by date desc limit 1) as org
-					  FROM metadata GROUP BY map_name ORDER BY ".$order." ".$by;
-	}
-	*/
-/*	
-	$query_n =	"SELECT DISTINCT metadata.map_name AS 'name', 
-								               stats.metric_name, 
-									           metadata.org, 
-									           stats.min_date, 
-									           stats.max_date, 
-									           stats.num AS 'count_number' 
-				FROM heatmap.metadata, heatmap.stats 
-				WHERE metadata.map_name = stats.map_name
-				ORDER BY metadata.".$order." ".$by." LIMIT " . $start_from . ", " . $limit;
-				*/
-	$query_n =	"SELECT DISTINCT map_name AS 'name' FROM metadata ORDER BY metadata.".$order." ".$by." LIMIT " . $start_from . ", " . $limit;
-	//
-	//SELECT metadata.org, metadata.metric_name FROM heatmap.metadata where heatmap.metadata.map_name='AirTemperatureAverage2HourHelsinki' order by date desc limit 1
+
+	//$query_n =	"SELECT DISTINCT map_name AS 'name' FROM metadata ORDER BY metadata.".$order." ".$by." LIMIT " . $start_from . ", " . $limit;
+	$query_n =	"SELECT DISTINCT map_name AS 'name' FROM metadata";
 
 ///
 	$count_number = 0;
@@ -212,13 +174,7 @@ $start_from = ($page-1) * $limit;
 					$visibility = '';
 					$map_name = $row['name'];
 				/***QUERY PER OTTENERE I DATI***/
-				/*
-					if(isset($row['org'])){
-										$organization = $row['org'];
-								}else{
-										$organization = '';
-								}
-					*/
+				
 					$organization = '';
 				
 					$count_number = $row['count_number'];
@@ -240,13 +196,7 @@ $start_from = ($page-1) * $limit;
 											$organization = $row3['org'];
 											$metric_name = $row3['metric_name'];
 										}
-					/*
-					$query_istances = "SELECT DISTINCT map_name, max(date) as 'max_date', min(date) as 'min_date', count(distinct date)as 'count_number' FROM heatmap.data WHERE map_name='".$map_name."'";
-					$result_istances = mysqli_query($link, $query_istances) or die(mysqli_error($link));
-							while ($row2 = mysqli_fetch_assoc($result_istances)) {
-								
-							}
-					*/	
+						
 					//////
 						
 						$idDash = $map_name;
@@ -355,11 +305,7 @@ $start_from = ($page-1) * $limit;
     }
 	//
 	if($role_att =='RootAdmin'){
-			/*$query_count = "SELECT count(DISTINCT map_name) as count FROM heatmap.metadata;";
-			$result_count = mysqli_query($link, $query_count) or die(mysqli_error($link));
-					while ($row_count  = mysqli_fetch_assoc($result_count)) {	
-							$total_rows = $row_count['count'];
-						}*/
+			
 		//
 			$query_count =	"SELECT count(distinct map_name) as count FROM metadata";
 			$result_count = mysqli_query($link, $query_count) or die(mysqli_error($link));
@@ -375,7 +321,7 @@ $start_from = ($page-1) * $limit;
 	/*******/
 //QUERY COLOR_MAP// 
 $process_cm = array();
-$query_cm = "SELECT DISTINCT metric_name FROM heatmap.colors ORDER BY metric_name ASC";
+$query_cm = "SELECT DISTINCT metric_name FROM heatmap.colors";
 $result_cm = mysqli_query($link, $query_cm) or die(mysqli_error($link));
 	if ($result_cm->num_rows >0){
 		while ($row_cm = mysqli_fetch_assoc($result_cm)) {	
@@ -447,6 +393,10 @@ $result_cm = mysqli_query($link, $query_cm) or die(mysqli_error($link));
         .hidden {
             display: none;
         }
+		
+		.paginate_button{
+			padding: 2px;
+		}
         
         td {
             vertical-align: middle;
@@ -553,7 +503,7 @@ $result_cm = mysqli_query($link, $query_cm) or die(mysqli_error($link));
                             <div class="row">
                                 <!-- -->
                                 <div class="col-xs-12" id="mainContentCnt" style='background-color: rgba(138, 159, 168, 1); padding-top:20px;'>
-									<!---->
+									<!--
                                     <div>
                                         <select name="limit" id="limit_select">
                                             <option value="5">5</option>
@@ -561,7 +511,7 @@ $result_cm = mysqli_query($link, $query_cm) or die(mysqli_error($link));
                                             <option value="15">15</option>
                                         </select>
                                     </div>
-									<!-- -->
+									 -->
                                 <table id="heatmap_table" class="table table-striped table-bordered display responsive no-wrap" style="width: 100%;">
                                 <thead class="dashboardsTableHeader">
                              <?php
@@ -580,21 +530,9 @@ $result_cm = mysqli_query($link, $query_cm) or die(mysqli_error($link));
 									$corr_page1= $_REQUEST["page"];
 									$pagina_attuale2='heatmap.php?showFrame='.$sf.'&page='.$corr_page1.'&orderBy=id&order='.$by_par.'&limit='.$limit.'';
 												
-											/*echo('<tr>		
-												<th class="map_name"><div><a>Map name</a></div></th>
-												<th class="metric_name"><div><a>Color Map</a></div></th>
-												<th class="user"><div><a>Owner</a></div></th>
-												<th class="organization"><div><a>Organization</a></div></th>
-												<th class="min_date"><div><a>Minimum date</a></div></th>
-												<th class="max_date"><div><a>Maximum date</a></div></th>
-												<th><div><a>Instances</a></div></th>
-												<th><a>Management</a></th>
-												<th class="view"><div><a>View Data</a></div></th>
-												<th class="delete"><div><a>Delete</a></div></th>
-											</tr>');*/
 										echo ('<tr>		
-													<th class="map_name"><div><a href="heatmap.php?showFrame='.$sf.'&page='.$page.'&orderBy=map_name&order='.$by_par.'&limit='.$limit.'">Map name </a>'.$icon_by .'</div></th>
-													<th class="metric_name"><div><a href="heatmap.php?showFrame='.$sf.'&page='.$page.'&orderBy=metric_name&order='.$by_par.'&limit='.$limit.'">Color Map	</a>'.$icon_by .'</div></th>
+													<th class="map_name"><div><a>Map name</a></div></th>
+													<th class="metric_name"><div><a>Color Map</a></div></th>
 													<th class="user"><div><a>Owner</a></div></th>
 													<th class="organization"><div><a>Organization</a></div></th>
 													<th class="min_date"><div><a>Minimum date</a></div></th>
@@ -693,53 +631,7 @@ $result_cm = mysqli_query($link, $query_cm) or die(mysqli_error($link));
 							?>
                                  </tbody>
                              </table>   
-                                
-                                <!------>
-                                    <?php
-							
-							//echo('TOTAL ROW:	'.$num_rows);
-							$total_records = $total_rows;
-							if($total_records > $limit){
-							$total_pages = ceil($total_records / $limit);
-								$prev_page = $_REQUEST["page"] -1;
-								$suc_page = $_REQUEST["page"] +1;
-								$corr_page= $_REQUEST["page"];
-								$array_link = array ();
-								/////
-							if ($prev_page >=1){
-							echo ('	<div class="pagination" value="'.$prev_page.'">&#09;<a href="heatmap.php?showFrame='.$_REQUEST['showFrame'].'&page=1&orderBy='.$order.'&order='.$by.'&limit='.$_REQUEST['limit'].'">First 	</a></div>');
-							echo ('	<div class="pagination" value="'.$prev_page.'">&#09;<a href="heatmap.php?showFrame='.$_REQUEST['showFrame'].'&page='.$prev_page.'&orderBy='.$order.'&order='.$by.'&limit='.$_REQUEST['limit'].'">	<< 	Prev</a></div>');
-							}		
-										if ($corr_page >11){
-										$init_j = $corr_page -10;
-										}else{$init_j = 1; 
-										}
-							for ($j=$init_j; $j<=$total_pages; $j++) { 
-									if ($j == $page){
-										$style = 'text-decoration: underline';
-									}else{
-										$style='';
-									}
-										if (($j<11)||(($corr_page-$j)>=0)||(($corr_page == $j)&&($corr_page < $total_pages-3))||(($corr_page >= $total_pages-3))){
-											echo ("&#09;<a class='page_n' value='".$j."' href='heatmap.php?showFrame=".$_REQUEST['showFrame']."&page=".$j."&orderBy=".$order."&order=".$by."&limit=".$_REQUEST['limit']."' style='".$style."'>".$j."</a>&#09;");
-										}else{echo(" ");}
-
-							}; 
-								$last_pages = $total_pages-3;
-								if (($total_pages > 13)&&($corr_page < $last_pages)){
-											echo ("...");
-											for ($y=$last_pages; $y<=$total_pages; $y++) {  
-
-												echo ("&#09;<a class='page_n' value='".$y."' href='heatmap.php?showFrame=".$_REQUEST['showFrame']."&page=".$y."&orderBy=".$order."&order=".$by."&limit=".$_REQUEST['limit']."'>".$y."</a>&#09;");		 
-											};
-									}
-							if ($suc_page <=$total_pages){
-
-									echo ('	<div class="pagination" value="'.$suc_page.'">&#09;<a href="heatmap.php?showFrame='.$_REQUEST['showFrame'].'&page='.$suc_page.'&orderBy='.$order.'&order='.$by.'&limit='.$_REQUEST['limit'].'">Next 	>>	</a></div>');
-									echo ('	<div class="pagination" value="'.$suc_page.'">&#09;<a href="heatmap.php?showFrame='.$_REQUEST['showFrame'].'&page='.$total_pages.'&orderBy='.$order.'&order='.$by.'&limit='.$_REQUEST['limit'].'">   	Last</a></div>');
-							}
-						}
-						?>
+                            
 						</div>
                                         <!----->
 										
@@ -781,6 +673,9 @@ $result_cm = mysqli_query($link, $query_cm) or die(mysqli_error($link));
                                                                 </th>
                                                                 <th class="status">
                                                                     <div><a>Status</a></div>
+                                                                </th>
+																<th class="indexed">
+                                                                    <div><a>Indexed</a></div>
                                                                 </th>
                                                                 <th class="bbox">
                                                                     <div><a>BBox</a></div>
@@ -896,21 +791,12 @@ $result_cm = mysqli_query($link, $query_cm) or die(mysqli_error($link));
                                                     <!-- -->
                                                     <div class="input-group" id="description_status"><span class="input-group-addon">Status: </span>
                                                         <select class="form-control" id="status">
-                                                            <option value='-1'>Not in GeoServer</option>
+                                                            <option value='-1'>Not in Geoserver</option>
                                                             <option value='1'>Completed</option>
                                                             <option value='0'>Not Completed</option>
                                                         </select>
                                                     </div>
-                                                    <br />
-                                                    <div class="input-group" id="description_indexed"><span class="input-group-addon">Indexed: </span>
-                                                        <select class="form-control" id="indexed">
-                                                            <option value='-1'>Error</option>
-                                                            <option value='1'>Completed</option>
-                                                            <option value='0'>Not Completed</option>
-                                                        </select>
-                                                    </div>
-                                                    <br />
-                                                    <!-- -->
+													<br />				
                                                 </div>
                                                 <div class="modal-footer" style="background-color: white">
                                                     <button type="button" class="btn cancelBtn" id="valus_close" data-dismiss="modal">Cancel</button>
@@ -1020,12 +906,7 @@ $result_cm = mysqli_query($link, $query_cm) or die(mysqli_error($link));
 																<!-- Fine visibility cnt -->
 																
 																<!-- Delegations cnt -->
-																<div id="delegationsCnt" class="tab-pane fade in">
-																<!--
-																	<div class="row centerWithFlex modalFirstLbl" id="delegationsNotAvailableRow">
-																		Delegations are not possibile on a public dashboard
-																	</div> 
-																	-->																	
+																<div id="delegationsCnt" class="tab-pane fade in">																
 																	<div class="row" id="delegationsFormRow">
 																		<div class="col-xs-12 centerWithFlex modalFirstLbl" id="newDelegationLbl">
 																			<b>Add new delegation</b>																		</div>
@@ -1153,13 +1034,24 @@ $result_cm = mysqli_query($link, $query_cm) or die(mysqli_error($link));
                 $(document).ready(function() {
 					
 					var table = $('#heatmap_table').DataTable({
-								"searching": false,
-								"paging": false,
-								"ordering": false,
+									"searching": true,
+								"paging": true,
+								"ordering": true,
 								"info": false,
-								"responsive": true
-							});
-									
+								"responsive": true,
+								"lengthMenu": [5,10,15],
+								"iDisplayLength": 10,
+								"pagingType": "full_numbers",
+								"dom": '<"pull-left"l><"pull-right"f>tip',
+								"language":{"paginate": {
+											"first":      "First",
+											"last":       "Last",
+											"next":       "Next >>",
+											"previous":   "<< Prev"
+										},
+										"lengthMenu":     "Show	_MENU_ ",
+								}
+							});	
 					
                     if (nascondi == 'hide') {
                         $('#mainMenuCnt').hide();
@@ -1206,7 +1098,9 @@ $result_cm = mysqli_query($link, $query_cm) or die(mysqli_error($link));
                     $(document).on('click', '.viewList', function() {
 						var map_name = $(this).val();
                         $('#list_header').text('Heatmap Instances List:	' + map_name);
-                        list_scroll(0, map_name);
+						var order_value = "data_date";
+						var order = "DESC";
+                        list_scroll(0, map_name, order, order_value);
 
                     });
                     /****/
@@ -1331,7 +1225,7 @@ $result_cm = mysqli_query($link, $query_cm) or die(mysqli_error($link));
                             async: true,
                             success: function(data) {
                                 $('#data_elimination').modal('hide');
-                                list_scroll(page, id);
+                                list_scroll(page, id,"DESC","data_date");
                             }
                         });
                     });
@@ -1583,7 +1477,7 @@ $result_cm = mysqli_query($link, $query_cm) or die(mysqli_error($link));
                     /**confirmEditData**/
                     $(document).on('click', '#confirmEditData', function() {
                         var status = $('#status').val();
-                        var indexed = $('#indexed').val();
+                        //var indexed = $('#indexed').val();
                         var id = $('#map_name_val').val();
                         var date_val = $('#date_val').val();
                         var corr = ($('#current_data_val').val() - 1);
@@ -1597,7 +1491,6 @@ $result_cm = mysqli_query($link, $query_cm) or die(mysqli_error($link));
                                 id: id,
                                 date_val: date_val,
                                 status: status,
-                                indexed: indexed,
                                 action: 'edit_metadata'
                             },
                             type: "POST",
@@ -1605,7 +1498,7 @@ $result_cm = mysqli_query($link, $query_cm) or die(mysqli_error($link));
                             success: function(data) {
                                 //edit-valus
                                 $('#edit-valus').modal('hide');
-                                list_scroll(corr, id);
+                                list_scroll(corr, id,"DESC","data_date");
                             }
                         });
 
@@ -1631,6 +1524,7 @@ $result_cm = mysqli_query($link, $query_cm) or die(mysqli_error($link));
                         var id = $(this).parent().parent();
                         $(id).remove();
                     });
+					
 					/***************************/
 					//newOwnershipConfirmBtn
 				 $(document).on('click', '#newOwnershipConfirmBtn', function() {
@@ -1737,7 +1631,7 @@ $result_cm = mysqli_query($link, $query_cm) or die(mysqli_error($link));
                 });
 				
                 //
-                function list_scroll(page, name) {
+                function list_scroll(page, name,order,order_value) {
 					$('.loader').show();
                     var array = new Array();
                     $('#corrent').text(page);
@@ -1746,7 +1640,9 @@ $result_cm = mysqli_query($link, $query_cm) or die(mysqli_error($link));
                         data: {
                             page: page,
                             map_name: name,
-                            action: 'get_values'
+                            action: 'get_values',
+							order_value: order_value,
+							order: order
                         },
                         type: "POST",
                         async: true,
@@ -1782,26 +1678,31 @@ $result_cm = mysqli_query($link, $query_cm) or die(mysqli_error($link));
                                         status_text = 'Not Completed';
                                     } else {
                                         status_text = 'Not in GeoServer';
-                                        //style = 'Style="color:red"';
                                     }
-
-                                    //var a1= $('.current_link').text();
-                                    //date_val
+									//
+									var index_text = '';
+                                    if (index == '1') {
+                                        index_text = 'Indexed';
+                                    } else if (index == '0') {
+                                        index_text = 'Not Indexed';
+                                    } else {
+                                        index_text = 'Not in GeoServer';
+                                    }
+									//status_text = status;
                                     var function_a = "function_data('" + id_completed + "','" + array[i]['date'] + "'," + status + "," + index + ")";
                                     //
-                                    $('#value_table tbody').append('<tr><td>' + array[i]['date'] + '</td><td>' + array[i]['description'] + '</td><td ' + style + '>' + status_text + '</td><td>' + array[i]['bbox'] + '</td><td>' + array[i]['value'] + '</td><td><button type="button" class="editDashBtn editValues"data-target="#edit-valus" onclick="' + function_a + '" data-toggle="modal">EDIT</button></td><td><button type="button" class="delDashBtn det_data" data-target="#data_elimination" data-toggle="modal">DEL</button></td></tr>');
+                                    $('#value_table tbody').append('<tr><td>' + array[i]['date'] + '</td><td>' + array[i]['description'] + '</td><td ' + style + '>' + status_text + '</td><td>'+index_text+'</td><td>' + array[i]['bbox'] + '</td><td>' + array[i]['value'] + '</td><td><button type="button" class="editDashBtn editValues"data-target="#edit-valus" onclick="' + function_a + '" data-toggle="modal">EDIT</button></td><td><button type="button" class="delDashBtn det_data" data-target="#data_elimination" data-toggle="modal">DEL</button></td></tr>');
                                     count++;
                                 }
 								//
-                                //if(count >= 10){
                                 var total_rows = array[0]['total'];
                                 if (total_rows > 10) {
                                     var count_rows = Math.floor(array[0]['total'] / 10);
                                     if (array[0]['total'] > 10) {
                                         if (page > 0) {
                                             var m = page - 1;
-                                            $('#link_list').append('	<a class="page_n_link" value="0" href="#" onclick=list_scroll(0,"' + name + '") >' + ' First  ' + '</a>	');
-                                            $('#link_list').append('	<a class="page_n_link" value="' + m + '" href="#" onclick=list_scroll(' + m + ',"' + name + '") >' + '  <<  ' + '</a>	');
+                                            $('#link_list').append('	<a class="page_n_link" value="0" href="#" onclick=list_scroll(0,"' + name + '","DESC","data_date") >' + ' First  ' + '</a>	');
+                                            $('#link_list').append('	<a class="page_n_link" value="' + m + '" href="#" onclick=list_scroll(' + m + ',"' + name + '","DESC","data_date") >' + '  <<  ' + '</a>	');
                                         }
 
                                         if (page < 11) {
@@ -1825,13 +1726,13 @@ $result_cm = mysqli_query($link, $query_cm) or die(mysqli_error($link));
                                             //
 
                                             if (y <= count_rows) {
-                                                $('#link_list').append('	<a class="page_n_link ' + current_link + '" value="' + y + '" href="#" onclick=list_scroll(' + y + ',"' + name + '") style="' + style + '">' + n + '</a>	');
+                                                $('#link_list').append('	<a class="page_n_link ' + current_link + '" value="' + y + '" href="#" onclick=list_scroll(' + y + ',"' + name + '","DESC","data_date") style="' + style + '">' + n + '</a>	');
                                             }
                                         }
                                         if (page < count_rows) {
                                             var p = page + 1;
-                                            $('#link_list').append('	<a class="page_n_link" value="' + p + '" href="#" onclick=list_scroll(' + p + ',"' + name + '") >' + '  >>  ' + '</a>	');
-                                            $('#link_list').append('	<a class="page_n_link" value="' + count_rows + '" href="#" onclick=list_scroll(' + count_rows + ',"' + name + '") >' + ' Latest ' + '</a>	');
+                                            $('#link_list').append('	<a class="page_n_link" value="' + p + '" href="#" onclick=list_scroll(' + p + ',"' + name + '","DESC","data_date") >' + '  >>  ' + '</a>	');
+                                            $('#link_list').append('	<a class="page_n_link" value="' + count_rows + '" href="#" onclick=list_scroll(' + count_rows + ',"' + name + '","DESC","data_date") >' + ' Latest ' + '</a>	');
                                         }
                                     }
                                 } else {
@@ -1840,6 +1741,58 @@ $result_cm = mysqli_query($link, $query_cm) or die(mysqli_error($link));
                             } else {
                                 $('#data_content').append('<div class="panel panel-default"><div class="panel-body">There are no data</div></div>');
                             }
+							////****////
+									var new_order = 'DESC';
+									var arrow = '<i class="arrow fa fa-caret-down"></i>';
+									if (order == 'DESC'){
+										new_order = 'ASC';
+										arrow = '<i class="arrow fa fa-caret-down"></i>';
+									}else{
+										new_order = 'DESC';
+										arrow = '<i class="arrow fa fa-caret-up"></i>';
+									}
+									
+									if (order == 'ASC'){
+										new_order = 'DESC';	
+										arrow = '<i class="arrow fa fa-caret-up"></i>';
+										
+									}else{
+										new_order = 'ASC';
+										arrow = '<i class="arrow fa fa-caret-down"></i>';
+									}
+									
+									$('.date_value').attr("onClick","list_scroll("+page+", '"+name+"','"+new_order+"','data_date')");
+									$('.status').attr("onClick","list_scroll("+page+", '"+name+"','"+new_order+"','completed')");
+									$('.indexed').attr("onClick","list_scroll("+page+", '"+name+"','"+new_order+"','indexed')");
+									$('.bbox').attr("onClick","list_scroll("+page+", '"+name+"','"+new_order+"','bbox')");
+									$('.value_value').attr("onClick","list_scroll("+page+", '"+name+"','"+new_order+"','number')");
+									$('.description').attr("onClick","list_scroll("+page+", '"+name+"','"+new_order+"','description')");
+									///
+									$('.arrow').remove();
+									if(order_value =='data_date'){
+										$('.date_value').append(arrow);
+									}
+									if(order_value =='description'){
+										$('.description').append(arrow);
+									}
+									if(order_value =='completed'){
+										$('.status').append(arrow);
+									}
+									if(order_value =='indexed'){
+										$('.indexed').append(arrow);
+									}
+									if(order_value =='number'){
+										$('.value_value').append(arrow);
+									}
+									if(order_value =='bbox'){
+										$('.bbox').append(arrow);
+									}
+									//$('.'+order_value+'').append(arrow);
+									//
+							////****////
+							
+							//<i class="fas fa-caret-up"></i>
+
                         }
 
                     });

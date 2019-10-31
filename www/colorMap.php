@@ -373,6 +373,7 @@ $total_rows = $result0->num_rows;
 									<div class="modal-header" style="background-color: white" id="color_header">Edit Color map: </div>
 									<div class="modal-body" style="background-color: white">
 									<input type="text" name="metric_name" id="metric_name" readonly hidden></input>
+									<input type="text" name="count_rows" id="count_rows" readonly hidden></input>
 									<div>
 									<table id="colormap_table" class="table table-striped table-bordered">
 										<thead class="dashboardsTableHeader">
@@ -419,7 +420,8 @@ $total_rows = $result0->num_rows;
 									<!-- -->
 									<div class="input-group"><span class="input-group-addon">Color map Name: </span><input name="name_color_map" id="name_color_map" type="text" class="form-control" required="required"/></div>
 									<br />
-									<input id="filetype1" name="action" value="color_map_create" style="display: none;"></input>	
+									<input id="filetype1" name="action" value="color_map_create" style="display: none;"></input>
+									<input type="text" name="count_rows0" id="count_rows0" value="0" readonly hidden></input>									
 									<!-- -->
 									<div>
 									<table id="colormap_table_create" class="table table-striped table-bordered">
@@ -731,6 +733,7 @@ $(document).on('click','.editColor',function(){
 							rgb = rgb0.replace("]",")");
 							$('#colormap_table tbody').append('<tr><td class="hidden"><input type="text" class="form-control val_min" name="paramId['+i+']" value="'+data_id+'" readonly>'+data_id+'</input></td><td><input type="text" class="form-control val_min" name="paramMin['+i+']" value="'+min+'" readonly></input></td><td><input name="paramMax['+i+']" type="text" class="form-control val_max mod_max" value="'+max+'"></input></td><td class="hidden"></td><td><div id="color-picker-rgb" class="input-group rgb_color"><input type="text" value="rgb'+rgb+'" class="form-control" name="paramRgb['+i+']"/><span class="input-group-addon"><i></i></span></div></td><td><input name="paramColor['+i+']" type="text" class="form-control" class="val_rgb" value="'+color+'"></input></td><td><input name="paramOrder['+i+']" type="text" class="form-control" class="val_order" value="'+order+'"></input></td><td><button type="button" class="delDashBtn del_color1" value="'+i+'" data-target="" data-toggle="modal">DEL</button></td></tr>');
 						}
+					$('#count_rows').val(i);
 					$('.rgb_color').colorpicker();
 				}
 			});
@@ -739,6 +742,7 @@ $(document).on('click','.editColor',function(){
 //add_color
 $(document).on('click','#add_color',function(){
 	var count = $('#colormap_table tbody tr').length;
+	var count_rows = $('#count_rows').val();
 	//
 	var min = count-1;
 	if(min >= 0){
@@ -752,7 +756,11 @@ $(document).on('click','#add_color',function(){
 		value0 = "";
 	}
 	
-	$('#colormap_table tbody').append('<tr><td class="hidden"></td><td><input name="paramMinMod['+count+']" type="text" class="form-control val_min mod_min"  value="'+value0+'" readonly></input></td><td><input type="text" class="form-control val_max mod_max" name="paramMaxMod['+count+']" value=""></input></td><td class="hidden"></td><td><div id="color-picker-rgb" class="input-group rgb_color" ><input type="text" value="rgb(255,255,255)" class="form-control" name="paramRgbMod['+count+']"/><span class="input-group-addon"><i></i></span></div></td><td><input name="paramColorMod['+count+']" type="text" class="form-control" class="val_rgb"></input></td><td><input name="paramOrderMod['+count+']" type="text" class="form-control" class="val_order"></input></td><td><button type="button" class="delDashBtn del_color1" value="'+count+'" data-target="" data-toggle="modal">DEL</button></td></tr>');
+	//$('#colormap_table tbody').append('<tr><td class="hidden"></td><td><input name="paramMinMod['+count+']" type="text" class="form-control val_min mod_min"  value="'+value0+'" readonly></input></td><td><input type="text" class="form-control val_max mod_max" name="paramMaxMod['+count+']" value=""></input></td><td class="hidden"></td><td><div id="color-picker-rgb" class="input-group rgb_color" ><input type="text" value="rgb(255,255,255)" class="form-control" name="paramRgbMod['+count+']"/><span class="input-group-addon"><i></i></span></div></td><td><input name="paramColorMod['+count+']" type="text" class="form-control" class="val_rgb"></input></td><td><input name="paramOrderMod['+count+']" type="text" class="form-control" class="val_order"></input></td><td><button type="button" class="delDashBtn del_color1" value="'+count+'" data-target="" data-toggle="modal">DEL</button></td></tr>');
+	$('#colormap_table tbody').append('<tr><td class="hidden"></td><td><input name="paramMin['+count_rows+']" type="text" class="form-control val_min mod_min"  value="'+value0+'" readonly></input></td><td><input type="text" class="form-control val_max mod_max" name="paramMax['+count_rows+']" value=""></input></td><td class="hidden"></td><td><div id="color-picker-rgb" class="input-group rgb_color" ><input type="text" value="rgb(255,255,255)" class="form-control" name="paramRgbMod['+count_rows+']"/><span class="input-group-addon"><i></i></span></div></td><td><input name="paramColorMod['+count_rows+']" type="text" class="form-control" class="val_rgb"></input></td><td><input name="paramOrderMod['+count_rows+']" type="text" class="form-control" class="val_order"></input></td><td><button type="button" class="delDashBtn del_color1" value="'+count_rows+'" data-target="" data-toggle="modal">DEL</button></td></tr>');
+	var new_val = Number(count_rows);
+	new_val = new_val +1;
+	$('#count_rows').val(new_val);
 	$('.rgb_color').colorpicker();
 	//
 });
@@ -760,6 +768,7 @@ $(document).on('click','#add_color',function(){
 //add_color
 $(document).on('click','#add_color0',function(){
 	//
+	var count_rows0 = $('#count_rows0').val();
 	var count = $('#colormap_table_create tbody tr').length;
 	var min = count-1;
 		var cont2 = count+1;
@@ -773,11 +782,35 @@ $(document).on('click','#add_color0',function(){
 		value0 = "";
 	}
 	
-	$('#colormap_table_create tbody').append('<tr><td class="hidden"></td><td><input type="text" class="form-control val_min ed_min" name="paramMin0['+count+']" id="val_min0" value="'+value0+'" readonly></input></td><td><input type="text" class="form-control val_max ed_max" id="val_max0" name="paramMax0['+count+']" value=""></input></td><td><div id="color-picker-rgb" class="input-group rgb_color"><input type="text" value="rgb(255,255,255)" class="form-control" name="paramRgb0['+count+']"/><span class="input-group-addon"><i></i></span></div></td><td><input name="paramColor0['+count+']" type="text" class="form-control" class="val_rgb" value="" required></input></td><td><input type="text" class="form-control" class="val_order" name="paramOrder0['+count+']" value="'+cont2+'"></input></td><td><button type="button" class="delDashBtn del_color1" value="'+count+'" data-target="" data-toggle="modal">DEL</button></td></tr>');
+	//$('#colormap_table_create tbody').append('<tr><td class="hidden"></td><td><input type="text" class="form-control val_min ed_min" name="paramMin0['+count+']" id="val_min0" value="'+value0+'" readonly></input></td><td><input type="text" class="form-control val_max ed_max" id="val_max0" name="paramMax0['+count+']" value=""></input></td><td><div id="color-picker-rgb" class="input-group rgb_color"><input type="text" value="rgb(255,255,255)" class="form-control" name="paramRgb0['+count+']"/><span class="input-group-addon"><i></i></span></div></td><td><input name="paramColor0['+count+']" type="text" class="form-control" class="val_rgb" value="" required></input></td><td><input type="text" class="form-control" class="val_order" name="paramOrder0['+count+']" value="'+cont2+'"></input></td><td><button type="button" class="delDashBtn del_color1" value="'+count+'" data-target="" data-toggle="modal">DEL</button></td></tr>');
+	$('#colormap_table_create tbody').append('<tr><td class="hidden"></td><td><input type="text" class="form-control val_min ed_min" name="paramMin0['+count_rows0+']" id="val_min0" value="'+value0+'" readonly></input></td><td><input type="text" class="form-control val_max ed_max" id="val_max0" name="paramMax0['+count_rows0+']" value=""></input></td><td><div id="color-picker-rgb" class="input-group rgb_color"><input type="text" value="rgb(255,255,255)" class="form-control" name="paramRgb0['+count_rows0+']"/><span class="input-group-addon"><i></i></span></div></td><td><input name="paramColor0['+count_rows0+']" type="text" class="form-control" class="val_rgb" value="" required></input></td><td><input type="text" class="form-control" class="val_order" name="paramOrder0['+count_rows0+']" value="'+cont2+'"></input></td><td><button type="button" class="delDashBtn del_color0" value="'+count_rows0+'" data-target="" data-toggle="modal">DEL</button></td></tr>');
 	$('.rgb_color').colorpicker();
+	$('#count_rows0').val(count + 1);
 	//
 });
 ///
+
+$(document).on('click','.del_color0',function(){
+	var id= $(this).parent().parent();
+	var id2=$(this).parent().parent().first().children().text();
+	var id4= $(this).val();
+	var min= Number(id4)-1;
+	var max= Number(id4)+1;
+	console.log(id4+' '+min+' '+max);
+	$(id).remove();
+	//
+	var el_min = document.getElementsByName("paramMin0["+max+"]");	
+	var el_max = document.getElementsByName("paramMax0["+min+"]");
+	var data_min = $(el_max).val();
+	$(el_min).val(data_min);
+	//
+	 
+	id3= id2.replace('DEL','');
+	//
+	var count = $('.delete_rows').length;
+	//
+	$('#list_deleted').append('<input type="text" class="delete_rows hidden" name="paramdel0['+count+']" value="'+id3+'"></input>');
+});
 
 //****////Eliminare il td corrente.
 $(document).on('click','.del_color1',function(){
@@ -789,8 +822,8 @@ $(document).on('click','.del_color1',function(){
 	console.log(id4+' '+min+' '+max);
 	$(id).remove();
 	//
-	var el_min = document.getElementsByName("paramMin0["+max+"]");	
-	var el_max = document.getElementsByName("paramMax0["+min+"]");
+	var el_min = document.getElementsByName("paramMin["+max+"]");	
+	var el_max = document.getElementsByName("paramMax["+min+"]");
 	var data_min = $(el_max).val();
 	$(el_min).val(data_min);
 	//
@@ -830,9 +863,10 @@ $(document).on('change','.mod_max',function(){
 	console.log('mySubString: '+mySubString);
 	var count =  Number(mySubString)+1;
 	console.log('val: '+val);
-	//var el = document.getElementsByName("paramMin["+count+"]");
-	 var el = document.getElementsByName("paramMinMod["+count+"]");
+		var el = document.getElementsByName("paramMin["+count+"]");
+	 var el2 = document.getElementsByName("paramMinMod["+count+"]");
 	$(el).val(val);
+	$(el2).val(val);
 	//console.log('el:'+el);
 	
 });

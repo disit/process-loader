@@ -16,6 +16,7 @@
    along with this program.  If not, see <http://www.gnu.org/licenses/>. */
    
 include("config.php");
+if (isset ($_SESSION['username'])&& isset($_SESSION['role'])){
 $link = mysqli_connect($host, $username, $password) or die("failed to connect to server !!");
 mysqli_set_charset($link, 'utf8');
 mysqli_select_db($link, $dbname);
@@ -28,16 +29,27 @@ mysqli_select_db($link, $dbname);
 	//$dati = $_REQUEST['dati'];
 	$id_p = $_REQUEST['id'];
 	//echo $id_p;
-   $name_p = $_REQUEST['nome'];
-   $group_p = $_REQUEST['gruppo'];
-   $job_type = $_REQUEST['file'];
-   $desc_p = $_REQUEST['descrizione'];
+   $name_p0 = $_REQUEST['nome'];
+   $name_p = filter_var($name_p0, FILTER_SANITIZE_STRING);
+   //
+   $group_p0 = $_REQUEST['gruppo'];
+   $group_p = filter_var($group_p0, FILTER_SANITIZE_STRING);
+   //
+   $job_type0 = $_REQUEST['file'];
+   $job_type = filter_var($job_type0, FILTER_SANITIZE_STRING);
+   //
+   $desc_p0 = mysqli_real_escape_string($connessione_al_server,$_REQUEST['descrizione']);
+   $desc_p = filter_var($desc_p0, FILTER_SANITIZE_STRING);
+   //
    $creation_date_p = date("Y-m-d H:i:s");
    
-   echo "<b>DESCRIZIONE:</b>".$desc_p."<br />";
+   //echo "<b>DESCRIZIONE:</b>".$desc_p."<br />";
    
    if ((isset($_REQUEST['url']))&&($_REQUEST['url'] !="")){
-   $url_p = $_REQUEST['url'];
+	//   
+   $url_p0 = $_REQUEST['url'];
+   $url_p = filter_var($url_p0, FILTER_SANITIZE_STRING);
+   //
    $url_data='"#url":"'.$url_p.'",';
    }else{
 	 $url_p="";
@@ -63,7 +75,8 @@ mysqli_select_db($link, $dbname);
    
    //
    if(isset($_REQUEST['email'])&&($_REQUEST['email'] != "")){
-   $email_p = $_REQUEST['email'];
+   $email_p0 = $_REQUEST['email'];
+   $email_p = filter_var($email_p0, FILTER_SANITIZE_EMAIL);
    $mail_data='"#notificationEmail":"'.$email_p.'",';
    }else{
 	  $email_p=""; 
@@ -72,7 +85,9 @@ mysqli_select_db($link, $dbname);
    
    if(isset($_REQUEST['time_out'])&&($_REQUEST['time_out'] != ""))
    {
-	  $time_out_p = $_REQUEST['time_out'];
+	  $time_out_p0 = $_REQUEST['time_out'];
+	  $time_out_p = filter_var($time_out_p0, FILTER_SANITIZE_STRING);
+	  
 	  $DataMap_p = '"#jobTimeout":"'. $time_out_p .'",';
    }
    else 
@@ -83,7 +98,8 @@ mysqli_select_db($link, $dbname);
    
    if(isset($_REQUEST['conc']))
    {
-	  $conc_p = $_REQUEST['conc'];
+	  $conc_p0 = $_REQUEST['conc'];
+	  $conc_p = filter_var($conc_p0, FILTER_VALIDATE_INT);
 	  $conc_p1 = 'true';
    }
    else
@@ -94,7 +110,8 @@ mysqli_select_db($link, $dbname);
    
   if(isset($_REQUEST['store']))
   {
-	$store_p = $_REQUEST['store'];
+	$store_p0 = $_REQUEST['store'];
+	$store_p = filter_var($store_p0, FILTER_VALIDATE_INT);
 	$store_p1 = 'true';
   }
   else 
@@ -105,7 +122,8 @@ mysqli_select_db($link, $dbname);
   
   if(isset($_REQUEST['recovery']))
   {
-	 $recovery_p = $_REQUEST['recovery'];
+	 $recovery_p0 = $_REQUEST['recovery'];
+	 $recovery_p = filter_var($recovery_p0, FILTER_SANITIZE_STRING);
 	 $recovery_p1 = 'true';
   }
   else 
@@ -114,13 +132,21 @@ mysqli_select_db($link, $dbname);
 	$recovery_p1 = 'false';
   }
   
-   $nome_trig_p = $_REQUEST['nome_trig'];
-   $descrizione_trig_p = $_REQUEST['descrizione_trig'];
-   $gruppo_trig_p = $_REQUEST['gruppo_trig'];
+   $nome_trig_p0 = $_REQUEST['nome_trig'];
+   $nome_trig_p = filter_var($nome_trig_p0, FILTER_SANITIZE_STRING);
+   ///
+   
+   $descrizione_trig_p0 = $_REQUEST['descrizione_trig'];
+   $descrizione_trig_p = filter_var($descrizione_trig_p0, FILTER_SANITIZE_STRING);
+   //
+   $gruppo_trig_p0 = $_REQUEST['gruppo_trig'];
+   $gruppo_trig_p = filter_var($gruppo_trig_p0, FILTER_SANITIZE_STRING);
+   //
    
     if (isset($_REQUEST['repeat_trig']))
 	{
-	   $repeat_trig_p = $_REQUEST['repeat_trig'];
+	   $repeat_trig_p0 = $_REQUEST['repeat_trig'];
+	   $repeat_trig_p = filter_var($repeat_trig_p0, FILTER_SANITIZE_STRING);
 	   $repeat_trig_p1 = 'true';
 	}
 	else 
@@ -129,10 +155,11 @@ mysqli_select_db($link, $dbname);
 	   $repeat_trig_p1 = 'false';
 	}  
    
-   $interval_trig_p = $_REQUEST['interval_trig'];
+   $interval_trig_p0 = $_REQUEST['interval_trig'];
+   $interval_trig_p = filter_var($interval_trig_p0, FILTER_SANITIZE_STRING);
    
    if(isset($_REQUEST['start'])){
-   $start_p = $_REQUEST['start'];
+   $start_p = mysqli_real_escape_string($connessione_al_server,$_REQUEST['start']);
    echo "START AT	".$start_p."<br>";
    echo $start_p_sec = date_create($start_p)->getTimestamp();
    $start_p_sec = $start_p_sec.'000';
@@ -141,7 +168,7 @@ mysqli_select_db($link, $dbname);
    }
    
    if(isset($_REQUEST['end'])&& $_REQUEST['end'] != ""){
-   $end_p = $_REQUEST['end'];
+   $end_p = mysqli_real_escape_string($connessione_al_server,$_REQUEST['end']);
    echo "END AT:	".$end_p."<br>";
    echo $end_p_sec = date_create($end_p)->getTimestamp();
    $end_p_sec = $end_p_sec.'000';
@@ -152,14 +179,16 @@ mysqli_select_db($link, $dbname);
    }
     if(isset($_REQUEST['priority']))
 	{
-		$priority_p = $_REQUEST['priority'];
+		$priority_p0 = $_REQUEST['priority'];
+		$priority_p = filter_var($priority_p0, FILTER_VALIDATE_INT);
 	}
 	else 
 	{
 		$priority_p = 0;
 	}  
    
-   $misfire_p = $_REQUEST['misfire'];
+   $misfire_p0 = $_REQUEST['misfire'];
+   $misfire_p = filter_var($misfire_p0, FILTER_SANITIZE_STRING);
    //GESTIOJNE DEI MisfireInstruction
    $resultMisfire = "";
     switch ($misfire_p) {
@@ -187,18 +216,20 @@ mysqli_select_db($link, $dbname);
     }
    //file position//
    if (isset($_REQUEST['file_position']) && $_REQUEST['file_position'] !=""){
-   $file_position = $_REQUEST['file_position'];
+   $file_position = mysqli_real_escape_string($connessione_al_server,$_REQUEST['file_position']);
    }else{
 	$file_position = "";   
    }
    
    
-   $NextJob_p = $_REQUEST['NextJobText']; 
+   $NextJob_p0 = $_REQUEST['NextJobText']; 
+   $NextJob_p = filter_var($NextJob_p0, FILTER_SANITIZE_STRING);
    //
    //
    
    if (isset($_REQUEST['ProcParameters'])){
    $ProcessParameter_p = $_REQUEST['ProcParameters']; 
+   //$ProcessParameter_p = filter_var($ProcessParameter_p0, FILTER_SANITIZE_STRING);
    }else{
 	  $ProcessParameter_p = '{}'; 
    }
@@ -221,7 +252,8 @@ mysqli_select_db($link, $dbname);
    
    if(isset($_REQUEST['sc_address']))
    {
-	   $indirizzo = $_REQUEST['sc_address'];
+	   $indirizzo0 = $_REQUEST['sc_address'];
+	   $indirizzo = filter_var($indirizzo0, FILTER_SANITIZE_STRING);
    }
    else
    {
@@ -259,10 +291,18 @@ mysqli_select_db($link, $dbname);
    
    ///
    if(isset($_REQUEST['next_job_n1'])&& $_REQUEST['next_job_n1'] != ""){
-   $next_j_cond=$_REQUEST['par_next_job_cond1'];
-   $next_j_res=$_REQUEST['next_job_result1'];
-   $next_job_n1=$_REQUEST['next_job_n1'];
-   $next_job_g1=$_REQUEST['next_job_g1'];
+   $next_j_cond0=$_REQUEST['par_next_job_cond1'];
+   $next_j_cond = filter_var($next_j_cond0, FILTER_SANITIZE_STRING);
+   //
+   $next_j_res0=$_REQUEST['next_job_result1'];
+   $next_j_res = filter_var($next_j_res0, FILTER_SANITIZE_STRING);
+   //
+   $next_job_n10=$_REQUEST['next_job_n1'];
+   $next_job_n1 = filter_var($next_job_n10, FILTER_SANITIZE_STRING);
+   //
+   $next_job_g10=$_REQUEST['next_job_g1'];
+   $next_job_g1 = filter_var($next_job_g10, FILTER_SANITIZE_STRING);
+   //
    $next_job_data='"#nextJobs":"[{\"operator\":\"'.$next_j_cond.'\",\"result\":\"'.$next_j_res.'\",\"jobName\":\"'.$next_job_n1.'\",\"jobGroup\":\"'.$next_job_g1.'\"}]",';
    }else{
 	   $next_j_cond="";
@@ -274,17 +314,23 @@ mysqli_select_db($link, $dbname);
    ////
     ///
 	if(isset($_REQUEST['job_cons_k1'])){
-    $job_cons_k1=$_REQUEST['job_cons_k1'];
+    $job_cons_k10=$_REQUEST['job_cons_k1'];
+	$job_cons_k1 = filter_var($job_cons_k10, FILTER_SANITIZE_STRING);
+	//
 	} else {
 		$job_cons_k1="";
 	}
 	if(isset($_REQUEST['job_cons_cond1'])){
-    $job_cons_cond1=$_REQUEST['job_cons_cond1'];
+    $job_cons_cond10=$_REQUEST['job_cons_cond1'];
+	$job_cons_cond1= filter_var($job_cons_cond10, FILTER_SANITIZE_STRING);
+	//
 	}else{
 		$job_cons_cond1="";
 	}
 	if(isset($_REQUEST['job_cons_v1'])&& $_REQUEST['job_cons_v1'] != ""){
-    $job_cons_v1=$_REQUEST['job_cons_v1'];
+    $job_cons_v10=$_REQUEST['job_cons_v1'];
+	$job_cons_v1= filter_var($job_cons_v10, FILTER_SANITIZE_STRING);
+	//
 	$JobConstraint_p = ',"#jobConstraints":"[{\"systemParameterName\":\"'.$job_cons_k1.'\",\"operator\":\"'.$job_cons_cond1.'\",\"value\":\"'.$job_cons_v1.'\"}]"';
 	}else{
 	$job_cons_v1="";	
@@ -292,21 +338,14 @@ mysqli_select_db($link, $dbname);
 	}
 	//
 	
-	//$JobConstraint_p = '{"systemParameterName":"'.$job_cons_k1.'","operator":"'.$job_cons_cond1.'","value":"'.$job_cons_v1.'"}';
-	//$JobConstraint_p = ',"#jobConstraints":"[{\"systemParameterName\":\"'.$job_cons_k1.'\",\"operator\":\"'.$job_cons_cond1.'\",\"value\":\"'.$job_cons_v1.'\"}]"';	
-	//
    ///// CORRETTO/////////////////////////////////////////////////////
 	$data = '?json=' . urlencode('{"startAt":"'.$start_p_sec.'","endAt":"'.$end_p_sec.'","withJobIdentityNameGroup":["'.$name_p.'","'.$group_p.'"],"jobClass":"'.$type_p.'","withDescription":"'.$descrizione_trig_p.'","withJobDescription":"'.$desc_p.'","withIdentityNameGroup":["'.$nome_trig_p.'","'.$gruppo_trig_p.'"],"withPriority":"'.$priority_p.'","repeatForever":"true","storeDurably":"'.$store_p1.'","requestRecovery":"'.$recovery_p1.'","withIntervalInSeconds":"'.$interval_trig_p.'","id":"scheduleJob","'.$resultMisfire.'":"","restUrl":"'.$url_p.'","jobDataMap":{"#notificationEmail":"'.$email_p.'","#url":"'.$url_p.'","#isNonConcurrent":"'.$conc_p1.'","#nextJobs":"[{\"operator\":\"'.$next_j_cond.'\",\"result\":\"'.$next_j_res.'\",\"jobName\":\"'.$next_job_n1.'\",\"jobGroup\":\"'.$next_job_g1.'\"}]","#processParameters":"[{\"processPath\":\"'.$path_p.'\"},'.$ProcessParameter_p.']","#jobConstraints":"[{\"systemParameterName\":\"'.$job_cons_k1.'\",\"operator\":\"'.$job_cons_cond1.'\",\"value\":\"'.$job_cons_v1.'\"}]"}}');
-   // $ProcessParameter_p
-   //$data = '{"startAt":"'.$start_p_sec.'","endAt":"'.$end_p_sec.'","withJobIdentityNameGroup":["'.$name_p.'","'.$group_p.'"],"jobClass":"RESTJob","withDescription":"'.$descrizione_trig_p.'","withJobDescription":"'.$desc_p.'","withIdentityNameGroup":["'.$nome_trig_p.'","'.$gruppo_trig_p.'"],"withPriority":"'.$priority_p.'","repeatForever":"true","storeDurably":"'.$store_p1.'","requestRecovery":"'.$recovery_p1.'","withIntervalInSeconds":"'.$interval_trig_p.'","id":"scheduleJob","misfire":"'.$misfire_p.'","notificationEmail":"'.$email_p.'","restUrl":"'.$url_p.'","jobDataMap":{"#url":"'.$url_p.'","#isNonConcurrent":"'.$conc_p1.'"},"nextJobs":{"operator":"'.$next_j_cond.'","result":"'.$next_j_res.'","jobName":"'.$next_job_n1.'","jobGroup":"'.$next_job_g1.'"},"jobConstraints":{"systemParameterName":"'.$job_cons_k1.'","operator":"'.$job_cons_cond1.'","value":"'.$job_cons_v1.'"},"processParameters":'.$ProcessParameter_p.'}';
+   //
    //[PARAMETRI NASCOSTI]//
-   //$data = '?json=' . urlencode('{"startAt":"'.$start_p_sec.'",'.$end_p_sec.'"withJobIdentityNameGroup":["'.$name_p.'","'.$group_p.'"],"jobClass":"'.$type_p.'","withDescription":"'.$descrizione_trig_p.'","withJobDescription":"'.$desc_p.'","withIdentityNameGroup":["'.$nome_trig_p.'","'.$gruppo_trig_p.'"],"withPriority":"'.$priority_p.'","repeatForever":"true","storeDurably":"'.$store_p1.'","requestRecovery":"'.$recovery_p1.'","withIntervalInSeconds":"'.$interval_trig_p.'","id":"scheduleJob","'.$resultMisfire.'":"","restUrl":"'.$url_p.'","jobDataMap":{'.$mail_data.$url_data.'"#isNonConcurrent":"'.$conc_p1.'"'.$next_job_data.',"#processParameters":"[{\"processPath\":\"'.$path_p.'\"},'.$ProcessParameter_p.']"'.$JobConstraint_p.'}}');
+   //
    $data = '?json=' . urlencode('{"startAt":"'.$start_p_sec.'",'.$end_p_sec.'"withJobIdentityNameGroup":["'.$name_p.'","'.$group_p.'"],"jobClass":"'.$type_p.'","withDescription":"'.$descrizione_trig_p.'","withJobDescription":"'.$desc_p.'","withIdentityNameGroup":["'.$nome_trig_p.'","'.$gruppo_trig_p.'"],"withPriority":"'.$priority_p.'","repeatForever":"true","storeDurably":"'.$store_p1.'","requestRecovery":"'.$recovery_p1.'","withIntervalInSeconds":"'.$interval_trig_p.'","id":"scheduleJob","'.$resultMisfire.'":"","restUrl":"'.$url_p.'","jobDataMap":{'.$mail_data.''.$url_data.'"#isNonConcurrent":"'.$conc_p1.'",'.$next_job_data.''.$DataMap_p.'"#processParameters":"[{\"processPath\":\"'.$path_p.'\"},'.$ProcessParameter_p.']"'.$JobConstraint_p.'}}');
    //
    $apiUrl = 'http://'.$indirizzo.':8080/SmartCloudEngine/index.jsp';
-   //$data = '?json='.urlencode(json_encode($jsonSce)); 
-   //$data = '?json='.json_encode($jsonSce); 
-	
 
 	//$url = $url.$data;
 	$apiUrl = $apiUrl.$data;
@@ -350,10 +389,10 @@ mysqli_select_db($link, $dbname);
 					if ($_REQUEST['showFrame'] == 'false'){
 						header ("location:job_type.php?showFrame=false");
 					}else{
-						header ("location:job_type.php");
+						header ("location:job_type.php?done=0");
 					}	
 				}else{
-					header ("location:job_type.php");
+					header ("location:job_type.php?done=1");
 				}
 	  //
 	}
@@ -364,15 +403,17 @@ mysqli_select_db($link, $dbname);
 	if ($_REQUEST['showFrame'] == 'false'){
 		header ("location:job_type.php?showFrame=false");
 					}else{
-						header ("location:job_type.php");
+						header ("location:job_type.php?done=2");
 					}	
 				}else{
-					header ("location:job_type.php");
+					header ("location:job_type.php?done=3");
 				}
 		
 		//
 	}
-	
+}else{
+	header ("location:page.php");
+}	
 
 
 ?>

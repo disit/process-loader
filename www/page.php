@@ -450,7 +450,8 @@ if(isset($_REQUEST['message'])){
 		// ajax per tirare fuori nomi e valori delle faccette
 		$.ajax({
 			url: "filterFacet.php",
-			data: {utente_att:ut_att, role_att:role_att},
+			//data: {utente_att:ut_att, role_att:role_att},
+			data: {role_att:role_att},
 			type: "POST",
 			async: true,
 			dataType: 'json',
@@ -498,8 +499,9 @@ if(isset($_REQUEST['message'])){
         //Reperimento dati per popolare tabella e griglia
         $.ajax({
             url: "getSolrResponse.php",
-            type: "GET",
-			data: {utente_att:ut_att,role_att:role_att},
+            type: "POST",
+			//data: {utente_att:ut_att,role_att:role_att},
+			data: {role_att:role_att},
             async: true,
             dataType: 'json',
             success: function(data) 
@@ -807,7 +809,8 @@ if(isset($_REQUEST['message'])){
 		data = arrayBuild(value,facet);
 		$.ajax({
 			url: "filterFacet.php",
-			data:{list: data,utente_att:ut_att,role_att:role_att},
+			//data:{list: data,utente_att:ut_att,role_att:role_att},
+			data:{list: data,role_att:role_att},
 			type: "POST",
 			async: true,
 			dataType: 'json',
@@ -845,7 +848,8 @@ if(isset($_REQUEST['message'])){
 			console.log(data);
         $.ajax({
 			url: "getSolrResponse.php",
-			data:{list:data,utente_att:ut_att,role_att:role_att},
+			//data:{list:data,utente_att:ut_att,role_att:role_att},
+			data:{list:data,role_att:role_att},
             type: "POST",
             async: true,
             dataType: 'json',
