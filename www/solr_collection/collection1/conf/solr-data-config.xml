@@ -1,0 +1,17 @@
+<dataConfig>
+<dataSource type="JdbcDataSource"
+driver="com.mysql.jdbc.Driver"
+url="jdbc:mysql://localhost:3306/processloader_db"
+user=""
+password=""/>
+<document>
+<entity name="entity_name"
+query="SELECT * FROM uploaded_files"
+deltaImportQuery="SELECT * FROM uploaded_files WHERE id='${dih.delta.id}'">
+<field column="Id" name="Id"/>
+<field column="Description" name="Description"/>
+<field column="username" name="username"/>
+<field column="Category" name="Category"/>
+</entity>
+</document>
+</dataConfig>

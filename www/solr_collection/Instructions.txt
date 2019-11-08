@@ -1,0 +1,3 @@
+The folder collection1 contains the files to define the scheme for displaying data on solr and must be installed in solr 7.0.1 in the "solr/data/" extension.
+
+In the "solr-data-config.xml" configuration file, the "user" and "password" information must be set with the credentials to access the Resource Manager database.
