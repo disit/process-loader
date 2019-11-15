@@ -16,22 +16,33 @@
    along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
 //EXTERNAL SERVICES//
-$host= 'localhost';
-$username= 'profiledb_user_read';
-$password= 'profiledbpassreadonly';
+$host= 'loclahost';
+$username= 'user';
+$password= 'password';
 $dbname= 'profiledb';
 $snap4city_API='localhost';
 
 //PHOTO SERVICE//
 $host_photo= 'localhost';
-$username_photo= 'root';
-$password_photo= 'toor';
-$dbname_photo= 'processloader_db';
-$photo_api='http://www.disit.org/ServiceMap/api/v1/photo/thumbs/';
+$username_photo= 'user';
+$password_photo= 'password';
+$dbname_photo= 'ServiceMap';
+$photo_api='http://localhost/ServiceMap/api/v1/photo/thumbs/';
+$default_longitude = 11.252;
+$default_latitude = 43.773;
+$default_serviceUri = 'http://localhost/ServiceMap/api/v1/?serviceUri=';
+$photo_service_api = 'http://localhost/ServiceMap/ajax/';
 
 //KPI EDITOR//
 $host_kpi= 'localhost';
-$username_kpi= 'root';
-$password_kpi= 'toor';
+$username_kpi= 'user';
+$password_kpi= 'password';
 $dbname_kpi= 'processloader_db';
+
+//heatmap server
+$host_heatmap ='localhost';
+$username_heatmap = 'root';
+$password_heatmap = 'ubuntu';
+$dbname_heatmap = 'heatmap';
+
 ?>
