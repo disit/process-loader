@@ -24,7 +24,8 @@ $host="localhost";
 $dbname = "processloader_db";
 $host_valueunit = $host;
 $username_valueunit = $username;
-$password_valueunit =$password;
+$password_valueunit = $password;
+$dbname_valueunit = $dbname;
 
 //SERVER LDAP
 $ldapServer = 'localhost';
