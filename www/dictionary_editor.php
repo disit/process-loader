@@ -17,6 +17,7 @@
    along with this program.  If not, see <http://www.gnu.org/licenses/>. */
    
 include('config.php'); // Includes Login Script
+include('functionalities.php');
 include('control.php');
 
 if (isset ($_SESSION['username'])){
@@ -44,6 +45,16 @@ if (!isset($_GET['pageTitle'])){
 	$default_title = "Process Loader: Dictionary Editor";
 }else{
 	$default_title = "";
+}
+
+if ($role_att ==""){
+	echo('You are not authorized to access this page.');
+	exit();
+}
+
+if($process['functionalities'][$role_att] == 0){
+		echo('You are not authorized to access this page.');
+		exit();
 }
 ?>
 
@@ -955,7 +966,7 @@ function filtroData(){
 	}
 	
 	
-	
+	/*
 		var role="<?=$role_att; ?>";
 	
 		if (role == ""){
@@ -979,6 +990,7 @@ function filtroData(){
 						window.location.href = 'page.php?pageTitle=Process%20Loader:%20View%20Resources';
 						}
 					}
+					*/
 		//
 		var titolo_default = "<?=$default_title; ?>";
 				if (titolo_default != ""){
