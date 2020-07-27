@@ -58,6 +58,7 @@ if (isset($_POST['help'])) {
 	
     $help0 = mysqli_real_escape_string($connessione_al_server,$_POST['help']);
 	//$help = filter_var($help0 , FILTER_SANITIZE_STRING);
+	$help0=$_POST['help'];
 	if (strpos($help0, '<script') !== false) {
 			echo 'true';
 			$help = filter_var($help0 , FILTER_SANITIZE_STRING);
@@ -257,8 +258,10 @@ if (($tipo !== "ETL") && ($tipo !== "R") && ($tipo !== "Java") && ($tipo !== "Io
         
         $contentjs = 'module.exports = function(RED) {function eventLog(inPayload, outPayload, config, _agent, _motivation, _ipext, _modcom) {var os = require("os"); var ifaces = os.networkInterfaces(); var uri = "http://192.168.1.43/RsyslogAPI/rsyslog.php";var pidlocal = RED.settings.APPID;var iplocal = null;Object.keys(ifaces).forEach(function (ifname) {ifaces[ifname].forEach(function (iface) {if ("IPv4" !== iface.family || iface.internal !== false) { return;}iplocal = iface.address;}); });';
         $contentjs = $contentjs . ' iplocal = iplocal + ":" + RED.settings.uiPort;var timestamp = new Date().getTime(); var modcom = _modcom;var ipext = _ipext; var payloadsize = JSON.stringify(outPayload).length / 1000;var agent = _agent; var motivation = _motivation; var lang = (inPayload.lang ? inPayload.lang : config.lang); var lat = (inPayload.lat ? inPayload.lat : config.lat); var lon = (inPayload.lon ? inPayload.lon : config.lon);';
-        $contentjs = $contentjs . 'var serviceuri = (inPayload.serviceuri ? inPayload.serviceuri : config.serviceuri); var message = (inPayload.message ? inPayload.message : config.message); var XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest; var xmlHttp = new XMLHttpRequest(); console.log(encodeURI(uri + "?p=log" + "&pid=" + pidlocal + "&tmstmp=" + timestamp + "&modCom=" + modcom + "&IP_local=" + iplocal + "&IP_ext=" + ipext +"&payloadSize=" + payloadsize + "&agent=" + agent + "&motivation=" + motivation + "&lang=" + lang + "&lat=" + (typeof lat != "undefined" ? lat : 0.0) + "&lon=" + (typeof lon != "undefined" ? lon : 0.0) + "&serviceUri=" + serviceuri + "&message=" + message));';
-        $contentjs = $contentjs . 'xmlHttp.open("' . $method . '", encodeURI(uri + "?p=log" + "&pid=" + pidlocal + "&tmstmp=" + timestamp + "&modCom=" + modcom + "&IP_local=" + iplocal + "&IP_ext=" + ipext +"&payloadSize=" + payloadsize + "&agent=" + agent + "&motivation=" + motivation + "&lang=" + lang + "&lat=" + (typeof lat != "undefined" ? lat : 0.0) + "&lon=" + (typeof lon != "undefined" ? lon : 0.0) + "&serviceUri=" + serviceuri + "&message=" + message), true);  xmlHttp.send(null); }';
+        $contentjs = $contentjs . 'var serviceuri = (inPayload.serviceuri ? inPayload.serviceuri : config.serviceuri); var message = (inPayload.message ? inPayload.message : config.message); var XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest; var xmlHttp = new XMLHttpRequest(); console.log(encodeURI(uri) + "?p=log" + "&pid=" + encodeURIComponent(pidlocal) + "&tmstmp=" + encodeURIComponent(timestamp) + "&modCom=" +encodeURIComponent( modcom) + "&IP_local=" + encodeURIComponent(iplocal) + "&IP_ext=" + ipext +"&payloadSize=" + encodeURIComponent(payloadsize) + "&agent=" + encodeURIComponent(agent) + "&motivation=" + encodeURIComponent(motivation) + "&lang=" + encodeURIComponent(lang) + "&lat=" + (typeof lat != "undefined" ? lat : 0.0) + "&lon=" + (typeof lon != "undefined" ? lon : 0.0) + "&serviceUri=" + encodeURIComponent(serviceuri) + "&message=" + encodeURIComponent(message));';
+      //$contentjs = $contentjs . 'xmlHttp.open("' . $method . '", encodeURI(uri) + "?p=log" + "&pid=" + pidlocal + "&tmstmp=" + timestamp + "&modCom=" + modcom + "&IP_local=" + iplocal + "&IP_ext=" + ipext +"&payloadSize=" + payloadsize + "&agent=" + agent + "&motivation=" + motivation + "&lang=" + lang + "&lat=" + (typeof lat != "undefined" ? lat : 0.0) + "&lon=" + (typeof lon != "undefined" ? lon : 0.0) + "&serviceUri=" + serviceuri + "&message=" + message), true);  xmlHttp.send(null); }';
+	  //$contentjs = $contentjs . 'console.log(encodeURI(uri) + "?TwRtwSearch=" + encodeURIComponent(TwRtwSearch) + (typeof hours != "undefined" && hours != "" ? "&hours=" + encodeURIComponent(hours) : "") + (typeof format != "undefined" && format != "" ? "&format=" + encodeURIComponent(format) : ""))';
+	    $contentjs = $contentjs . 'xmlHttp.open("' . $method . '", encodeURI(uri) + "?p=log" + "&pid=" + encodeURIComponent(pidlocal) + "&tmstmp=" + encodeURIComponent(timestamp) + "&modCom=" + encodeURIComponent(modcom) + "&IP_local=" + encodeURIComponent(iplocal) + "&IP_ext=" + encodeURIComponent(ipext) +"&payloadSize=" + encodeURIComponent(payloadsize) + "&agent=" + encodeURIComponent(agent) + "&motivation=" + encodeURIComponent(motivation) + "&lang=" + encodeURIComponent(lang) + "&lat=" + (typeof lat != "undefined" ? lat : 0.0) + "&lon=" + (typeof lon != "undefined" ? lon : 0.0) + "&serviceUri=" + encodeURIComponent(serviceuri) + "&message=" + encodeURIComponent(message), true);  xmlHttp.send(null); }';
         $contentjs = $contentjs . 'function ' . $nome_funzione . '(config) { RED.nodes.createNode(this, config); var node = this;node.on("input", function(msg) {';
         $contentjs = $contentjs . 'var uri = "' . $url . '"; ';
         
@@ -291,25 +294,42 @@ if (($tipo !== "ETL") && ($tipo !== "R") && ($tipo !== "Java") && ($tipo !== "Io
         }else{
         //$contentjs = $contentjs . '));xmlHttp.open("'.$method.'", encodeURI(uri + "?'.$parameters[0].'=" + '.$parameters[0];    
         }*/
-        $first     = true;
+        $first0     = true;
         //$contentjs = $contentjs . '));xmlHttp.open("'.$method.'", encodeURI(uri';
-        $contentjs = $contentjs . 'xmlHttp.open("' . $method . '", encodeURI(uri';
+        //$contentjs = $contentjs . 'xmlHttp.open("' . $method . '", encodeURI(uri';
+		//
+		$contentjs = $contentjs . 'console.log(encodeURI(uri)';
+        for ($x = 0; $x < $num; $x++) {
+            if (($parameters[$x] != "") || ($parameters[$x] != null)) {
+                if ($first0) {
+                    $contentjs = $contentjs . '+ "?' . $parameters[$x] . '=" + encodeURIComponent(' . $parameters[$x].')';
+                    $first0    = false;
+                } else {
+                    $contentjs = $contentjs . ' +(typeof ' . $parameters[$x] . ' != "undefined" && ' . $parameters[$x] . ' != "" ? "&' . $parameters[$x] . '=" + encodeURIComponent(' . $parameters[$x] . ') : "")';
+                }
+            }
+        }
+		$contentjs = $contentjs . ');';
+		//
+		$first     = true;
+		$contentjs = $contentjs . 'xmlHttp.open("' . $method . '", encodeURI(uri)';
         for ($x = 0; $x < $num; $x++) {
             if (($parameters[$x] != "") || ($parameters[$x] != null)) {
                 if ($first) {
-                    $contentjs = $contentjs . '+ "?' . $parameters[$x] . '=" + ' . $parameters[$x];
+                    $contentjs = $contentjs . '+ "?' . $parameters[$x] . '=" + encodeURIComponent(' . $parameters[$x].')';
                     $first     = false;
                 } else {
-                    $contentjs = $contentjs . ' +(typeof ' . $parameters[$x] . ' != "undefined" && ' . $parameters[$x] . ' != "" ? "&' . $parameters[$x] . '=" + ' . $parameters[$x] . ' : "")';
+                    $contentjs = $contentjs . ' +(typeof ' . $parameters[$x] . ' != "undefined" && ' . $parameters[$x] . ' != "" ? "&' . $parameters[$x] . '=" + encodeURIComponent(' . $parameters[$x] . ') : "")';
                 }
             }
         }
         
-        $contentjs = $contentjs . '), false);';
+        //$contentjs = $contentjs . '), false);';
+		$contentjs = $contentjs . ', false);';
         if ($auth_check == 'Yes') {
             $contentjs = $contentjs . 'xmlHttp.setRequestHeader("Authorization","Basic " + btoa (username + ":" + password));';
         }
-        $contentjs = $contentjs . 'xmlHttp.send(null); if (xmlHttp.responseText != "") { try { msg.payload = JSON.parse(xmlHttp.responseText); } catch (e) { msg.payload = xmlHttp.responseText;}} else {msg.payload = JSON.parse("{\"status\": \"There was some problem\"}"); }eventLog(inPayload, msg, config, "Node-Red", "MicroserviceUserCreated", uri, "RX"); node.send(msg);});}RED.nodes.registerType("' . $micro_name . '", ' . $nome_funzione . ');}';
+        $contentjs = $contentjs . 'xmlHttp.send(null); if (xmlHttp.responseText != "") { try { msg.payload = JSON.parse(xmlHttp.responseText); } catch (e) { msg.payload = xmlHttp.responseText;}} else {msg.payload = JSON.parse("{\"status\": \"There was some problem. HTTP Status Code: " + xmlHttp.statusText + "\"}"); }eventLog(inPayload, msg, config, "Node-Red", "MicroserviceUserCreated", uri, "RX"); node.send(msg);});}RED.nodes.registerType("' . $micro_name . '", ' . $nome_funzione . ');}';
         
         fwrite($myfileJs, $contentjs);
         fclose($myfileJs);
