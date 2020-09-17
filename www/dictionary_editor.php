@@ -285,19 +285,20 @@ if($process['functionalities'][$role_att] == 0){
 				<div class="input-group" style="display:none;"><span class="input-group-addon">Id: </span><input id="id_create_e" type="text" class="form-control" name="id" readonly></input></div><br />
 				<div class="input-group" style="display:none;"><input id="vn_hid" type="text" class="form-control" name="vn_hid" readonly></div>
 				<!-- -->
-				<div class="input-group" ><span class="input-group-addon">Value Name: </span><input id="vn_create_e" type="text" class="form-control autocomplete" name="vn_create_e" oninput="check('edit')" list="mylist_e" data-minchars="3"/>
+				<div class="input-group" ><span class="input-group-addon">Value Name: </span><input id="vn_create_e" type="text" class="form-control autocomplete" name="vn_create_e" oninput="check('edit')" list="mylist_e" data-minchars="3" readonly/>
 				<datalist id="mylist_e"></datalist>
 				</div>
 				<div id="message_control_e" style="color:#AA3939"></div>
 				<br />
 				<div class="input-group"><span class="input-group-addon">Description: </span><input id="label_create_e" type="text" class="form-control" name="label_create_e"></input></div><br />
 				<div class="input-group"><span class="input-group-addon">Select type of element: </span>
-							<select id="select_type_creation_e" name="select_type_creation" class="form-control">
+							<input id="select_type_creation_e" type="text" class="form-control" name="select_type_creation" readonly>
+							<!--<select id="select_type_creation_e" name="select_type_creation" class="form-control">
 								  <option value="nature">nature</option>
 								  <option value="subnature">subnature</option>
 								  <option value="value type">value type</option>
 								  <option value="value unit">value unit</option>
-							</select>
+							</select>-->
 				</div><br />
 				<div class="input-group" id="list_nature_e"><span class="input-group-addon">Select Nature: </span>
 							<select id="select_nature_e" name="select_nature_e" class="form-control" >
@@ -460,6 +461,7 @@ function editData(id, value, label, type, parent){
 	$('#select_type_creation_e').val(type);
 	var vn_create_e=	$('#vn_create_e').val();
 	console.log('vn_create_e:	'+	vn_create_e);
+	console.log('parent: '+parent);
 	//
 	if(type == "subnature"){
 		var array_act = new Array();
@@ -945,6 +947,7 @@ function filtroData(){
 		$('#select_vt_e').multiselect({
 			includeSelectAllOption: true,
 			enableFiltering: true,
+			enableCaseInsensitiveFiltering: true,
 			maxHeight: 450,
 			maxWidth: 300 
 			});
@@ -954,6 +957,7 @@ function filtroData(){
 		$('#select_vtype').multiselect({
 			includeSelectAllOption: true,
 			enableFiltering: true,
+			enableCaseInsensitiveFiltering: true,
 			maxHeight: 450,
 			maxWidth: 300 
 			});
@@ -1114,8 +1118,10 @@ function filtroData(){
 			
 	   });*/
 	   /////
+	   /*
 	    $("#select_type_creation_e").change(function () { 
 							var type = $("#select_type_creation_e").val();
+							console.log('type:	'+type);
 							if(type == "subnature"){
 								var array_act = new Array();
 									$("#list_nature_e").show();
@@ -1150,6 +1156,8 @@ function filtroData(){
 								$("#list_nature_e").hide();
 							}
 							if(type == "value unit"){
+								var multiselect = $('.multiselect').val();
+								console.log('multiselect: '+multiselect);
 								var array_act = new Array();
 									$("#list_vt_e").show();
 													$.ajax({
@@ -1173,6 +1181,7 @@ function filtroData(){
 																		 value: data[i]['value']
 																	};
 																	//
+																	
 																	var list_parent = parent.split(', ');
 																	var l = list_parent.length;
 																	//
@@ -1192,7 +1201,7 @@ function filtroData(){
 							}
 					
 				});
-		
+		*/
 		
 	   //
 	   

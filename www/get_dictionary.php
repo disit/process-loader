@@ -96,7 +96,7 @@ if (isset($_SESSION['username']) && isset($_SESSION['role'])) {
 		$value_type = filter_var($value_type , FILTER_SANITIZE_STRING);
 		//
         if ($value_type == 1) {
-            $value_type = "SELECT *, parent_id AS parent_value FROM dictionary_table WHERE type = 'value type' AND status = 1";
+            $value_type = "SELECT *, parent_id AS parent_value FROM dictionary_table WHERE type = 'value type' AND status = 1 ORDER BY value ASC";
         } else {
             $value_type = "";
         }
@@ -301,7 +301,8 @@ if (isset($_SESSION['username']) && isset($_SESSION['role'])) {
         $select_type_creation = mysqli_real_escape_string($connessione_al_server, $_REQUEST['select_type_creation']);
 		$select_nature = null;
 		//
-		$query_check="Select * FROM dictionary_table WHERE value LIKE'".$vn_create."' "; 
+		//$query_check="Select * FROM dictionary_table WHERE value LIKE'".$vn_create."' "; 
+		$query_check="Select * FROM dictionary_table WHERE value LIKE'".$vn_create."' AND status = 1";
 		$result_check = mysqli_query($link, $query_check) or die('ERROR NELLA QUERY');
 		$n_row = mysqli_num_rows($result_check);
 		
@@ -397,32 +398,28 @@ if (isset($_SESSION['username']) && isset($_SESSION['role'])) {
 		if($select_type_creation == 'subnature'){
 		$select_nature = mysqli_real_escape_string($connessione_al_server, $_REQUEST['select_nature_e']);
 		//
-		 $query  = "UPDATE dictionary_table SET value='" . $vn_create . "', label='" . $lb_create . "', type='" . $select_type_creation . "', parent_id='".$select_nature."'  WHERE id=" . $id;
-		//
-		}else{
-		$select_nature = null;
-		//
-		 $query  = "UPDATE dictionary_table SET value='" . $vn_create . "', label='" . $lb_create . "', type='" . $select_type_creation . "', parent_id=null  WHERE id=" . $id;
+		 //$query  = "UPDATE dictionary_table SET value='" . $vn_create . "', label='" . $lb_create . "', type='" . $select_type_creation . "', parent_id='".$select_nature."'  WHERE id=" . $id;
+		 $query  = "UPDATE dictionary_table SET label='" . $lb_create . "', parent_id='".$select_nature."'  WHERE id=" . $id;
 		//
 		}
+
 		
 		//
 		if($select_type_creation == 'value unit'){
 		//
-		$query  = "UPDATE dictionary_table SET value='" . $vn_create . "', label='" . $lb_create . "', type='" . $select_type_creation . "'  WHERE id=" . $id;
-		//
-		}else{
-		$select_vt_e = null;
-		//
-		 $query  = "UPDATE dictionary_table SET value='" . $vn_create . "', label='" . $lb_create . "', type='" . $select_type_creation . "', parent_id=null  WHERE id=" . $id;
+		//$query  = "UPDATE dictionary_table SET value='" . $vn_create . "', label='" . $lb_create . "', type='" . $select_type_creation . "'  WHERE id=" . $id;
+		$query  = "UPDATE dictionary_table SET label='" . $lb_create . "' WHERE id=" . $id;
 		//
 		}
+
 		
 		if(($select_type_creation == 'nature')||($select_type_creation == 'value type')){
-			 $query  = "UPDATE dictionary_table SET value='" . $vn_create . "', label='" . $lb_create . "', type='" . $select_type_creation . "', parent_id=null  WHERE id=" . $id;
+			 //$query  = "UPDATE dictionary_table SET value='" . $vn_create . "', label='" . $lb_create . "', type='" . $select_type_creation . "', parent_id=null  WHERE id=" . $id;
+			 $query  = "UPDATE dictionary_table SET label='" . $lb_create . "'  WHERE id=" . $id;
 		}
 		//
 		///
+		//echo ($query);
 		 $result = mysqli_query($link, $query) or die(mysqli_error($link));
 		///
 		//
