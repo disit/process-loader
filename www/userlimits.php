@@ -115,7 +115,7 @@ if (!isset($_GET['pageTitle'])) {
 
                         <div id="types">
                             <div id="element_type">
-                                <div id="select_element_type" style="margin-left: 5%;">
+                                <div id="select_element_type" style="margin: 5%;">
                                     <div id="buotton_files" style="width: 75%; padding-bottom:50px;">
                                         <!-- -->
                                         <button type="button" class="btn btn-warning new_rule" data-toggle="modal" data-target="#myModal_new" style="float:left; margin-right: 5px;">
@@ -468,8 +468,10 @@ if (!isset($_GET['pageTitle'])) {
                                 search_type(elementtype_c);
                                 search_orgs(organization_c);
                                 //
-                            } else {
+                            } else if (result == 'duplicated') {
                                 alert("You can't create a new rule with these parameters beacause is yet existing.");
+                            } else {
+                                alert(message);
                             }
                         }
                     });
@@ -519,8 +521,10 @@ if (!isset($_GET['pageTitle'])) {
                                 search_type(elementtype_n);
                                 search_orgs(organization_n);
                                 //
+                            } else if (result == 'duplicated') {
+                                alert("You can't edit a rule with these parameters beacause is yet existing.");
                             } else {
-                                alert("You can't create a new rule with these parameters beacause is yet existing.");
+                                alert(message);
                             }
                         }
                     });

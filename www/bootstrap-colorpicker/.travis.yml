@@ -1,12 +1,12 @@
 language: node_js
 node_js:
-  - "6"
   - "8"
+  - "10"
+  - "11"
 before_script:
-  - npm install -g grunt-cli
+  - npm install -g gulp-cli jsdoc ava
 
 script:
   - yarn install
-  - grunt --verbose
-    # Check that files didn't change after running grunt. It should be run before pushing any code change.
-  - if ! git diff --name-only --quiet -- dist docs src index.html --; then echo \"Files where modified after grunt execution!!...\"; exit 1; fi
+  - npm run build
+  - npm run test

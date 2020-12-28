@@ -1,42 +1,61 @@
 # Contributing
 
+All contributions are welcome!
+
 ## Support
 
-The issue tracker is not the place for support requests. If you get stuck with bootstrap-colorpicker, it's very likely
-that the fine folks at [StackOverflow](http://stackoverflow.com/) will be able to help you; simply describe the problem
-you're having and provide them a link to the repo (so they know what code you're using).
+If you get stuck with this library you can search or ask in the project 
+[issues](https://github.com/itsjavi/bootstrap-colorpicker/issues) or in
+[StackOverflow](http://stackoverflow.com/).
+
+[Describe your problem or questions in detail](./ISSUE_TEMPLATE.md) and follow the steps mentioned in the "Issues"
+section of this document.
 
 
 ## Issues
-For feature requests, suggestions or ideas, add `[SUGGESTION]` before the title of the issue, for anything else follow
-the following guidelines.
 
-### Steps to submit an issue
-These steps are mandatory. Issues that are not clear or are not clearly reproduceable with a live example will be closed.
+- Search for existing issues before creating a new one, to avoid duplication.
+- Give the issue a proper title. Use prefixes like `[feature request]`, `[suggestion]` or `[question]`
+  in front of the title when it is not related to a possible bug.
+- When the issue is related to a possible bug, please always fill the [suggested template](./ISSUE_TEMPLATE.md) 
+  where applicable.
+- It is mandatory to provide live examples using [JSFiddle](http://jsfiddle.net/0vopxm13/157/) if applicable,
+  that's the quickest and most efficient way for everyone to help you.
 
-- Reproduce your problem in a separated environment, like in JSFiddle,
-  [here is a template for it](http://jsfiddle.net/0vopxm13/157/), that you can fork in the same page.
-  It already includes the required JS and CSS files.
-- Before posting your issue, consider adding this information:
-  * Expected behaviour: what should happen?
-  * Actual behaviour: what happens instead?
-  * Your context: Where it happens? In which browser and version (if applicable)?
-  * Plugin version (and/or commit reference).
-  * jQuery version you use and list of all other plugins/scripts you are using with this one and may cause some conflict.
-  * A link to your JSFiddle (or similar tool) demo where you reproduced the problem (if applicable).
 
 ## Pull Requests
 
-Patches and new features are welcome!
+Pull Requests fixing existing issues are really appreciated, but you can also add a new features.
+If your new feature works and receives the approval of the community, it will be merged.
 
-- Prerequisites: having `node`, `npm`, `yarn` and `grunt` installed in your machine.
-- After a fresh clone for your fork, you need to run `yarn install` inside the project's root folder.
-- For checking your changes in the browser you can execute `node serve` and navigate to http://localhost:5000/
-- Before any commit run always `grunt` inside the project's root folder, to update the dist files
-  (never modify them manually).
-- Do not change the plugin coding style.
-- Check that the index.html demos aren't broken (modify if necessary).
-- Test your code at least in Chrome, Firefox and Edge.
-- Any new feature should come with updated docs if applicable (a demonstration).
-- Generate the `/dist` files executing `grunt` before your Pull Request.
-- Push to your fork and submit the pull request.
+- Your working environment will need `node` v10.x with `npm`, `gulp` and `ava`.
+- After a fresh clone for your fork, you need to run `npm install` inside the project's root folder.
+- Before committing your changes to Github you have to assure that the tests are green and the build is successful.
+  
+  - Run the build process and make sure it doesn't produce any error: `npm run build`.
+  - Run all tests and the linter: `npm run test`.
+  - Check the documentation: `npm start` and go to [http://localhost:8080/](http://localhost:8080/).
+
+- Respect the coding style of the project, do not change it if not necessary.
+- Test your code changes at least in Chrome and Firefox.
+  Preferably it should also be tested in mobile browsers and Edge.
+- If possible, cover all your changes with unit tests.
+- New features and new options should come with the corresponding documentation and demo.
+- When creating a new Pull Request of your branch to the original repository,
+  please fill the [suggested template](./PULL_REQUEST_TEMPLATE.md) where applicable.
+  
+### Documentation updates
+
+To contribute with the documentation, you only need to update the JSDoc comments of the `src/js` code
+and the examples in the `src/hbs` folder.
+
+After that and after the documentation changes have been merged into master, the project maintainers
+can run `npm run publish-docs` to update the `gh-pages` branch and the documentation website.
+
+
+### Code of Conduct
+Please respect the [Code of Conduct](./.github/CODE_OF_CONDUCT.md).
+
+<hr>
+
+Thanks for reading and following this document.
