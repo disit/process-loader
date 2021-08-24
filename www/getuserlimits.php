@@ -180,8 +180,8 @@ if (isset($_SESSION['role'])) {
             $limits = mysqli_real_escape_string($link, $_POST['limits']);
             $limits = filter_var($limits, FILTER_SANITIZE_STRING);
 
-            $limits_n = mysqli_real_escape_string($link, $_POST['limits_n']);
-            $limits_n = filter_var($limits_n, FILTER_SANITIZE_STRING);
+			$limits_n = mysqli_real_escape_string($link, $_POST['limits_n']);
+			$limits_n = filter_var($limits_n, FILTER_SANITIZE_STRING);
             //$limits_n = filter_var($limits_n, FILTER_SANITIZE_NUMBER_INT);
             //
             $response01 = file_get_contents($org_limits_api);
@@ -194,7 +194,8 @@ if (isset($_SESSION['role'])) {
             }
             array_push($check_org, 'any');
             //
-            //echo('limits_n'.gettype($limits_n));
+
+			//echo('limits_n'.gettype($limits_n));
 
             if (($role == 'any') || ($role == 'Manager') || ($role == 'AreaManager') || ($role == 'ToolAdmin') || ($role == 'RootAdmin')) {
 
@@ -250,6 +251,7 @@ if (isset($_SESSION['role'])) {
             $limits = mysqli_real_escape_string($link, $_POST['limits_c']);
             $limits = filter_var($limits, FILTER_SANITIZE_STRING);
 
+			///
             $query_select = "SELECT * FROM limits WHERE username='" . htmlspecialchars($user) . "' AND organization='" . htmlspecialchars($organization) . "' AND role='" . htmlspecialchars($role) . "' AND elementType='" . htmlspecialchars($elementtype) . "' ";
             $result_select = mysqli_query($link, $query_select);
             $num = $result_select->num_rows;
@@ -257,6 +259,11 @@ if (isset($_SESSION['role'])) {
             //echo($num);
             //
             //$num_rows = mysql_num_rows($result_select);
+			if (($user=="")||($user== null)){
+				 $message['result'] = 'error';
+                $message['message'] = 'username not valid';
+                echo json_encode($message);
+			}else{
             if ($num > 0) {
                 $message['result'] = 'error';
                 $message['message'] = 'duplicated';
@@ -272,8 +279,9 @@ if (isset($_SESSION['role'])) {
                     array_push($check_org, $value1);
                     //print_r($v1);
                 }
-                array_push($check_org, 'any');
+                 array_push($check_org, 'any');
                 //-------//
+
                 //
 				if (($role == 'any') || ($role == 'Manager') || ($role == 'AreaManager') || ($role == 'ToolAdmin') || ($role == 'RootAdmin')) {
                     //
@@ -312,6 +320,7 @@ if (isset($_SESSION['role'])) {
                 }
             }
             //
+			}
         } elseif ($action == 'del_type') {
             //
             //
@@ -339,7 +348,7 @@ if (isset($_SESSION['role'])) {
                 array_push($check_org, $value1);
                 //print_r($v1);
             }
-            array_push($check_org, 'any');
+             array_push($check_org, 'any');
             //
 
             if (($role == 'any') || ($role == 'Manager') || ($role == 'AreaManager') || ($role == 'ToolAdmin') || ($role == 'RootAdmin')) {

@@ -47,7 +47,7 @@ $xms = '-Xmx512m';
 $data_integration_path = ':/home/ubuntu/programs/data-integration/lib/*';
 $level = 'Debug';
 //Access_token
-$access_token_userinfo = "http://www.snap4city.org/auth/realms/master/protocol/openid-connect/userinfo";
+$access_token_userinfo = "http://localhost/auth/realms/master/protocol/openid-connect/userinfo";
 //R PARAMETERS
 $r_path = '/usr/bin/Rscript';
 

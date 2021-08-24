@@ -190,7 +190,8 @@ if($process['functionalities'][$role_att] == 0){
 						<li class="divider"></li>
 						<li><a href="#"><input class="select_check" type="checkbox" name="value type" value="value type" onclick="filtroData()" id="select_vt">value type</a></li>
 						<li><a href="#"><input class="select_check" type="checkbox" name="value unit" value="value unit" onclick="filtroData()" id="select_vu">value unit</a></li>
-						
+						<li class="divider"></li>
+						<li><a href="#"><input class="select_check" type="checkbox" name="data type" value="data_type" onclick="filtroData()" id="select_dt">data type</a></li>
 					  </div>
 					</div>
 				<!---->
@@ -203,7 +204,7 @@ if($process['functionalities'][$role_att] == 0){
 						<th>Value Name</th>
 						<th style="max-width: 150px;">Dictionary Type</th>
 						<th>Description</th>
-						<!--<th>Parent Id</th>-->
+						<th>Data Types</th>
 						<th>Parent Value Name</th>
 						<th>Child Value Name</th>
                         <th>Controls</th> 
@@ -245,6 +246,7 @@ if($process['functionalities'][$role_att] == 0){
 								  <option value="subnature">subnature</option>
 								  <option value="value type">value type</option>
 								  <option value="value unit">value unit</option>
+								  <option value="data type">data type</option>
 								  
 							</select>
 				</div><br />
@@ -261,6 +263,11 @@ if($process['functionalities'][$role_att] == 0){
 							<select id="select_vtype" name="select_vtype[]" class="form-control" multiple="multiple" size="24" data-show-subtext="true" data-live-search="true">
 							</select>
 				</div>
+				<div class="input-group" id="list_dt"><span class="input-group-addon">Select Data Type: </span>
+							<select id="select_dtype" name="select_dtype[]" class="form-control" multiple="multiple" size="24" data-show-subtext="true" data-live-search="true">
+							</select>
+				</div>
+				<br />
 				</div>				
 				<div class="modal-footer">
 					<button type="button" class="btn cancelBtn" data-dismiss="modal" id="close_new_voice">Cancel</button>
@@ -307,7 +314,13 @@ if($process['functionalities'][$role_att] == 0){
 				<div class="input-group" id="list_vt_e"><span class="input-group-addon">Select Value Type: </span>
 							<select id="select_vt_e" name="select_vt_e[]" class="form-control" multiple="multiple" size="24">
 							</select>
-				</div><br /><br />
+				</div>
+				<div class="input-group" id="list_dt_e"><span class="input-group-addon">Select Data Type: </span>
+							<select id="select_dt_e" name="select_dt_e[]" class="form-control" multiple="multiple" size="24">
+
+							</select>
+				</div>
+				<br /><br />
 				</div>				
 				<div class="modal-footer">
 					<button type="button" class="btn cancelBtn" data-dismiss="modal">Cancel</button>
@@ -452,8 +465,8 @@ function myFunctionDate() {
   }
 }
 
-function editData(id, value, label, type, parent){
-	//alert('EDIT');
+function editData(id, value, label, type, parent, data_type){
+	//alert('data_type: '+data_type);
 	$('#id_create_e').val(id);
 	$('#vn_create_e').val(value);
 	$('#vn_hid').val(value);
@@ -473,7 +486,8 @@ function editData(id, value, label, type, parent){
 												select_all: 0,
 												nature:1,
 												subnature:0,
-												value_type: 0
+												value_type: 0,
+												data_type: 0
 											 },
 										type: "GET",
 										async: true,
@@ -507,13 +521,13 @@ function editData(id, value, label, type, parent){
 												select_all: 0,
 												nature:0,
 												subnature:0,
-												value_type: 1
+												value_type: 1,
+												data_type: 0
 											 },
 										type: "GET",
 										async: true,
 										dataType: 'json',
 										success: function (data) {
-											
 											for (var i = 0; i < data.length; i++)
 											{
 												 array_act[i] = {
@@ -521,7 +535,6 @@ function editData(id, value, label, type, parent){
 												 value: data[i]['value']
 											};
 											$("#select_vt_e").append('<option id="v_'+array_act[i]['id']+'" value="'+array_act[i]['id']+'">'+array_act[i]['value']+'</option>');
-											
 										}
 										//
 										var list_parent = parent.split(', ');
@@ -540,6 +553,56 @@ function editData(id, value, label, type, parent){
 			//
 	}else{
 		$("#list_vt_e").hide();
+	}
+	if(type == "value type"){
+		var array_act = new Array();
+		$("#list_dt_e").show();
+				$.ajax({
+									url: "get_dictionary.php",
+										data: { action: "dt_voice"},
+										type: "GET",
+										async: true,
+										dataType: 'json',
+										success: function (data) {
+											for (var i = 0; i < data.length; i++){
+												 array_act[i] = {
+												 id: data[i]['id'],
+												 value: data[i]['value'],
+												 //data_type: data[i]['data_type']
+											};
+											//select_dt_e
+											$("#select_dt_e").append('<option id="v_'+array_act[i]['value']+'" name="select_dt_e" value="'+array_act[i]['id']+'">'+array_act[i]['value']+'</option>');
+
+											
+										}
+										//
+										var list_parent = data_type.split(',');
+										var l = list_parent.length;
+										//
+										for (var y = 0; y < l; y++){
+											console.log(list_parent[y]);
+														$('#v_'+list_parent[y]).attr('selected', 'selected');
+											}
+										$('#select_dt_e').multiselect('rebuild');
+										//
+								}
+							/////////////
+							
+							//
+						});
+		//   //SELECT DATA TYPE//
+		//var nameArr = data_type.split(',');
+		/*var lang_Arr = nameArr.length;
+		$('#select_dt_e').multiselect('rebuild');
+		for(i = 0; i < lang_Arr; i++){
+			var d1 = nameArr[i];
+			$(":checkbox[value="+d1+"]").prop("checked","true");
+		}*/
+		//
+		//
+		//$('#select_dt_e').multiselect('rebuild');
+	}else{
+		$("#list_dt_e").hide();
 	}
 	//
 }
@@ -577,7 +640,8 @@ function filtroDataAll(){
 						select_all: select_all,
 						value_type: 0,
 						nature: 0,
-						subnature: 0
+						subnature: 0,
+						data_type: 0
 					 },
                 type: "GET",
                 async: true,
@@ -593,7 +657,7 @@ function filtroDataAll(){
 						 type: data[i]['type'],
 						 parent_id: data[i]['parent_id'],
 						 parent_value: data[i]['parent_value'],
-						 child_value: data[i]['child_value']
+						 child_value: data[i]['child_value'],
 					};
 					
 					var parV = "";
@@ -603,6 +667,8 @@ function filtroDataAll(){
 					var string_label = String(array_act[i]['label']);
 					//var edit_finction= array_act[i]['id']+",'"+string_value+"','"+string_label+"','"+string_type+"'","'"+parV+"'";
 					var parV = array_act[i]['parent_value'];
+					var parDt = "";
+					//
 					if(parV == null){
 						parV = "";
 					}else{
@@ -621,9 +687,13 @@ function filtroDataAll(){
 					}else{
 						childV = childV.toString().replace(/,/g, ', ');
 					}
+					if((parDt == null)||(parDt == "undefined")){
+						parDt = "";
+					}else{
+						parDt = parDt.toString().replace(/,/g, ', ');
+					}
 					
-					
-					var edit_finction= array_act[i]['id']+",'"+string_value+"','"+string_label+"','"+string_type+"','"+id_prent+"'";
+					var edit_finction= array_act[i]['id']+",'"+string_value+"','"+string_label+"','"+string_type+"','"+id_prent+"','"+parDt+"'";
 					//alert(array_act);
 					//var button_put = '<button type="button" class="pubDashBtn put_file" data-target="#put-modal" data-toggle="modal" value="'+i+'" onclick="">PUT</button>';
 					var button_edit = '<button type="button" class="editDashBtn edit_file" data-target="#edit-modal" data-toggle="modal" value="'+i+'" onclick="editData('+edit_finction+')">EDIT</button>';
@@ -631,7 +701,7 @@ function filtroDataAll(){
 					//var button_dispacth = '<button type="button" class="viewDashBtn dispatch_file" data-target="#dispatch-modal" data-toggle="modal" value="'+i+'" onclick="">DISPATCH</button>';
 					var button_put ="";
 					var button_dispacth = "";
-					$("#value_table").append('<tr><td class="pop_link ellipsis">'+array_act[i]['value']+'</td><td class="pop_link ellipsis">'+array_act[i]['type']+'</td><td>'+array_act[i]['label']+'</td><td class="pop_link ellipsis" title="'+parV+'" data-content="'+parV+'" data-toggle="popover" data-original-title>'+parV+'</td><td href="#" class="pop_link ellipsis" data-toggle="popover" data-content="'+childV+'" title="'+childV+'"  data-original-title>'+childV+'</td><td>'+button_edit+' '+button_dispacth+' '+button_put+' ' +button_del+'</td></tr>');
+					$("#value_table").append('<tr><td class="pop_link ellipsis">'+array_act[i]['value']+'</td><td class="pop_link ellipsis">'+array_act[i]['type']+'</td><td>'+array_act[i]['label']+'</td><td></td><td class="pop_link ellipsis" title="'+parV+'" data-content="'+parV+'" data-toggle="popover" data-original-title>'+parV+'</td><td href="#" class="pop_link ellipsis" data-toggle="popover" data-content="'+childV+'" title="'+childV+'"  data-original-title>'+childV+'</td><td>'+button_edit+' '+button_dispacth+' '+button_put+' ' +button_del+'</td></tr>');
 					}
 					var table = $('#value_table').DataTable({
 						"searching": true,
@@ -775,6 +845,7 @@ function check(type_action){
 								 label: data[0]['label'],
 								 type: data[0]['type'],
 								 parent_id: data[0]['parent_id'],
+								 data_type: data[0]['data_type'],
 								};
 								$('#label_create_e').val(array_act[0]['label']);
 								if((select_type_creation=='subnature')){
@@ -841,6 +912,13 @@ function filtroData(){
 	 }else{
 		 value_type = 0;
 	 }
+	 if($('#select_dt').is(':checked')){
+		 data_type = 1;
+		 select_all = 0;
+		 $('#select_all').prop('checked', false);
+	 }else{
+		 data_type = 0;
+	 }
 	 
 	//
 	$.ajax({
@@ -850,7 +928,8 @@ function filtroData(){
 						select_all: select_all,
 						value_type:value_type,
 						nature:nature,
-						subnature:subnature
+						subnature:subnature,
+						data_type:data_type
 					 },
                 type: "GET",
                 async: true,
@@ -866,9 +945,9 @@ function filtroData(){
 						 type: data[i]['type'],
 						 parent_id: data[i]['parent_id'],
 						 parent_value: data[i]['parent_value'],
-						 child_value: data[i]['child_value']
+						 child_value: data[i]['child_value'],
+						 data_type: data[i]['data_type']
 					};
-					
 					var parV = "";
 					//
 					var string_type = String(array_act[i]['type']);
@@ -895,12 +974,13 @@ function filtroData(){
 						childV = childV.toString().replace(/,/g, ', ');
 					}
 					
-					var edit_finction= array_act[i]['id']+",'"+string_value+"','"+string_label+"','"+string_type+"','"+id_prent+"'";
+					//var edit_finction= array_act[i]['id']+",'"+string_value+"','"+string_label+"','"+string_type+"','"+id_prent+"'";
+					var edit_finction= array_act[i]['id']+",'"+string_value+"','"+string_label+"','"+string_type+"','"+id_prent+"','"+array_act[i]['data_type']+"'";
 					var button_edit = '<button type="button" class="editDashBtn edit_file" data-target="#edit-modal" data-toggle="modal" value="'+i+'" onclick="editData('+edit_finction+')">EDIT</button>';
 					var button_del = '<button type="button" class="delDashBtn delete_file" data-target="#delete-modal" data-toggle="modal" value="'+i+'" onclick="deleteData('+array_act[i]['id']+')">DELETE</button>';
 					var button_put ="";
 					var button_dispacth = "";
-					$("#value_table").append('<tr><td class="pop_link ellipsis">'+array_act[i]['value']+'</td><td class="pop_link ellipsis">'+array_act[i]['type']+'</td><td>'+array_act[i]['label']+'</td><td class="pop_link ellipsis" title="'+parV+'"  data-content="'+parV+'" data-toggle="popover" data-original-title>'+parV+'</td><td href="#" class="pop_link ellipsis" data-toggle="popover" data-content="'+childV+'" title="'+childV+'"  data-original-title>'+childV+'</td><td>'+button_edit+' '+button_dispacth+' '+button_put+' ' +button_del+'</td></tr>');
+					$("#value_table").append('<tr><td class="pop_link ellipsis">'+array_act[i]['value']+'</td><td class="pop_link ellipsis">'+array_act[i]['type']+'</td><td>'+array_act[i]['label']+'</td><td></td><td class="pop_link ellipsis" title="'+parV+'"  data-content="'+parV+'" data-toggle="popover" data-original-title>'+parV+'</td><td href="#" class="pop_link ellipsis" data-toggle="popover" data-content="'+childV+'" title="'+childV+'"  data-original-title>'+childV+'</td><td>'+button_edit+' '+button_dispacth+' '+button_put+' ' +button_del+'</td></tr>');
 					}
 					var table = $('#value_table').DataTable({
 						"searching": true,
@@ -934,6 +1014,7 @@ function filtroData(){
 		var nascondi= "<?=$hide_menu; ?>";
 		$("#list_nature").hide();
 		$("#list_vt").hide();
+		$("#list_dt").hide();
 		//
 		if (nascondi == 'hide'){
 			$('#mainMenuCnt').hide();
@@ -955,6 +1036,15 @@ function filtroData(){
 			
 		$(function () { 
 		$('#select_vtype').multiselect({
+			includeSelectAllOption: true,
+			enableFiltering: true,
+			enableCaseInsensitiveFiltering: true,
+			maxHeight: 450,
+			maxWidth: 300 
+			});
+			});
+		$(function () { 
+		$('#select_dtype').multiselect({
 			includeSelectAllOption: true,
 			enableFiltering: true,
 			enableCaseInsensitiveFiltering: true,
@@ -1020,7 +1110,8 @@ function filtroData(){
 						 type: data[i]['type'],
 						 parent_id: data[i]['parent_id'],
 						 parent_value: data[i]['parent_value'],
-						 child_value: data[i]['child_value']
+						 child_value: data[i]['child_value'],
+						 data_type: data[i]['data_type']
 					};
 					//alert(array_act);
 					var parV = "";
@@ -1029,6 +1120,11 @@ function filtroData(){
 					var string_type = String(array_act[i]['type']);
 					var string_value = String(array_act[i]['value']);
 					var string_label = String(array_act[i]['label']);
+					var string_datatype = String(array_act[i]['data_type']);
+					
+					if ((string_datatype == null)||(string_datatype == "undefined")){
+						string_datatype ="";
+					}
 					//var edit_finction= array_act[i]['id']+",'"+string_value+"','"+string_label+"','"+string_type+"'";
 					var parent_id = array_act[i]['parent_id'];
 					if (parent_id == null){
@@ -1051,7 +1147,7 @@ function filtroData(){
 						childV = childV.toString().replace(/,/g, ', ');
 					}
 					//
-					var edit_finction= array_act[i]['id']+",'"+string_value+"','"+string_label+"','"+string_type+"','"+parent_id+"'";
+					var edit_finction= array_act[i]['id']+",'"+string_value+"','"+string_label+"','"+string_type+"','"+parent_id+"','"+string_datatype+"'";
 					//
 					//var button_put = '<button type="button" class="pubDashBtn put_file" data-target="#put-modal" data-toggle="modal" value="'+i+'" onclick="">PUT</button>';
 				    var button_edit = '<button type="button" class="editDashBtn edit_file" data-target="#edit-modal" data-toggle="modal" value="'+i+'" onclick="editData('+edit_finction+')">EDIT</button>';
@@ -1064,7 +1160,7 @@ function filtroData(){
 					//
 					$("#mylist").append('<option class="checkoptc c_'+array_act[i]['type']+'" readonly>'+array_act[i]['value']+'</option>');
 					$("#mylist_e").append('<option class="checkopte e_'+array_act[i]['type']+'" readonly>'+array_act[i]['value']+'</option>');
-					$("#value_table").append('<tr><td class="pop_link ellipsis">'+array_act[i]['value']+'</td><td class="pop_link ellipsis">'+array_act[i]['type']+'</td><td>'+array_act[i]['label']+'</td><td href="#" class="pop_link ellipsis" data-toggle="popover" data-content="'+parV+'" title="'+parV+'"  data-original-title>'+parV+'</td><td href="#" class="pop_link ellipsis" data-toggle="popover" data-content="'+childV+'" title="'+childV+'"  data-original-title>'+childV+'</td><td>'+button_edit+' '+button_dispacth+' '+button_put+' ' +button_del+'</td></tr>');
+					$("#value_table").append('<tr><td class="pop_link ellipsis">'+array_act[i]['value']+'</td><td class="pop_link ellipsis">'+array_act[i]['type']+'</td><td>'+array_act[i]['label']+'</td><td>'+string_datatype+'</td><td href="#" class="pop_link ellipsis" data-toggle="popover" data-content="'+parV+'" title="'+parV+'"  data-original-title>'+parV+'</td><td href="#" class="pop_link ellipsis" data-toggle="popover" data-content="'+childV+'" title="'+childV+'"  data-original-title>'+childV+'</td><td>'+button_edit+' '+button_dispacth+' '+button_put+' ' +button_del+'</td></tr>');
 					}
 					var table = $('#value_table').DataTable({
 						"searching": true,
@@ -1094,6 +1190,7 @@ function filtroData(){
 			  $("#select_nature").empty();
 			  $("#select_vt_e").empty();
 			  $('#list_vt').hide();
+			  $("#list_dt").hide();
 			  $('#list_nature').hide();
 			  $('#message_control').empty();
 			  $('#create_new_voice').attr("disabled", false);
@@ -1104,6 +1201,7 @@ function filtroData(){
 			  $("#select_vt_e").empty();
 			  $('#message_control_e').empty();
 			  $('#edit_voice').attr("disabled", false);
+			  $('#select_dt_e').empty();
 			});
 	   /////////
 	   $('#close_new_voice').click(function() {
@@ -1111,11 +1209,42 @@ function filtroData(){
 		   $('#label_create').val('');
 		   $('#select_type_creation').val('nature');
 		   $('#list_vt').hide();
+		   $("#list_dt").hide();
 		   $('#list_nature').hide();
 	   });
 	   ///////
-	   /*$(".edit_file").click(function() {
-			
+	   /*$("#edit_voice").click(function() {
+			//
+			console.log('edit_click');
+			var id_create_e = $('#id_create_e').val();
+			var vn_create_e = $('#vn_create_e').val();
+			var label_create_e = $('#label_create_e').val();
+			var select_type_creation_e = $('#select_type_creation_e').val();
+			var list_nature_e = $('#list_nature_e').val();
+			var select_nature_e = $('#select_nature_e').val();
+			var list_vt_e = $('#list_vt_e').val();
+			var list_dt_e = $('#list_dt_e').val();
+			console.log(list_dt_e);
+			//
+			$.ajax({
+				url: "get_dictionary.php",
+				data: { action: "edit_voice",
+							id: id_create_e,
+							vn_create_e: vn_create_e,
+							label_create_e: label_create_e,
+							select_type_creation: select_type_creation_e,
+			                select_nature_e: select_nature_e,
+						    select_dt_e: list_dt_e,
+							list_vt_e: list_vt_e,
+				 },
+				type: "POST",
+				async: true,
+				dataType: 'json',
+				success: function (data) {
+								console.log('OK');
+						}
+			});
+			//
 	   });*/
 	   /////
 	   /*
@@ -1220,7 +1349,8 @@ function filtroData(){
 																		value_type: 0,
 																		select_all: 0,
 																		nature:1,
-																		subnature:0
+																		subnature:0,
+																		data_type: 0
 																	 },
 																type: "GET",
 																async: true,
@@ -1254,12 +1384,14 @@ function filtroData(){
 																		value_type: 1,
 																		select_all: 0,
 																		nature:0,
-																		subnature:0
+																		subnature:0,
+																		data_type: 0
 																	 },
 																type: "GET",
 																async: true,
 																dataType: 'json',
 																success: function (data0) {	
+																	console.log(data0);
 																	for (var y = 0; y < data0.length; y++){
 																		 array_act0[y] = {
 																		 id: data0[y]['id'],
@@ -1268,14 +1400,81 @@ function filtroData(){
 																		$("#select_vtype").append('<option value="'+array_act0[y]['id']+'">'+array_act0[y]['value']+'</option>');
 																}
 																$('#select_vtype').multiselect('rebuild');
+																$('#select_dtype').multiselect('rebuild');
 														}
 												});
 									///////////
 							}else{
 								$("#select_vtype").empty();
 								$("#list_vt").hide();
+								$("#list_dt").hide();
 							}
 							$('#select_vtype').multiselect('rebuild');
+							if (type == "data type"){
+								var array_act0 = new Array();
+									$("#list_vt").show();
+													$.ajax({
+															url: "get_dictionary.php",
+																data: { action: "get_values",
+																		value_unit: 0,
+																		value_type: 1,
+																		select_all: 0,
+																		nature:0,
+																		subnature:0,
+																		data_type: 0
+																	 },
+																type: "GET",
+																async: true,
+																dataType: 'json',
+																success: function (data0) {	
+																	console.log(data0);
+																	for (var y = 0; y < data0.length; y++){
+																		 array_act0[y] = {
+																		 id: data0[y]['id'],
+																		 value: data0[y]['value']
+																		};
+																		$("#select_vtype").append('<option value="'+array_act0[y]['id']+'">'+array_act0[y]['value']+'</option>');
+																}
+																$('#select_vtype').multiselect('rebuild');
+																$('#select_dtype').multiselect('rebuild');
+														}
+												});
+									///////////
+								/*$("#list_dt").show();
+								//
+								var array_act0 = new Array();
+											$.ajax({
+															url: "get_dictionary.php",
+																data: { action: "get_values",
+																		value_unit: 0,
+																		value_type: 0,
+																		select_all: 0,
+																		nature:0,
+																		subnature:0,
+																		data_type: 1
+																	 },
+																type: "GET",
+																async: true,
+																dataType: 'json',
+																success: function (data0) {	
+																console.log(data0);
+																	for (var y = 0; y < data0.length; y++){
+																		 array_act0[y] = {
+																		 id: data0[y]['id'],
+																		 value: data0[y]['value']
+																		};
+																		$("#select_dtype").append('<option value="'+array_act0[y]['id']+'">'+array_act0[y]['value']+'</option>');
+																}
+																$('#select_vtype').multiselect('rebuild');
+																$('#select_dtype').multiselect('rebuild');
+														}
+												});
+								//
+								$("#list_vt").hide();
+								$('#select_dtype').multiselect('rebuild');*/
+							}else{
+								$("#list_dt").hide();
+							}
 					
 				});
 	   
