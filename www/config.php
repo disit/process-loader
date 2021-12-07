@@ -19,7 +19,6 @@
 session_start();
 $username = "user";
 $password = "password";
-//$password = "";
 $host="localhost";
 $dbname = "processloader_db";
 $host_valueunit = $host;
@@ -29,6 +28,10 @@ $dbname_valueunit = $dbname;
 
 //SERVER LDAP
 $ldapServer = 'localhost';
+$ldapParamters = 'dc=organization,dc=com';
+$ldapAdminDN = ''; //Anonymous connection if empty
+$ldapAdminPwd = '';
+
 //nome repository files
 $repository_files = 'jobs/';
 $repository_destination = '/srv/share/jobs/';

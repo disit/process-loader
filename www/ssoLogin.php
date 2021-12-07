@@ -53,12 +53,15 @@
 	//echo($oidc->requestUserInfo);
 	//
     $username = $oidc->requestUserInfo("preferred_username");
-	$ldapUsername = "cn=". $username . ",".$ldapParamters;
+    $ldapUsername = "cn=". $username . ",".$ldapParamters;
 	//echo($ldapUsername);
 
     $ds = ldap_connect($ldapServer, $ldapPort);
     ldap_set_option($ds, LDAP_OPT_PROTOCOL_VERSION, 3);
-    $bind = ldap_bind($ds);
+    if($ldapAdminDN)
+      $bind = ldap_bind($ds, $ldapAdminDN, $ldapAdminPwd);
+    else
+      $bind = ldap_bind($ds);
     if($ds && $bind)
     {
         if(checkLdapMembership($ds, $ldapUsername, "ProcessLoader",$ldapParamters))
@@ -87,7 +90,7 @@
         }
     } else {
 	  $ldapOk = false;
-      $msg="cannot bind to LDAP server";
+          $msg="cannot bind to LDAP server $ldapServer:$ldapPort '$ldapAdminDN'";
     }
 
     if($ldapOk)
