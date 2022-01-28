@@ -155,7 +155,7 @@ if (SimpleXLSX::parse($target_dir . $file)) {
 
     for ($header_index=0;$header_index<count($all_headers_array);$header_index++) {
 
-        if($dateObserved_col_header_type=='row' && $dateObserved_col_header==$all_headers_array[$header_index]){
+        if(($dateObserved_col_header_type=='row' || $dateObserved_col_header_type=='row_converted') && $dateObserved_col_header==$all_headers_array[$header_index]){
             $date_observed_row_index=$header_index;
             ?>
 										<tr id="tr_<?php echo $header_index;?>" style="display: none;">
@@ -312,8 +312,8 @@ var s="<option value='-'>-</option>";
         	for (j = 0; j < combo_value_types.length; j++) {
         		id= document.getElementsByClassName('combo_value_type')[j].id;
         		var dateObserved_for_row_value_type_combo_id='combo_value_type_<?php echo $date_observed_row_index; ?>';
-        		if(dateObserved_for_row_value_type_combo_id==id &&  dateObserved_type=='row'){
-					alert
+        		if(dateObserved_for_row_value_type_combo_id==id &&  (dateObserved_type=='row' || dateObserved_type=='row_converted')){
+					
         			var option = document.createElement("option");
         			option.text = "timestamp";
         			option.value = "timestamp";
@@ -376,7 +376,7 @@ function load_value_unit_combo(col_index) {
 
 //disable and hide comboboxes for dateObserved column
 
-if(dateObserved_type=='row'){
+if(dateObserved_type=='row' || dateObserved_type=='row_converted'){
 
 	var dateObserved_for_row_value_unit_combo_id='combo_value_unit_<?php echo $date_observed_row_index ?>';
 	var dateObserved_for_row_value_unit_combo= document.getElementById(dateObserved_for_row_value_unit_combo_id);
@@ -434,7 +434,7 @@ function validateForm() {
 	if(clicked=='next'){
 		var dateObserved_type="<?php echo $_POST['hidden_observed_date_type']?>";
 
-if(dateObserved_type=='row'){
+if(dateObserved_type=='row' || dateObserved_type=='row_converted'){
 	var frm = document.getElementById('values_types_units') || null;
 	if(frm) {
 	   frm.action = 'datatablemanager_preview.php?showFrame=false';

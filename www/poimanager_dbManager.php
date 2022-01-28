@@ -31,30 +31,15 @@ function insertValueName($value_name) {
     return $value_name_id;
 }
 
-function insertPoiDataTable($final_table, $row_count, $file_name, $elementId, $coord_type, $center_lat, $center_lon, $radius, $nature, $sub_nature,$lang,$org)
+function insertPoiDataTable($final_table, $row_count, $file_name, $elementId, $coord_type, $center_lat, $center_lon, $radius, $nature, $sub_nature,$lang,$org,$poi_lats,$poi_lons)
 {
     $cell_count = count($final_table);
-    // echo $final_table_length;
-    // die();
     $row_length = $cell_count / $row_count;
 
-//     echo $row_length;
-//     die();
-    
-        // var_dump($each_row_length);
-        // die();
-        // echo $row_count;
-        // echo var_dump($final_table);
-
-        // echo $final_table_length;
-        // echo "<br>";
-        // echo $row_count;
-        // echo $each_row_length;
-    
         $cel_index=0;
         $col_pointer=0;
-    
-    //     for ($row_index = 0; $row_index < $row_count; $row_index ++) {
+        $row_index=0;
+        
         while($col_pointer<$cell_count){
         
         $row = array();
@@ -62,9 +47,6 @@ function insertPoiDataTable($final_table, $row_count, $file_name, $elementId, $c
         for ($cel_index = $col_pointer; $cel_index < $col_pointer+$row_length; $cel_index ++) {
             array_push($row, $final_table[$cel_index]);
         }
-        
-//         echo $row_length;
-//         die();
     
                 $col_pointer = $col_pointer + $row_length;
 
@@ -99,72 +81,19 @@ function insertPoiDataTable($final_table, $row_count, $file_name, $elementId, $c
                 $latitude = str_replace("'", "\'", $row[27]);
                 $longitude = str_replace("'", "\'", $row[28]);
                 // ///////////////////////////////////////////////////////////////
-//                 echo '$nameENG: ' . $nameENG;
-//                 echo '<br>';
-//                 echo '$abbreviationENG: ' . $abbreviationENG;
-//                 echo '<br>';
-//                 echo '$descriptionShortENG: ' . $descriptionShortENG;
-//                 echo '<br>';
-//                 echo '$descriptionLongENG: ' . $descriptionLongENG;
-//                 echo '<br>';
-//                 echo '$phone: ' . $phone;
-//                 echo '<br>';
-//                 echo '$fax: ' . $fax;
-//                 echo '<br>';
-//                 echo '$url: ' . $url;
-//                 echo '<br>';
-//                 echo '$email: ' . $email;
-//                 echo '<br>';
-//                 echo '$refPerson: ' . $refPerson;
-//                 echo '<br>';
-//                 echo '$secondPhone: ' . $secondPhone;
-//                 echo '<br>';
-//                 echo '$secondFax: ' . $secondFax;
-//                 echo '<br>';
-//                 echo '$secondEmail: ' . $secondEmail;
-//                 echo '<br>';
-//                 echo '$secondCivicNumber: ' . $secondCivicNumber;
-//                 echo '<br>';
-//                 echo '$secondStreetAddress: ' . $secondStreetAddress;
-//                 echo '<br>';
-//                 echo '$notes: ' . $notes;
-//                 echo '<br>';
-//                 echo '$timetable: ' . $timetable;
-//                 echo '<br>';
-//                 echo '$photo: ' . $photo;
-//                 echo '<br>';
-//                 echo '$other1: ' . $other1;
-//                 echo '<br>';
-//                 echo '$other2: ' . $other2;
-//                 echo '<br>';
-//                 echo '$other3: ' . $other3;
-//                 echo '<br>';
-//                 echo '$postalcode: ' . $postalcode;
-//                 echo '<br>';
-//                 echo '$province: ' . $province;
-//                 echo '<br>';
-//                 echo '$city: ' . $city;
-//                 echo '<br>';
-//                 echo '$streetAddress: ' . $streetAddress;
-//                 echo '<br>';
-//                 echo '$civicNumber: ' . $civicNumber;
-//                 echo '<br>';
-//                 echo '$latitude: ' . $latitude;
-//                 echo '<br>';
-//                 echo '$longitude: ' . $longitude;
-//                 echo '<br>';
-//                 echo '//////////////////////////////////////////////////////////////';
-//                 echo '<br>';
-
+                $calculated_poi_lat=$poi_lats[$row_index];
+                $calculated_poi_lon=$poi_lons[$row_index];
                 // insert cell
-                $insert_cell_query = getPoiInsertCellQuery($file_name, $elementId, $suri, $sheet_name, $coord_type, $center_lat, $center_lon, $radius, $nature, $sub_nature, $name, $abbreviation, $descriptionShort, $descriptionLong, $phone, $fax, $url, $email, $refPerson, $secondPhone, $secondFax, $secondEmail, $secondCivicNumber, $secondStreetAddress, $notes, $timetable, $photo, $other1, $other2, $other3, $postalcode, $province, $city, $streetAddress, $civicNumber, $latitude, $longitude,$lang,$org);
+                $insert_cell_query = getPoiInsertCellQuery($file_name, $elementId, $suri, $sheet_name, $coord_type, $center_lat, $center_lon, $radius, $nature, $sub_nature, $name, $abbreviation, $descriptionShort, $descriptionLong, $phone, $fax, $url, $email, $refPerson, $secondPhone, $secondFax, $secondEmail, $secondCivicNumber, $secondStreetAddress, $notes, $timetable, $photo, $other1, $other2, $other3, $postalcode, $province, $city, $streetAddress, $civicNumber, $latitude, $longitude,$lang,$org,$calculated_poi_lat,$calculated_poi_lon);
                 // echo $insert_cell_query;
                 // // die();
                 $insert_cell_result = executeInsertCellQuery($row_number, $cell_number, count($row), $insert_cell_query);
                 // echo $insert_cell_result;
                 // die();
+                
 //             }
 //     }
+                ++$row_index;
     }
 }
 

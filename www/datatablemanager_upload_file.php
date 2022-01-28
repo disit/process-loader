@@ -612,7 +612,6 @@ if (!isset($_GET['pageTitle'])){
             return true;
         }
     }
-
    
 	function dl_file(file){
 		var target_dir='<?php echo $target_dir ?>';

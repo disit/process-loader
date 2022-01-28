@@ -187,9 +187,10 @@ if (!isset($_GET['pageTitle'])){
             $header_row.='<td class=\"header\" style="background: #1C70D2;color: black;font-family: Montserrat;font-weight:400; font-size: 14px;">'.'Context Broker'.'</td></tr>';
             
             if($coordinate_type=="address"){
-                $header_row = substr($header_row, 0, count($header_row) - 12);
-                $header_row.='<td class=\"header\" style="background: #1C70D2;color: black;font-family: Montserrat;font-weight:400; font-size: 14px;width:160px">'.'Device/Instance will be created?'.'</td>';
-                $header_row.='<td class=\"header\" style="background: #1C70D2;color: black;font-family: Montserrat;font-weight:400; font-size: 14px;width:420px">'.'Comment'.'</td></tr>';
+                $header_row = substr($header_row, 0, count($header_row) - 6);
+                $header_row.='<td class=\"header\" style="background: #1C70D2;color: black;font-family: Montserrat;font-weight:400; font-size: 14px;width:160px">'.'Device/Instance will be created?'.'</td></tr>';
+//                 $header_row.='<td class=\"header\" style="background: #1C70D2;color: black;font-family: Montserrat;font-weight:400; font-size: 14px;width:160px">'.'Device/Instance will be created?'.'</td>';
+//                 $header_row.='<td class=\"header\" style="background: #1C70D2;color: black;font-family: Montserrat;font-weight:400; font-size: 14px;width:420px">'.'Comment'.'</td></tr>';
             }
             
             echo $header_row;
@@ -197,20 +198,18 @@ if (!isset($_GET['pageTitle'])){
 
             $device_names = array();
             $sheet_names = array();
-            $device_row_lats=array();
-            $device_row_lons=array();
             $devices = $result['Devices'];
 
             for ($device_index = 0; $device_index < count($devices); $device_index ++) {
+                
                 $device_names[$device_index] = $devices[$device_index]['name'];
                 $sheet_names[$device_index] = $devices[$device_index]['sheet_name'];
-                $device_row_lats[$device_index] = $devices[$device_index]['lat'];
-                $device_row_lons[$device_index] = $devices[$device_index]['lon'];
 
                 $device_name = $device_names[$device_index];
                 $sheet_name = $sheet_names[$device_index];
-                $device_row_lat = $device_row_lats[$device_index];
-                $device_row_lon = $device_row_lons[$device_index];
+                
+//                 $device_row_lat = $devices[$device_index]['lat'];
+//                 $device_row_lon = $devices[$device_index]['lon'];
 
                 $row_array_to_be_inseted = array();
 
@@ -218,44 +217,49 @@ if (!isset($_GET['pageTitle'])){
                 $row_array_to_be_inseted[0] = $sheet_name;
 
                 $rows = $result['Instances'];
-                $address_lon="";
+//                 $address_lon="";
+//                 $address_lat="";
                 
                 for ($row_index = 0; $row_index < count($rows[$device_index]['Values']); $row_index ++) {
                         $row = explode("|", $rows[$device_index]['Values'][$row_index]);
                         
+                        $red_cancel=false;
+                        
                         if($coordinate_type=="address"){
-                            $address_lon=$row[count($row)-1];
+                            
+                            if(strlen($row[count($row)-2])==0){
+                                $row[count($row)-2]="<img style='width:25px;background: orangered;' src='img/datatabemanager_na.png'/>";
+                                $red_cancel=true;
+                            }
+                            
+                            if(strlen($row[count($row)-1])==0){
+                                $row[count($row)-1]="<img style='width:25px;background: orangered;' src='img/datatabemanager_na.png'/>";
+                                $red_cancel=true;
+                            }
                         }
                         
                         for ($cell_index = 0; $cell_index < count($row); $cell_index ++) {
                             $row_array_to_be_inseted[$cell_index + 2] = $row[$cell_index];
                         }
-
-                        // var_dump($row_array_to_be_inseted);
-                        // die();
+                        
                     if ($coordinate_type == 'file') {
                         $row_array_to_be_inseted[count($features) + 2] = $coord_lat_file;
                         $row_array_to_be_inseted[count($features) + 3] = $coord_lon_file;
-                    } else if ($coordinate_type == 'row') {
-                        $row_array_to_be_inseted[count($features) + 2] = $device_row_lat;
-                        $row_array_to_be_inseted[count($features) + 3] = $device_row_lon;
-                    }
-                        
-                    if ($coordinate_type != "address") {
+                                  
                         $row_array_to_be_inseted[count($features) + 4] = $nature;
                         $row_array_to_be_inseted[count($features) + 5] = $sub_nature;
                         $row_array_to_be_inseted[count($features) + 6] = $context_broker;
-                    } else {
+                    } else{
+                        
                         $row_array_to_be_inseted[count($features) + 2] = $nature;
                         $row_array_to_be_inseted[count($features) + 3] = $sub_nature;
                         $row_array_to_be_inseted[count($features) + 4] = $context_broker;
 
-                        if (strlen($address_lon) != 0) {
+                        if ($coordinate_type == "address" && $red_cancel) {
+                            $row_array_to_be_inseted[count($features) + 5] = "<img style='width:25px' src='img/datatabemanager_red_cancel.png'/>";
+                        } else if($coordinate_type == "address" && !$red_cancel) {
                             $row_array_to_be_inseted[count($features) + 5] = "<img style='width:25px' src='img/datatablemanager_address_coord_ok.png'/>";
-                            $row_array_to_be_inseted[count($features) + 6] = "-";
-                        } else {
-                            $row_array_to_be_inseted[count($features) + 5] = "<img style='width:25px' src='img/datatablemanager_address_coord_ko.png'/>";
-                            $row_array_to_be_inseted[count($features) + 6] = "Address field is empty <b>OR</b> no coordinate found by the provided address";
+//                          $row_array_to_be_inseted[count($features) + 6] = "Address field is empty <b>OR</b> no coordinate found by the provided address";
                         }
                     }
                         echo '<tr><td>' . implode('</td><td>', $row_array_to_be_inseted) . '</td></tr>';

@@ -420,12 +420,21 @@ function getDataTableJson($conn,$query,$dateObserved_type,$model_features,$model
         $device_sheet_name_query = getDeviceSheetNameQuery($element_id, $device_list[$device_index]);
         $device_sheet_name = executeGetDeviceSheetNameQuery($device_sheet_name_query);
 
-            $device_lat_query = getDeviceLatQuery($element_id, $device_list[$device_index],$coord_type);
+        if($coord_type=="address"){
+            $device_lat_query = getDeviceAddressLatQuery($element_id, $device_list[$device_index]);
+            $device_lon_query = getDeviceAddressLonQuery($element_id, $device_list[$device_index]);
+            
+            $device_lat = executeGetDeviceAddressLatQuery($device_lat_query);
+            $device_lon = executeGetDeviceAddressLonQuery($device_lon_query);
+            
+        }else{
+            $device_lat_query = getDeviceLatQuery($element_id, $device_list[$device_index]);
+            $device_lon_query = getDeviceLonQuery($element_id, $device_list[$device_index]);
+        
             $device_lat = executeGetDeviceLatQuery($device_lat_query,$coord_type);
-
-            $device_lon_query = getDeviceLonQuery($element_id, $device_list[$device_index],$coord_type);
             $device_lon = executeGetDeviceLonQuery($device_lon_query,$coord_type);
-
+        }
+        
             $result['Devices'][$device_index] = array(
                 'name' => str_replace(" ", "", $device_list[$device_index]),
                 'sheet_name' => $device_sheet_name,
@@ -450,13 +459,15 @@ function getDataTableJson($conn,$query,$dateObserved_type,$model_features,$model
             
             $device_address_lats_query = getDeviceAddressLatsQuery($element_id, $device_list[$device_index]);
             $device_address_lats = executeGetDeviceAddressCoords($device_address_lats_query);
+            $device_address_lats =getDistinctCoords($device_address_lats,count($headers));
+            
             
             $device_address_lons_query = getDeviceAddressLonsQuery($element_id, $device_list[$device_index]);
             $device_address_lons = executeGetDeviceAddressCoords($device_address_lons_query);
-        
+            $device_address_lons =getDistinctCoords($device_address_lons,count($headers));
+            
             $device_address_warnings_query = getDeviceAddressWarningsQuery($element_id, $device_list[$device_index]);
             $device_address_warnings = executeGetDeviceAddressWarnings($device_address_warnings_query);
-        
         }
         
         $cell_pointer = 0;
@@ -489,13 +500,26 @@ function getDataTableJson($conn,$query,$dateObserved_type,$model_features,$model
             $cell_pointer = $cell_pointer + count($model_features);
             $result['Instances'][$device_index]['Values'][$device_rows_index] = $row_string;
             
-            if($coord_type=="address"){
-                $result['Instances'][$device_index]['Warnings'][$device_rows_index]=$device_address_warnings[$device_rows_index];
-            }
+//             if($coord_type=="address"){
+//                 $result['Instances'][$device_index]['Warnings'][$device_rows_index]=$device_address_warnings[$device_rows_index];
+//             }
         }
-    }
 
+    }
     return $result;
+}
+
+function getDistinctCoords($coord,$headers_count){
+    
+$distinct_coord=array();
+$pointer=0;
+
+while($pointer<count($coord)){
+    array_push($distinct_coord,$coord[$pointer]);
+    $pointer=$pointer+$headers_count;
+}
+
+return $distinct_coord;
 }
 
 function getModelFeatureDataTypes($model_features,$headers,$headerDataTypes){
@@ -756,6 +780,28 @@ function getFormatedFileDateObserved($hidden_observed_date_for_file_name,$observ
         return $observed_date_for_file_name;
 }
 
+function convertStandardFormatTimeToUTC($standard_date, $coord_type,$lat_row_for_file,$lon_row_for_file,$lat_file,$lon_file){
+    $formatted_lat="";
+    $formatted_lon="";
+
+    if($coord_type=="row" || $coord_type=="address"){
+        $formatted_lat=$lat_row_for_file;
+        $formatted_lon=$lon_row_for_file;
+    }else{
+        $formatted_lat=$lat_file;
+        $formatted_lon=$lon_file;
+    }
+    
+    $date = new \DateTime($standard_date);
+    $formatted_date=$date->format(DateTime::ATOM); // Updated ISO8601
+    
+    $formatted_date_trimed=substr($formatted_date, 0,11);
+    
+    $converted_date=$formatted_date_trimed.'00:00:00.000'.toGmtOffset(get_nearest_timezone((float) $formatted_lat,(float) $formatted_lon));
+    
+    return $converted_date;
+}
+
 function get_nearest_timezone($cur_lat, $cur_long, $country_code = '') {
     $timezone_ids = ($country_code) ? DateTimeZone::listIdentifiers(DateTimeZone::PER_COUNTRY, $country_code)
     : DateTimeZone::listIdentifiers();
@@ -829,7 +875,7 @@ function getWarningArray($target_dir,$file_name) {
     
     if(checkIfFileNameContainsSpecialCharacters($file_name)!=false){
         $special_chars_string=implode(" ", checkIfFileNameContainsSpecialCharacters($file_name));
-        array_push($warnings, "Check file name if it contains: <b>". $special_chars_string."</b>");
+        array_push($warnings, "The file name contains special characters: <b>". $special_chars_string."</b>");
     }
     
 //     if(detectDtmUtf8($file_name)==1){
@@ -854,22 +900,30 @@ function getWarningArray($target_dir,$file_name) {
     for ($sheet_number = 0; $sheet_number < count($sheetNames); $sheet_number ++) {
         for ($y = 0; $y < count($sheetNames); $y ++) {
             if ($sheetColHeaders[$sheet_number] != $sheetColHeaders[$y]) {
-                array_push($warnings, "Column headers for sheets <b>" . $sheetNames[$sheet_number] . "</b> and <b>" . $sheetNames[$y] . "</b> are not the same");
+                array_push($warnings, "Column headers in sheets <b>" . $sheetNames[$sheet_number] . "</b> and <b>" . $sheetNames[$y] . "</b> are not the same");
                 break 1;
             }
         }
     }
 
     // check column headers include non-english letters
-//     for ($y = 0; $y < count($sheetNames); $y ++) {
-//         $column_headers = $sheetColHeaders[$y];
-//         for ($column_header_index = 0; $column_header_index < count($column_headers); $column_header_index ++) {
-//             $column_header = $column_headers[$column_header_index];
-//             if (detectDtmUtf8($column_header) == 1) {
-//                 array_push($warnings, "Column header <b>" . $column_header . "</b> in sheet <b>" . $sheetNames[$y] . "</b> includes non-UTF-8 (e.g., non-English) letters");
-//             }
-//         }
-//     }
+    for ($y = 0; $y < count($sheetNames); $y ++) {
+        $column_headers = $sheetColHeaders[$y];
+        for ($column_header_index = 0; $column_header_index < count($column_headers); $column_header_index ++) {
+            $column_header = $column_headers[$column_header_index];
+            if (detectDtmUtf8($column_header) == 1) {
+                array_push($warnings, "Column header <b>" . $column_header . "</b> in sheet <b>" . $sheetNames[$y] . "</b> includes special characters");
+            }
+        }
+    }
+
+    // check sheet names if include special characters
+    for ($y = 0; $y < count($sheetNames); $y ++) {
+        $sheetName = $sheetNames[$y];
+        if (detectDtmUtf8($sheetName) == 1 || checkIfStringContainsSpecialCharacters($sheetName)) {
+            array_push($warnings, "Sheet <b>" . $sheetName . " includes special characters");
+        }
+        }
     
 //     for ($sheetIndex = 0; $sheetIndex < count($sheetNames); $sheetIndex ++) {
 //         $sheetData = $xlsx->rows($sheetIndex);
@@ -877,15 +931,14 @@ function getWarningArray($target_dir,$file_name) {
 //             $sheetRow = $sheetData[$rowIndex];
 //             foreach ($sheetRow as $value) {
 //                 if(checkIfStringContainsSpecialCharacters($value)){
-//                     array_push($warnings, "The column headers should not contain special characters (For example, blank space, |, @, #, &, %)!");
+//                     array_push($warnings, "Column headers should not contain special characters (For example, blank space, |, @, #, &, %)!");
 //                     break 3;
 //                 }
 //             }
 //         }
 //     }
-    
-    
-//     for ($sheetIndex = 0; $sheetIndex < count($sheetNames); $sheetIndex ++) {
+     
+ //     for ($sheetIndex = 0; $sheetIndex < count($sheetNames); $sheetIndex ++) {
 //         $sheetData = $xlsx->rows($sheetIndex);
 //         for ($rowIndex = 0; $rowIndex < count($sheetData); $rowIndex ++) {
 //             $sheetRow = $sheetData[$rowIndex];
@@ -981,8 +1034,8 @@ function getOrg($usernameD,$ldapServer,$ldapParamters){
     return checkLdapOrganization($ds, $ldapUsername, $ldapParamters);
 }
 
-
 function detectDtmUtf8($string){
+
     return preg_match('%(?:
         [\xC2-\xDF][\x80-\xBF]             # non-overlong 2-byte
         |\xE0[\xA0-\xBF][\x80-\xBF]        # excluding overlongs
@@ -991,8 +1044,44 @@ function detectDtmUtf8($string){
         |\xF0[\x90-\xBF][\x80-\xBF]{2}     # planes 1-3
         |[\xF1-\xF3][\x80-\xBF]{3}         # planes 4-15
         |\xF4[\x80-\x8F][\x80-\xBF]{2}     # plane 16
-        )+%xs',
-        $string);
+        )+%xs', $string);
+}
+
+function checkColContainSpacialCharacters($file_name, $target_dir, $column_name)
+{
+    require_once ('datatablemanager_SimpleXLSX.php');
+
+    $xlsx = SimpleXLSX::parse($target_dir . $file_name);
+    $sheetNames = $xlsx->sheetNames();
+    $sheetColHeaders = array();
+    $col_index = 0;
+    $toReturn = 'false';
+
+    for ($sheet_number = 0; $sheet_number < count($sheetNames); $sheet_number ++) {
+        $sheetColHeaders[$sheet_number] = $xlsx->rows($sheet_number)[0];
+    }
+
+    for ($y = 0; $y < count($sheetColHeaders); $y ++) {
+        if ($sheetColHeaders[$y] == $column_name) {
+            $col_index = $y;
+        }
+    }
+
+    for ($sheetIndex = 0; $sheetIndex < count($sheetNames); $sheetIndex ++) {
+        $sheetData = $xlsx->rows($sheetIndex);
+        for ($rowIndex = 0; $rowIndex < count($sheetData); $rowIndex ++) {
+            $sheetRow = $sheetData[$rowIndex];
+            for ($column_index = 0; $column_index < count($sheetRow); $column_index ++) {
+                if ($col_index == $column_index) {
+                    if (detectDtmUtf8($sheetRow[$column_index]) == 1 || checkIfStringContainsSpecialCharacters($sheetRow[$column_index])) {
+                        $toReturn = 'true';
+                            break 3;
+                    }
+                }
+            }
+        }
+}
+return $toReturn;
 }
 
 function sendDtmFailedUploadEmail($file,$reasons,$org,$user){
@@ -1039,7 +1128,7 @@ function sendDtmFailedUploadEmail($file,$reasons,$org,$user){
         $message.= "<tr><td colspan='4' ><p style='font-size:15px;;margin-bottom: 0px;font-weight: bold;'>File Name: </p><p style='font-size:13px;margin-bottom: 0px;margin-top: 0px;'>" . $file."</p></td></tr>";
         $message.= "<tr><td colspan='4' ><p style='font-size:15px;margin-bottom: 0px;font-weight: bold;'>User: </p><p style='font-size:13px;margin-top: 0px;margin-bottom: 0px;'>" . $user ."</p></td></tr>";
         $message.= "<tr><td colspan='4' ><p style='font-size:15px;margin-bottom: 0px;font-weight: bold;'>Organization: </p><p style='font-size:13px;margin-top: 0px;margin-bottom: 0px;'>".$org ."</p></td></tr>";
-        $message.= "<tr><td>";
+        $message.= "<tr><td>";  
         $message.="<p style='font-size:15px;font-weight: bold;'>Reasons(s):</p><ul style='padding-left: 0px;'>";
         foreach ($reasons as $reason) {
             $message .= "<li>" . $reason . "</li>";
@@ -1106,7 +1195,6 @@ function sendDtmSuccessUploadEmail($file,$org,$user,$element_id){
     }
 }
 
-
 function sendDTMErrorUserDelegationEmail($file, $org, $elementId,$user_name_uploader, $username_to_delegate, $error){
     
     //Load Composer's autoloader
@@ -1120,7 +1208,6 @@ function sendDTMErrorUserDelegationEmail($file, $org, $elementId,$user_name_uplo
     
     //Create an instance; passing `true` enables exceptions
     $mail = new PHPMailer(true);
-    
     
     try {
         //Server settings

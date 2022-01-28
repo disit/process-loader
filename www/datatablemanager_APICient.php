@@ -23,6 +23,11 @@ $ownershipLimitApiUrl=$configs['ownershipLimitApiUrl'];
 $processLoaderContextBrokerURI=$configs['processLoaderContextBrokerURI'];
 $ownershipDeleteApiUrl=$configs['ownershipDeleteApiUrl'];
 $delegationUrl=$configs['delegationUrl'];
+$delegationOrgUrl=$configs['delegationOrgUrl'];
+
+function getUsernameToDelegateQuery($org){
+    return $GLOBALS['delegationOrgUrl'].$org;
+}
 
 function getDataTablesLimitQuery($access_token){
     return $GLOBALS['ownershipLimitApiUrl'].$access_token;

@@ -15,6 +15,9 @@ GNU Affero General Public License for more details.
 You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
+require 'sso/autoload.php';
+use Jumbojett\OpenIDConnectClient;  
+
 include('config.php'); // Includes Login Script
 include('external_service.php');
 //
@@ -67,7 +70,7 @@ if ($action == 'get_values') {
                 FROM heatmap.data WHERE map_name='" . $map_name . "' GROUP BY date ORDER BY date ".$order." LIMIT " . $start_page . ",10) t1
 JOIN (
     
-    SELECT a.map_name, a.description, b.completed, b.indexed, a.date FROM heatmap.metadata a LEFT JOIN heatmap.maps_completed b ON a.map_name=b.map_name AND a.date= b.date
+    SELECT a.map_name, a.description, b.completed, b.indexed, a.date, a.nature, a.subnature FROM heatmap.metadata a LEFT JOIN heatmap.maps_completed b ON a.map_name=b.map_name AND a.date= b.date
     WHERE a.map_name = '" . $map_name . "'
    
    )t2 ON t1.map_name = t2.map_name AND t1.data_date = t2.date ORDER BY t1.data_date ".$order;
@@ -103,7 +106,7 @@ JOIN (
 } elseif ($action == 'get_heatmaps') {
     $start_from = $_REQUEST['start_from'];
     $limit      = $_REQUEST['limit'];
-    $query_n    = "SELECT metadata.map_name, maps_completed.completed, metadata.metric_name, metadata.description, metadata.date FROM heatmap.metadata,heatmap.maps_completed WHERE metadata.map_name = maps_completed.map_name AND metadata.date = maps_completed.date ORDER BY metadata.date DESC LIMIT " . $start_from . ", " . $limit . ";";
+    $query_n    = "SELECT metadata.map_name, maps_completed.completed, metadata.metric_name, metadata.description, metadata.date, metadata.nature, metadata.subnature FROM heatmap.metadata,heatmap.maps_completed WHERE metadata.map_name = maps_completed.map_name AND metadata.date = maps_completed.date ORDER BY metadata.date DESC LIMIT " . $start_from . ", " . $limit . ";";
     //
     $result = mysqli_query($link, $query_n) or die(mysqli_error($link));
     $process_list = array();
@@ -123,6 +126,8 @@ JOIN (
                 "metric_name" => $row['metric_name'],
                 "description" => $row['description'],
                 "completed" => $row['completed'],
+				"nature" => $row['nature'],
+                "subnature" => $row['subnature'],
                 "date" => $row['date'],
                 "bbox" => $bbox
             );
@@ -132,6 +137,28 @@ JOIN (
     
     echo json_encode($process_list);
     //
+}else if($action == 'edit_metadata'){
+	//heatmap: heatmap,
+	//nature: nature,
+	//subnature: subnature,
+	 $heatmap = $_REQUEST['heatmap'];
+	$heatmap  = filter_var($heatmap, FILTER_SANITIZE_STRING);
+	//
+    $nature  = $_REQUEST['nature'];
+	$nature  = filter_var($nature, FILTER_SANITIZE_STRING);
+	//
+    //$indexed       = $_REQUEST['indexed'];
+    $subnature    = $_REQUEST['subnature'];
+	$subnature = filter_var($subnature, FILTER_SANITIZE_STRING);
+	
+	$query1 = "UPDATE heatmap.metadata SET nature='" . $nature . "', subnature='" . $subnature . "' WHERE map_name='" . $heatmap  . "'";
+	//
+	echo($query1);
+	//
+	$result1 = mysqli_query($link, $query1) or die(mysqli_error($link));
+	//
+	//
+	//
 } else if ($action == 'delete_data') {
     $id        = $_REQUEST['id'];
     $date      = $_REQUEST['date'];
@@ -385,6 +412,83 @@ JOIN (
     $order = $_REQUEST['orderBy'];
     header("location:colorMap.php?showFrame=".$sf."&page=".$page."&orderBy=".$order."&order=".$by."&limit=".$limit);
     ///////
+}elseif($action == 'getdetails') {
+	$id = $_REQUEST['id'];
+	//$querybb = "SELECT map_name, MAX(longitude) AS 'max_long', MAX(latitude) AS 'max_lat', MIN(longitude) AS 'min_long', MIN(latitude) AS 'min_lat' FROM heatmap.data WHERE map_name='" . $id . "' GROUP BY map_name LIMIT 1";
+	$query_istances = "SELECT metric_name, min_date, max_date, num AS count_number FROM heatmap.stats WHERE map_name='".$id."'";
+	$result_istances = mysqli_query($link, $query_istances) or die(mysqli_error($link));
+	//
+	$list        = array();
+	$count = mysqli_num_rows($result_istances);
+	//
+	if ($count > 0){	
+	while ($row0 = mysqli_fetch_assoc($result_istances)) {
+		//echo("$row0['min_date']: ".$row0['min_date']);
+			$listFile = array(
+                "min_date" => $row0['min_date'],
+                "max_date" => $row0['max_date'],
+                "count_number" => $row0['count_number']
+            );
+            array_push($list, $listFile);	
+        }
+	}else{
+		$listFile = array(
+                "min_date" => '',
+                "max_date" => '',
+                "count_number" => ''
+            );
+            array_push($list, $listFile);
+	}
+	//
+	echo json_encode($list);
+	//
+}else if($action == 'get_owner'){
+	$id_dash=$_REQUEST['id'];
+	$list_api2 = array();
+$list_api = array();
+$array_pub = array();
+$total_list = 0;
+$array_del = array();
+$utente = $_SESSION['username'];
+//
+$owner = "";
+///INIZIO ERRORE /////
+
+if (isset($_SESSION['accessToken'])){
+$token = $_SESSION['accessToken'];
+//echo($_SESSION['refreshToken']);
+//
+//if(($json_api == null)||($json_api == "")){
+	//OPERAZIONI PER IL REFRESH//
+			$oidc = new OpenIDConnectClient($ssoEndpoint, $ssoClientId, $ssoClientSecret);	
+            $oidc->providerConfigParam(array('token_endpoint' => $oicd_address.'/auth/realms/master/protocol/openid-connect/token'));
+			$tkn = $oidc->refreshToken($_SESSION['refreshToken']);
+			$accessToken = $tkn->access_token;
+            $_SESSION['refreshToken'] = $tkn->refresh_token;
+			$url_api =($personalDataApiBaseUrl.'/v1/list/?type=HeatmapID&accessToken='.$token);
+			//DELEGATION PUBBLICHE + DELEGATION ALL'UTENTE
+			//
+			$json_api = file_get_contents($url_api);
+	/*}else{
+		    $url_api =($personalDataApiBaseUrl.'v1/list/?type=HeatmapID&accessToken='.$token);
+		    $json_api = file_get_contents($url_api);
+	}*/
+	
+	$list_api = json_decode($json_api);
+	$total_list = count($list_api);
+	//$owner['url'] = $url_api;
+		for($c=0; $c<$total_list; $c++){
+			//echo($c);
+			$elementId = $list_api[$c]->elementId; 
+			$username = $list_api[$c]->username;
+			$list_api2[$elementId]=$username;
+			if ($elementId == $id_dash){
+				$owner['user'] = $username;
+			}
+		}			
+}
+echo json_encode($owner);
+///
 } else {
     echo ('ERROR');
 }

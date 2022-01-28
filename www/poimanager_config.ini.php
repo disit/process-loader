@@ -16,6 +16,7 @@ poi_datatypes="string,string,string,string,string,string,URL,email,string,string
 cell_special_characters="?,|"
 
 [api]
+locationUrl="http://localhost/ServiceMap/api/v1/location/?"
 delegationUrl="http://localhost/datamanager/api/v1/username/"
 base_suri="http://www.disit.org/km4city/resource/poi/"
 ownershipApiUrl = "http://localhost/ownership-api/v1/register/?"

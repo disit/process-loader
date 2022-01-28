@@ -19,6 +19,7 @@ $selected_header=$_GET['selected_header'];
 
 $target_dir=$_GET['target_dir'];
 
+
 require_once ('datatablemanager_SimpleXLSX.php');
 $xlsx = SimpleXLSX::parse($target_dir . $file);
 $sheet_rows_data = $xlsx->rows(0);
@@ -47,20 +48,16 @@ for ($sheetIndex = 0; $sheetIndex < count($sheetNames); $sheetIndex ++) {
         for ($cell_number = 0; $cell_number < count($all_headers_array); $cell_number ++) {
             if ($cell_number == $col_index) {
                 $date = $all_headers_array[$cell_number];
-                if (validateDate($date)==false) {
+                if (validateDate($date)=='false') {
                     $result='false';
-                    $error_cell_index=$date;
-//                     echo $error_cell_index;
-                    $error_row_index=$rowIndex;
-//                     echo $error_row_index;
-                    $error_sheet_name=$sheetNames[$sheetIndex];
-//                     echo $error_sheet_name;
                     break 3;
+                }else if(validateDate($date)!='true'){
+                    $result=validateDate($date);
+                }
                 }
             }
         }
     }
-}
 
 echo $result;
 
@@ -68,24 +65,55 @@ function validateDate($date)
 {
         // if (preg_match('/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})Z$/', $date, $parts) == true) {
         // $time = gmmktime($parts[4], $parts[5], $parts[6], $parts[2], $parts[3], $parts[1]);
-    $tempDate = explode('-', $date);
-    $tmp_result= checkdate($tempDate[1], $tempDate[2], $tempDate[0]);
+//     $tempDate = explode('-', $date);
+//     $tmp_result= checkdate($tempDate[1], $tempDate[2], $tempDate[0]);
     
-    if(!($tmp_result)){
-        return false;
+//     if(!($tmp_result)){
+//         return false;
+//     }else{
+//         $input_time = strtotime($date);
+//         if ($input_time === false) {
+//             return false;
+//         } else {
+//             return true;
+//         }
+//     }
+
+    $results = array();
+    $results[] = \DateTime::createFromFormat("Y-m-d\TH:i:s",$date);
+    $results[] = \DateTime::createFromFormat("Y-m-d\TH:i:s.u",$date);
+    $results[] = \DateTime::createFromFormat("Y-m-d\TH:i:s.uP",$date);
+    $results[] = \DateTime::createFromFormat("Y-m-d\TH:i:sP",$date);
+    $results[] = \DateTime::createFromFormat(DATE_ATOM,$date);
+    
+    $success = array_values(array_filter($results));
+    if(count($success) > 0) {
+        return 'true';
     }else{
-        $input_time = strtotime($date);
-        if ($input_time === false) {
-            return false;
-        } else {
-            return true;
+        
+        //trigger exception in a "try" block
+        try {
+            $datetime = new DateTime($date);
+            $formatted_date=$datetime->format(DateTime::ATOM); // Updated ISO8601
+            
+            $results = array();
+            $results[] = \DateTime::createFromFormat("Y-m-d\TH:i:s",$formatted_date);
+            $results[] = \DateTime::createFromFormat("Y-m-d\TH:i:s.u",$formatted_date);
+            $results[] = \DateTime::createFromFormat("Y-m-d\TH:i:s.uP",$formatted_date);
+            $results[] = \DateTime::createFromFormat("Y-m-d\TH:i:sP",$formatted_date);
+            $results[] = \DateTime::createFromFormat(DATE_ATOM,$formatted_date);
+            
+            $success = array_values(array_filter($results));
+            if(count($success) > 0) {
+                return $formatted_date;
+            }else{
+                return 'false';
+            }
+        }
+        //catch exception
+        catch(Exception $e) {
+            return 'false';
         }
     }
-
 }
-
-
-
-
-
 ?>

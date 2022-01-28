@@ -133,16 +133,15 @@ if (!isset($_GET['pageTitle'])){
 								<div class="guideline">
 									<fieldset class="guideline">
 										<legend class="guideline">Suggested guildelines for composing a value name</legend>
-										<ul class="guideline">
-											<li class="li_guideline">A value name is used to indentify an IOT device</li>
-											<li class="li_guideline">By default, file name and sheet name (defined in the previous step) are included in value name</li>
-											<li class="li_guideline">At least, the values of one column, among the selected columns, must be distinct</li>
-											<li class="li_guideline">The values of selected columns must not contain special characters including (For example,?,#,@,%)</li>
-											<li class="li_guideline">The values of selected columns should not contain parentheses. Otherwise, they are replaced with brackets</li>
-											<li class="li_guideline">The values of selected columns should not contain blank spaces. Otherwise, they are removed</li>
-											<li class="li_guideline">The values of selected columns should not contain non-UTF-8 (e.g., non-English). Otherwise, they are replaced with their equivalent English letters </li>
-												
-										</ul>
+    										<ul class="guideline">
+    											<li class="li_guideline">A value name is used to indentify an IOT device</li>
+    											<li class="li_guideline">By default, file name and sheet name (defined in the previous step) are included in value name</li>
+    											<li class="li_guideline">At least, the values of one column, among the selected columns, must be distinct</li>
+    											<li class="li_guideline">The values of selected columns must not contain special characters including (For example,?,#,@,%)</li>
+    											<li class="li_guideline">The values of selected columns should not contain parentheses. Otherwise, they are replaced with brackets</li>
+    											<li class="li_guideline">The values of selected columns should not contain blank spaces. Otherwise, they are removed</li>
+    											<li class="li_guideline">The values of selected columns should not contain non-UTF-8 (e.g., non-English). Otherwise, they are replaced with their equivalent English letters </li>
+    										</ul>
 									</fieldset>
 								</div>
 
@@ -301,7 +300,7 @@ if(!empty($_POST['hidden_selected_value_names'])){
     echo "</script>";
 }
 
-if($observed_date_type=='row'){
+if($observed_date_type=='row' || $observed_date_type=='row_converted'){
     unset($all_headers_array[array_search($hidden_observed_date_for_row_header, $all_headers_array)]); // remove item at index 0
     $all_headers_array = array_values($all_headers_array); // 'reindex' array
 }
@@ -401,7 +400,6 @@ function validateForm() {
 //     	all_columns[i]=x.options[i].text;
 //     }
 
-
 	if(clicked=='Next'){
 	$("#select2 option").map(function(){ return this.value }).get();
 
@@ -417,7 +415,31 @@ function validateForm() {
 	var selectIsValid = true;
 	var target_dir="<?php echo $target_dir?>";
 	var file_name="<?php echo $file_name?>";
-	
+
+	//check Columns have special characters
+// 	$.ajax({  
+// 	    type:"GET",  
+// 	    url:"datatablemanager_checkSpecialCharacterCol.php",
+// 	    data:"target_dir="+target_dir+"&file_name="+file_name+"&selected_headers="+selected_value_types_array_string,
+// 	    async:false,     
+// 	    success:function(data){ 
+// 			if(data=='true'){
+// 				var non_distinct_headers=data.split(","); 
+// 				console. log(non_distinct_headers);
+// 				alert("Following the provided guidlines, selected columns must not contain contain special characters!")
+// 				selectIsValid = false;
+// 				}else{
+// 					var selected_value_types_string= selected_value_types_array.join('|');
+// 					$('#hidden_selected_value_names').val(selected_value_types_string);
+// 					}
+// 	    },
+// 	    error: function (xhr, error) {
+// 	        console.debug(xhr); 
+// 	        console.debug(error);
+// 	      }
+// 		});
+
+		//check Columns have distinct values	
 		$.ajax({  
 		    type:"GET",  
 		    url:"datatablemanager_checkDistinctCol.php",
@@ -425,10 +447,10 @@ function validateForm() {
 		    async:false,     
 		    success:function(data){ 
 
-				if(data!='true'){
+				if(data=='true'){
 					var non_distinct_headers=data.split(","); 
-					console. log(non_distinct_headers);
-					alert("Following the provided guidlines, the selected column must contain unique data!")
+					console.log(non_distinct_headers);
+					alert("Selected columns must not contain duplicate data or special characters!")
 					selectIsValid = false;
 					}else{
 						var selected_value_types_string= selected_value_types_array.join('|');

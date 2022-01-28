@@ -511,7 +511,8 @@ function editData(id, value, label, type, parent, data_type){
 		$("#list_nature_e").hide();
 	}
 //select_vt_e	
-	if(type == "value unit"){
+	//if(type == "value unit"){
+		if((type == "value unit")||(type == "data type")){
 		var array_act = new Array();
 		$("#list_vt_e").show();
 	$.ajax({
@@ -647,7 +648,7 @@ function filtroDataAll(){
                 async: true,
                 dataType: 'json',
                 success: function (data) {
-					
+					console.log(data);
                     for (var i = 0; i < data.length; i++)
                     {
 						 array_act[i] = {
@@ -658,6 +659,7 @@ function filtroDataAll(){
 						 parent_id: data[i]['parent_id'],
 						 parent_value: data[i]['parent_value'],
 						 child_value: data[i]['child_value'],
+						 data_type: data[i]['data_type']
 					};
 					
 					var parV = "";
@@ -667,6 +669,7 @@ function filtroDataAll(){
 					var string_label = String(array_act[i]['label']);
 					//var edit_finction= array_act[i]['id']+",'"+string_value+"','"+string_label+"','"+string_type+"'","'"+parV+"'";
 					var parV = array_act[i]['parent_value'];
+					var datT = array_act[i]['data_type'];
 					var parDt = "";
 					//
 					if(parV == null){
@@ -692,6 +695,11 @@ function filtroDataAll(){
 					}else{
 						parDt = parDt.toString().replace(/,/g, ', ');
 					}
+					if((datT == null)||(datT == "undefined")){
+						datT = "";
+					}else{
+						datT = datT.toString().replace(/,/g, ', ');
+					}
 					
 					var edit_finction= array_act[i]['id']+",'"+string_value+"','"+string_label+"','"+string_type+"','"+id_prent+"','"+parDt+"'";
 					//alert(array_act);
@@ -701,7 +709,7 @@ function filtroDataAll(){
 					//var button_dispacth = '<button type="button" class="viewDashBtn dispatch_file" data-target="#dispatch-modal" data-toggle="modal" value="'+i+'" onclick="">DISPATCH</button>';
 					var button_put ="";
 					var button_dispacth = "";
-					$("#value_table").append('<tr><td class="pop_link ellipsis">'+array_act[i]['value']+'</td><td class="pop_link ellipsis">'+array_act[i]['type']+'</td><td>'+array_act[i]['label']+'</td><td></td><td class="pop_link ellipsis" title="'+parV+'" data-content="'+parV+'" data-toggle="popover" data-original-title>'+parV+'</td><td href="#" class="pop_link ellipsis" data-toggle="popover" data-content="'+childV+'" title="'+childV+'"  data-original-title>'+childV+'</td><td>'+button_edit+' '+button_dispacth+' '+button_put+' ' +button_del+'</td></tr>');
+					$("#value_table").append('<tr><td class="pop_link ellipsis">'+array_act[i]['value']+'</td><td class="pop_link ellipsis">'+array_act[i]['type']+'</td><td>'+array_act[i]['label']+'</td><td>'+datT+'</td><td class="pop_link ellipsis" title="'+parV+'" data-content="'+parV+'" data-toggle="popover" data-original-title>'+parV+'</td><td href="#" class="pop_link ellipsis" data-toggle="popover" data-content="'+childV+'" title="'+childV+'"  data-original-title>'+childV+'</td><td>'+button_edit+' '+button_dispacth+' '+button_put+' ' +button_del+'</td></tr>');
 					}
 					var table = $('#value_table').DataTable({
 						"searching": true,
@@ -980,7 +988,7 @@ function filtroData(){
 					var button_del = '<button type="button" class="delDashBtn delete_file" data-target="#delete-modal" data-toggle="modal" value="'+i+'" onclick="deleteData('+array_act[i]['id']+')">DELETE</button>';
 					var button_put ="";
 					var button_dispacth = "";
-					$("#value_table").append('<tr><td class="pop_link ellipsis">'+array_act[i]['value']+'</td><td class="pop_link ellipsis">'+array_act[i]['type']+'</td><td>'+array_act[i]['label']+'</td><td></td><td class="pop_link ellipsis" title="'+parV+'"  data-content="'+parV+'" data-toggle="popover" data-original-title>'+parV+'</td><td href="#" class="pop_link ellipsis" data-toggle="popover" data-content="'+childV+'" title="'+childV+'"  data-original-title>'+childV+'</td><td>'+button_edit+' '+button_dispacth+' '+button_put+' ' +button_del+'</td></tr>');
+					$("#value_table").append('<tr><td class="pop_link ellipsis">'+array_act[i]['value']+'</td><td class="pop_link ellipsis">'+array_act[i]['type']+'</td><td>'+array_act[i]['label']+'</td><td>'+array_act[i]['data_type']+'</td><td class="pop_link ellipsis" title="'+parV+'"  data-content="'+parV+'" data-toggle="popover" data-original-title>'+parV+'</td><td href="#" class="pop_link ellipsis" data-toggle="popover" data-content="'+childV+'" title="'+childV+'"  data-original-title>'+childV+'</td><td>'+button_edit+' '+button_dispacth+' '+button_put+' ' +button_del+'</td></tr>');
 					}
 					var table = $('#value_table').DataTable({
 						"searching": true,

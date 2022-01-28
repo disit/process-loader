@@ -18,8 +18,13 @@
 
 
 //include('config.php'); // Includes Login Script
+include('functionalities.php');
 include ('external_service.php');
 include ('control.php');
+
+$link = mysqli_connect($host, $username, $password) or die("failed to connect to server !!");
+mysqli_set_charset($link, 'utf8');
+mysqli_select_db($link, $dbname);
 
 if (isset ($_SESSION['username'])){
   $utente_att = $_SESSION['username'];	
@@ -37,6 +42,9 @@ $order = 'id';
 
 if (isset($_GET['order'])){
 	$by = $_GET['order'];
+	if (($by !=='ASC')&&($by !=='DESC')){
+		$by = 'DESC';
+	}
 }else{
 	$by = 'DESC';
 }
@@ -45,6 +53,10 @@ if (isset ($_SESSION['username'])){
   $role_att = $_SESSION['role'];	
 }else{
  $role_att= "";	
+}
+if ($role_att !=='RootAdmin'){
+	header("location:page.php".$showFrame);
+	exit();
 }
 
 if (isset($_REQUEST['showFrame'])){
@@ -56,16 +68,17 @@ if (isset($_REQUEST['showFrame'])){
 	}	
 }else{$hide_menu= "";}
 
-
 if (!isset($_GET['pageTitle'])){
 	$default_title = "Audit Personal Data Violation";
 }else{
 	$default_title = "";
 }
 
+
 if (isset($_GET['user'])||$_GET['user'] !==""){
 	//$user = $_GET['user'];
 	$user_lab= $_GET['user'];
+	//$user_lab= filter_var_array($user_lab, FILTER_SANITIZE_STRING);
 	$user_lab_trim = str_replace(' ','',$user_lab);
 	$user = "username LIKE '%".$user_lab_trim."%' ";
 	//$user_lab= $_GET['user'];
@@ -123,6 +136,8 @@ if ($_GET['sourceRequest'] ==""){
 if (isset($_GET['varN'])||$_GET['varN'] !==""){
 	$varN_lab = $_GET['varN'];
 	$varN_lab_trim = str_replace(' ','',$varN_lab);
+	$varN_lab_trim   = filter_var_array($varN_lab_trim, FILTER_SANITIZE_STRING);
+	//
 	//$varN = " AND variable_name LIKE'%".$_GET['varN']."%'	";
 	$varN = "	variable_name LIKE'%".$varN_lab_trim."%'	";
 }else{
@@ -131,7 +146,9 @@ if (isset($_GET['varN'])||$_GET['varN'] !==""){
 }
 
 if(isset($_GET['domain'])||$_GET['domain'] !==""){
-	$domain= "AND domain='".$_GET['domain']."'";
+	$dom   = filter_var_array($_GET['domain'], FILTER_SANITIZE_STRING);
+	$domain= "AND domain='".$dom."'";
+	//$domain= "AND domain='".$_GET['domain']."'";
 }else{
 	$domain= "";
 }
@@ -148,6 +165,7 @@ if ($_GET['varN'] == ""){
 if (isset($_GET['mot'])||$_GET['mot'] !==""){
 	$mot_lab = $_GET['mot'];
 	$mot_lab_trim = str_replace(' ','',$mot_lab);
+	$mot_lab_trim   = filter_var_array($mot_lab_trim, FILTER_SANITIZE_STRING);
 	$mot = " motivation LIKE '%".$mot_lab_trim."%'	";
 	//$mot = " AND motivation LIKE '%".$_GET['mot']."%'	";
 }else{
@@ -163,6 +181,7 @@ if ($_GET['mot'] == ""){
 if (isset($_GET['delUser'])||$_GET['delUser'] !==""){
 	$delUser_lab = $_GET['delUser'];
 	$delUser_trim = str_replace(' ','',$delUser_lab); 
+	$delUser_trim   = filter_var_array($delUser_trim, FILTER_SANITIZE_STRING);
 	$delUser = " AND delegated_username LIKE '%".$delUser_trim."%'	";
 }else{
 	$delUser = "";
@@ -170,7 +189,9 @@ if (isset($_GET['delUser'])||$_GET['delUser'] !==""){
 
 if (isset($_GET['delApp'])||$_GET['delApp'] !==""){
 	$delApp_lab=$_GET['delApp'];
-	$delApp = " AND delegated_app_name LIKE '%".$_GET['delApp']."%'	";
+	$delApp_lab   = filter_var_array($delApp_lab, FILTER_SANITIZE_STRING);
+	$delApp_lab = str_replace(' ','',$delApp_lab); 
+	$delApp = " AND delegated_app_name LIKE '%".$delApp_lab."%'	";
 	
 }else{
 	$delApp = "";
@@ -189,6 +210,9 @@ if ($_GET['delApp'] ==""){
 //$total_rows = 0;
 if (isset($_GET['limit'])|| $_GET['limit']!==""){
 $limit=$_GET['limit'];
+			if (is_int($limit)==false){
+				$limit = 10; 
+			}
 }else{
 $limit = 10;  
 }
@@ -198,6 +222,9 @@ $limit = 10;
 
 if (isset($_GET["page"])) { 
 		$page  = $_GET["page"]; 
+		if (is_int($page)==false){
+			$page = 1; 
+			}
 	} else { 
 		$page=1; 
 	};  
@@ -206,7 +233,12 @@ $start_from = ($page-1) * $limit;
 if (isset($_GET["start"])||$_GET["start"] !=""){
 	//$start_d = " AND time>='". $_GET["start"]."'	";
 	$start_lab = $_GET['start'];
-	$start_d = " time>='". $_GET["start"]."'	";
+	if (strtotime($start_lab)){
+		$start_d = " time>='". $_GET["start"]."'	";
+	}else{
+		$start_d = "";
+	}
+	//$start_d = " time>='". $_GET["start"]."'	";
 }else{
 	$start_d = "";
 	$start_lab = "";
@@ -220,7 +252,11 @@ if ($_GET["start"] == ""){
 if (isset($_GET["end"])|| $_GET["end"] !=""){
 	//$end_d ="AND time<='".$_GET["end"]."'";
 	$end_lab = $_GET['end'];
+	if (strtotime($end_lab)){
 	$end_d =" time<='".$_GET["end"]."'";
+	}else{
+		$end_d = "";
+	}
 }else{
 	$end_d = "";
 	$end_lab = "";
@@ -234,7 +270,14 @@ if ($_GET["end"] == ""){
 if (isset($_GET['ip_address'])){
 	$ip_address_lab=$_GET['ip_address'];
 	$ip_address_lab_trim = str_replace(' ','',$ip_address_lab); 
-	$ip_address="ip_address LIKE '%".$ip_address_lab_trim."%'";
+	//$ip_address_lab_trim   = filter_var_array($ip_address_lab_trim, FILTER_VALIDATE_IP);
+	if (preg_match("/[0-9.]/i",$ip_address_lab_trim)){
+		$ip_address="ip_address LIKE '%".$ip_address_lab_trim."%'";
+	}else{
+		$ip_address_lab_trim   = filter_var_array($ip_address_lab_trim, FILTER_SANITIZE_STRING);
+		$ip_address="ip_address LIKE '%".$ip_address_lab_trim."%'";
+	}
+	//$ip_address="ip_address LIKE '%".$ip_address_lab_trim."%'";
 }else{
 		$ip_address_lab="";
 		$ip_address="";
@@ -342,9 +385,7 @@ $query_n = $query_n . "	ORDER BY ".$order." ".$by." LIMIT ".$start_from.", ".$li
  
 //echo ($query_n);
 
-$link = mysqli_connect($host, $username, $password) or die("failed to connect to server !!");
-mysqli_set_charset($link, 'utf8');
-mysqli_select_db($link, $dbname);
+
 
 //$query = "SELECT activity.* FROM profiledb.activity ORDER BY id DESC LIMIT ".$start_from.", ".$limit.";";
 //$result = mysqli_query($link, $query) or die(mysqli_error($link));
@@ -389,8 +430,6 @@ $lun_sr = count($array_sr);
 //echo $lun_sr;
 //var_dump($array_sr);
 ////////////////////	
-
-	
 ?>
 
 <html lang="en">
@@ -495,7 +534,7 @@ $lun_sr = count($array_sr);
 			  text-decoration: inherit;
 			}
   </style>
-	<?php include('functionalities.php'); ?>
+	
         <div class="container-fluid">
 		<div class="row mainRow" style='background-color: rgba(138, 159, 168, 1)'>
 					<?php 

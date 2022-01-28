@@ -18,7 +18,9 @@
    
 include('config.php'); // Includes Login Script
 include('control.php');
-//include('functionalities.php');
+
+// require_once 'datatablemanager_APIQueryManager.php';
+require_once 'poimanager_APIQueryManager.php';
 
 if (isset ($_SESSION['username'])){
   $utente_att = $_SESSION['username'];	
@@ -141,7 +143,7 @@ if (!isset($_GET['pageTitle'])){
 
 								<div id="div_table">
 									<table id="table_preview">
-              <?php
+            <?php
             require_once ('datatablemanager_SimpleXLSX.php');
             require_once ('poimanager_myUtil.php');
             $configs = parse_ini_file('poimanager_config.ini.php');
@@ -171,18 +173,22 @@ if (!isset($_GET['pageTitle'])){
             if ($xlsx = SimpleXLSX::parse($target_dir . $file_name)) {
                 $sheet_names = $xlsx->sheetNames();
                 $sheet_rows_data = $xlsx->rows(0);
-//                 $all_headers_array = $sheetZeroData[0];
-                $header_row_css = 'style="color: black;font-family: Montserrat;font-weight: 400;font-size: 14px;width: 150px;background: mediumseagreen;"';
+
+                $header_row_css = 'style="color: black;font-family: Montserrat;font-weight: 400;font-size: 14px;width: 200px;background: mediumseagreen;"';
                 
                 if($poi_file_type=="caseb"){
-                    echo '<tr><td style="background: white;border-top: none;border-left: none;" colspan="29"></td><td class=header style="background: darkcyan;width: 100px;font-weight: bold;height: 50px;" colspan="3">Search Area</td><td style="background: white; border-top: none; border-right: none;" colspan="2"></td></tr>';
-                    echo '<tr class=header><td style="width: max-content;background: #1C70D2;font-weight: bold">Sheet Name</td><td style="width: max-content;background: #1C70D2;font-weight: bold">Service URI</td><th style="color: black;">' . implode('</th><th style="color: black;">', $template_columns) . '</th><td class=\"header\" '.$header_row_css.'>Center Latitude</td><td class=\"header\" '.$header_row_css.'>Center Longitude</td><td class=\"header\" '.$header_row_css.'>Radius (km)</td><td class=\"header\" style="color: black;font-family: Montserrat;font-weight:400; font-size: 14px;width: 120px;background: #1C70D2;"> Nature</td><td class=\"header\" style="color: black;font-family: Montserrat;font-weight:400; font-size: 14px;width: 120px;background: #1C70D2;"> Sub Nature</td><td class=\"header\" style="color: black;font-family: Montserrat;font-weight:400; font-size: 14px;width: 120px;background: #1C70D2;">Language</td></tr>';
+//                     echo '<tr><td style="background: white;border-top: none;border-left: none;" colspan="29"></td><td class=header style="background: darkcyan;width: 100px;font-weight: bold;height: 50px;" colspan="3">Search Area</td><td style="background: white; border-top: none; border-right: none;" colspan="2"></td></tr>';
+                    echo '<tr class=header><td style="width: max-content;background: #1C70D2;font-weight: bold">Sheet Name</td><td style="width: max-content;background: #1C70D2;font-weight: bold">Service URI</td><th style="color: black;">' . implode('</th><th style="color: black;">', $template_columns) . '</th><td class=\"header\" '.$header_row_css.'>Calculated Latitude</td><td class=\"header\" '.$header_row_css.'>Calculated Longitude</td><td class=\"header\" style="color: black;font-family: Montserrat;font-weight:400; font-size: 14px;width: 200px;background: #1C70D2;">Nature</td><td class=\"header\" style="color: black;font-family: Montserrat;font-weight:400; font-size: 14px;width: 200px;background: #1C70D2;">Sub Nature</td><td class=\"header\" style="color: black;font-family: Montserrat;font-weight:400; font-size: 14px;width: 120px;background: #1C70D2;">Language</td></tr>';
                 }else{
                     echo '<tr class=header><td style="width: max-content;background: #1C70D2;font-weight: bold">Sheet Name</td><td style="width: max-content;background: #1C70D2;font-weight: bold">Service URI</td><th style="color: black;">' . implode('</th><th style="color: black;">', $template_columns) . '</th><td class=\"header\" style="color: black;font-family: Montserrat;font-weight:400; font-size: 14px;width: 120px;background: #1C70D2;"> Nature</td><td class=\"header\" style="color: black;font-family: Montserrat;font-weight:400; font-size: 14px;width: 120px;background: #1C70D2;"> Sub Nature</td><td class=\"header\" style="color: black;font-family: Montserrat;font-weight:400; font-size: 14px;width: 120px;background: #1C70D2;">Language</td></tr>';
                 }
                 
                 // Append rows//////////////////////////////////////////////////////////////
                 $row_count = 0;
+                
+                $poi_lats=array();
+                $poi_lons=array();
+                
                 for ($sheetIndex = 0; $sheetIndex < count($sheet_names); $sheetIndex ++) {
                     $sheet_rows_data = $xlsx->rows($sheetIndex);
                     // $rowIndex = 1 ---> ignore header rows
@@ -203,30 +209,53 @@ if (!isset($_GET['pageTitle'])){
                             $row_array_to_be_inseted[$cell_index + 2] = $cleaned_cell_value;
                         }
 
-                            // update table values to be sent to the next form
+                        // update table values to be sent to the next form
                         $final_table_value_name_Sheet_name_rest .= implode("|", $row_array_to_be_inseted) . "|";
 
                         if ($poi_file_type == 'caseb') {
-                            $row_array_to_be_inseted[count($template_columns) + 3] = $_POST['hidden_latitude'];
-                            $row_array_to_be_inseted[count($template_columns) + 4] = $_POST['hidden_longitude'];
-                            $row_array_to_be_inseted[count($template_columns) + 5] = $_POST['hidden_radius'];
-                            $row_array_to_be_inseted[count($template_columns) + 6] = $_POST['hidden_nature'];
-                            $row_array_to_be_inseted[count($template_columns) + 7] = $_POST['hidden_sub_nature'];
-                            $row_array_to_be_inseted[count($template_columns) + 8] = $_POST['hidden_lang'];
                             
+                            $poi_address=getFirstPoiAddress($sheetRowData,$template_columns);
+                            $address_coord = getPoiAddressCoord($poi_address, $_POST['hidden_latitude'], $_POST['hidden_longitude'], $_POST['hidden_radius']);
+                            
+                            if(strlen($address_coord[0]==0)){
+                                $poi_address=getSecondPoiAddress($sheetRowData,$template_columns);
+                                $address_coord = getPoiAddressCoord($poi_address, $_POST['hidden_latitude'], $_POST['hidden_longitude'], $_POST['hidden_radius']);
+                            }
+                            
+                            $poi_lat=$address_coord[0];
+                            $poi_lon=$address_coord[1];
+                            
+                            array_push($poi_lats,$poi_lat);
+                            array_push($poi_lons,$poi_lon);
+                           
+                            if (strlen($poi_lat) == "") {
+                                $poi_lat = "<img style='width:25px' src='img/datatablemanager_address_coord_ko.png'/>";
+                                $poi_lon = "<img style='width:25px' src='img/datatablemanager_address_coord_ko.png'/>";
+                            } 
+
+//                             $row_array_to_be_inseted[count($template_columns) + 6] = $_POST['hidden_nature'];
+//                             $row_array_to_be_inseted[count($template_columns) + 7] = $_POST['hidden_sub_nature'];
+//                             $row_array_to_be_inseted[count($template_columns) + 8] = $_POST['hidden_lang'];
+//                             $row_array_to_be_inseted[count($template_columns) + 9] = '<a href onclick="edit_coord('.$rowIndex.','.count($template_columns).')">Edit Coordination</a>';
                         }else{
                             $row_array_to_be_inseted[count($template_columns) + 3] = $_POST['hidden_nature'];
                             $row_array_to_be_inseted[count($template_columns) + 4] = $_POST['hidden_sub_nature'];
                             $row_array_to_be_inseted[count($template_columns) + 5] = $_POST['hidden_lang'];
-                            
                         }
 
                         // insert rest of values that are not part of value name in the row array
-//                         if ($dateObserved_type == 'file') {
-//                             echo '<tr><td>' . implode('</td><td>', $row_array_to_be_inseted_dof) . '</tr>';
-//                         } else {
+                        if ($poi_file_type == 'caseb') {
+                            echo '<tr id="row_'.$rowIndex.'"><td>' . implode('</td><td>', $row_array_to_be_inseted);
+                            echo '<td id="lat_'.$rowIndex.'">'.$poi_lat.'</td>';
+                            echo '<td id="lon_'.$rowIndex.'">'.$poi_lon.'</td>';
+                            echo '<td>'. $_POST['hidden_nature'].'</td>';
+                            echo '<td>'. $_POST['hidden_sub_nature'].'</td>';
+                            echo '<td>'.$_POST['hidden_lang'].'</td>';
+                            echo '<td class="list_table_buttons"  id="edit_td_'.$rowIndex.'"><input id="edit_btn_'.$rowIndex.'" value="Edit Coordinate" type="button" class="list_table_buttons"  style="background-color: orange;top: -3px;position: relative;width: 200px;" onclick="edit_coord('.$rowIndex.','.count($template_columns).')"></td>';
+                            echo '</tr>';
+                        } else {
                             echo '<tr><td>' . implode('</td><td>', $row_array_to_be_inseted) . '</tr>';
-//                         }
+                        }
                         ++ $row_count;
                     }
                 }
@@ -244,6 +273,8 @@ if (!isset($_GET['pageTitle'])){
 								<input type="hidden" name="final_table_value_name_Sheet_name_rest" id="final_table_value_name_Sheet_name_rest" value=""> 
 								<input type="hidden" name="hidden_file_name" id="hidden_file_name" value="">
 								<input type="hidden" id="hidden_row_count" name="hidden_row_count" value="">	
+								<input type="hidden" id="hidden_poi_lats" name="hidden_poi_lats" value="">	
+								<input type="hidden" id="hidden_poi_lons" name="hidden_poi_lons" value="">	
 
         						<input type="hidden" name="hidden_poi_file_type" id="hidden_poi_file_type"  value="<?php echo $_POST['hidden_poi_file_type']; ?>">
         					    <input type="hidden" name="hidden_file_to_uplolad_fromvalue_type_page" 	id="hidden_file_to_uplolad_fromvalue_type_page" value="<?php echo $_POST['hidden_file_to_uplolad_fromvalue_type_page']; ?>"> 
@@ -267,6 +298,212 @@ if (!isset($_GET['pageTitle'])){
 
 <script type='text/javascript'>
 
+function edit_coord(row_number,columns_count){
+
+	var rows = document.getElementById('table_preview').rows;
+	var row = rows[row_number];
+	
+	lat_td_id="lat_".concat(row_number);
+	lon_td_id="lon_".concat(row_number);
+	edit_td_id="edit_td_".concat(row_number);
+	edit_btn_id="edit_btn_".concat(row_number);
+	var edit_btn=document.getElementById(edit_btn_id);
+	var cancel_btn=document.getElementById ("cancel_btn_".concat(row_number));
+	
+	if(edit_btn.value!="Save"){
+
+	//save initial lat and lons
+	var init_td_lat=document.getElementById(lat_td_id).innerText;
+	var init_td_lon=document.getElementById(lon_td_id).innerText;	
+	//create lat textbox
+	var lat_input=document.createElement('input');
+	lat_input.setAttribute('type','text');
+	lat_input.setAttribute("id","tb_lat_".concat(row_number));
+	lat_input.value=document.getElementById(lat_td_id).innerText;
+	document.getElementById(lat_td_id).innerText="";
+	row.cells[columns_count+2].appendChild(lat_input);
+
+	//create lon textbox
+	var lon_input=document.createElement('input');
+	lon_input.setAttribute('type','text');
+	lon_input.setAttribute("id","tb_lon_".concat(row_number));
+	lon_input.value=document.getElementById(lon_td_id).innerText;
+	document.getElementById(lon_td_id).innerText="";
+	row.cells[columns_count+3].appendChild(lon_input);
+
+	//change edit button to save
+	edit_btn.value="Save";
+	edit_btn.style.backgroundColor = "#4CAF50";
+	edit_btn.onclick = function(){save_coord(row_number,columns_count)};
+
+	//Add cancel button
+	var cancel_button=document.createElement('button');
+	cancel_button.innerHTML = "Cancel"; 
+	cancel_button.setAttribute("id","cancel_btn_".concat(row_number));
+	cancel_button.style.width="200px";
+	cancel_button.style.textAlignLast = "center";
+	cancel_button.style.backgroundColor = "darkgrey";
+	cancel_button.onclick = function(){cancel_coord(row_number,init_td_lat,init_td_lon,columns_count)};
+	document.getElementById(edit_td_id).appendChild(cancel_button);     
+	document.getElementById("cancel_btn_".concat(row_number)).className = "cancel_btn";
+	}
+}
+
+function save_coord(row_number,columns_count){
+
+	var tb_lat_id="tb_lat_".concat(row_number);
+	var tb_lon_id="tb_lon_".concat(row_number);
+
+	var tb_lat=document.getElementById(tb_lat_id);
+	var tb_lon=document.getElementById(tb_lon_id);
+	
+	var tb_lat_exists=false;
+	var tb_lon_exists=false;
+	
+	if(typeof(tb_lat) != 'undefined' && tb_lat != null){
+		tb_lat_exists=true;
+	}
+
+	if(typeof(tb_lon) != 'undefined' && tb_lon != null){
+		tb_lon_exists=true;
+	}
+
+	var lat_tb_remove=true;
+	var lon_tb_remove=true;
+	var edit_button_change=true;
+	var lat_td_id="lat_".concat(row_number);
+	var lon_td_id="lon_".concat(row_number);
+	var edit_btn_id="edit_btn_".concat(row_number);
+
+	var cancel_btn_id="cancel_btn_".concat(row_number);
+	
+	var edit_btn=document.getElementById(edit_btn_id);
+	var td_lat=document.getElementById(lat_td_id);
+	var td_lon=document.getElementById(lon_td_id);
+	var cancel_btn=document.getElementById(cancel_btn_id);
+
+	if(tb_lat_exists==true){
+	var tb_lat_value=tb_lat.value;
+	var tb_lat_value_number = Number(tb_lat_value);
+    var is_tb_lat_value_number_float = tb_lat_value_number === +tb_lat_value_number && tb_lat_value_number !== (tb_lat_value_number | 0);
+
+	if(tb_lat_value.length==0){
+		var img = document.createElement('img');
+	    img.src = "img/datatablemanager_address_coord_ko.png";
+	    img.style.width="25px";
+	    td_lat.appendChild(img);
+	    tb_lat.remove();
+		}else if (is_tb_lat_value_number_float == false) {
+	        alert("Latitude value must be float!");
+	        tb_lat.style.backgroundColor = "#ffdddd";
+	        edit_button_change=false;
+		}else{
+		document.getElementById(lat_td_id).innerText=tb_lat_value;
+        tb_lat.remove();
+		}
+	}
+
+	if(tb_lon_exists==true){ 
+	var tb_lon_value=tb_lon.value;
+    var tb_lon_value_number = Number(tb_lon_value);
+    var is_tb_lon_value_number_float = tb_lon_value_number === +tb_lon_value_number && tb_lon_value_number !== (tb_lon_value_number | 0);
+
+	if(tb_lon_value.length==0){
+		var img = document.createElement('img');
+	    img.src = "img/datatablemanager_address_coord_ko.png";
+	    img.style.width="25px";
+	    td_lon.appendChild(img);
+	    tb_lon.remove();
+	}else if (is_tb_lon_value_number_float == false) {
+        alert("Longitude value must be float!");
+        tb_lon.style.backgroundColor = "#ffdddd";    
+        edit_button_change=false;
+	}else if(edit_button_change==true){
+		document.getElementById(lon_td_id).innerText=tb_lon_value;
+        tb_lat.remove();
+	}
+	}
+
+	if(edit_button_change==true){
+		cancel_btn.remove();
+		//change save button to edit
+		edit_btn.value="Edit Coordinate";
+		edit_btn.style.backgroundColor = "orange";
+		edit_btn.onclick = function(){edit_coord(row_number,columns_count)};
+		}
+}
+
+function cancel_coord(row_number,td_lat_value,td_lon_value,columns_count){
+
+	var tb_lat_id="tb_lat_".concat(row_number);
+	var tb_lon_id="tb_lon_".concat(row_number);
+
+	var tb_lat=document.getElementById(tb_lat_id);
+	var tb_lon=document.getElementById(tb_lon_id);
+	
+	var tb_lat_exists=false;
+	var tb_lon_exists=false;
+	
+	if(typeof(tb_lat) != 'undefined' && tb_lat != null){
+		tb_lat_exists=true;
+	}
+
+	if(typeof(tb_lon) != 'undefined' && tb_lon != null){
+		tb_lon_exists=true;
+	}
+	
+	var lat_td_id="lat_".concat(row_number);
+	var lon_td_id="lon_".concat(row_number);
+	var edit_td_id="edit_td_".concat(row_number);
+	var edit_btn_id="edit_btn_".concat(row_number);
+	var cancel_btn_id="cancel_btn_".concat(row_number)
+	
+	var edit_btn=document.getElementById(edit_btn_id);
+	var cancel_btn=document.getElementById(cancel_btn_id);
+
+	var td_lat=document.getElementById(lat_td_id);
+	var td_lon=document.getElementById(lon_td_id);
+	
+	if(td_lat_value==""){
+
+		var img = document.createElement('img');
+	    img.src = "img/datatablemanager_address_coord_ko.png";
+	    img.style.width="25px";
+	    
+	    td_lat.appendChild(img);
+
+		}else{
+		document.getElementById(lat_td_id).innerText=td_lat_value;
+		}
+
+	if(td_lon_value==""){
+
+		var img = document.createElement('img');
+	    img.src = "img/datatablemanager_address_coord_ko.png";
+	    img.style.width="25px";
+	    
+	    td_lon.appendChild(img);
+
+		}else{
+		document.getElementById(lon_td_id).innerText=td_lon_value;
+		}
+
+	//change save button to edit
+	edit_btn.value="Edit Coordinate";
+	edit_btn.style.backgroundColor = "orange";
+	edit_btn.onclick = function(){edit_coord(row_number,columns_count)};
+
+	if(tb_lat_exists==true){
+		tb_lat.remove();
+		}
+	
+	if(tb_lat_exists==true){
+		tb_lon.remove();
+		}
+	
+	cancel_btn.remove();
+}
+
     $(document).ready(function () {
 
 		var nascondi= "<?=$hide_menu; ?>";
@@ -280,7 +517,7 @@ if (!isset($_GET['pageTitle'])){
 		$('#sc_mng').show();
 	}
 	
-	//redirect
+		//redirect
 		var role="<?=$role_att; ?>";
 	
 		if (role == ""){
@@ -308,7 +545,6 @@ if (!isset($_GET['pageTitle'])){
 						window.location.href = 'page.php?pageTitle=Process%20Loader:%20View%20Resources';
 						}
 					}
-		//
 		var titolo_default = "<?=$default_title; ?>";
 				if (titolo_default != ""){
 					$('#headerTitleCnt').text(titolo_default);
@@ -317,34 +553,86 @@ if (!isset($_GET['pageTitle'])){
 </script>
 	<script type="text/javascript">
 
-function validateForm() {
+	function validateForm() {
 
-    	if(clicked=='Save'){
+	    if (clicked == 'Save') {
 
-    	$('#hidden_org').val("<?php echo $org; ?>"); 
-		$('#hidden_row_count').val("<?php echo $row_count; ?>"); 
-		$('#file_name').val("<?php echo $file_name; ?>"); 
-        $('#final_table_value_name_Sheet_name_rest').val("<?php echo substr($final_table_value_name_Sheet_name_rest, 0,strlen($final_table_value_name_Sheet_name_rest)-1); ?>"); 
+	        //check if No cancel button exists
+	        var cancel_btn_exists = document.getElementsByClassName('cancel_btn');
+			var poi_file_type="<?php echo $poi_file_type; ?>";
 
+			if (poi_file_type=='caseb'){
+	         if(cancel_btn_exists.length > 0) {
+	            alert("Please, complete editing the coordinates before saving your ingested data!");
+	            return false;
+	        } else {
+				//get the edited lat and lon
+		        var template_columns_count="<?php echo count($template_columns); ?>";
+				var lat_col_index=Number(template_columns_count)+2;
+				var lon_col_index=Number(template_columns_count)+3;
+				var rows = document.getElementById('table_preview').rows;
+				var poi_lats=[];
+				var poi_lons=[];
 
-        
-		if( confirm('Do you really want to save data to the database?')){
-			document.getElementById("div_please_wait").style.display='block';
-			return true;
-			}else{
-				return false;
-				}
-    	}else{
-    		if( confirm('You will probably lose the inserted data. Are you sure?')){
-    			var frm = document.getElementById('preview') || null;
- 			   	frm.action = 'poimanager_general_information.php?showFrame=false'; 
-   			
-    			return true;
-        	}else{
-				return false;
-			}
-}
-}
+				for (var row_index = 1; row_index < rows.length; row_index++) {
+					var row = rows[row_index];
+					var lat=row.cells[lat_col_index].innerHTML;
+
+					if(lat=='<img style="width:25px" src="img/datatablemanager_address_coord_ko.png">' || lat=='<img src="img/datatablemanager_address_coord_ko.png" style="width: 25px;">'){
+						lat="";
+						}
+					
+					poi_lats[row_index-1]=lat;
+
+					var lon=row.cells[lon_col_index].innerHTML;
+					if(lon=='<img style="width:25px" src="img/datatablemanager_address_coord_ko.png">' || lon=='<img src="img/datatablemanager_address_coord_ko.png" style="width: 25px;">'){
+						lon="";
+						}
+					poi_lons[row_index-1]=lon;
+					}
+	            $('#hidden_poi_lats').val(poi_lats.join());
+	            $('#hidden_poi_lons').val(poi_lons.join());
+	            $('#hidden_org').val("<?php echo $org;?>");
+	            $('#hidden_row_count').val("<?php echo $row_count; ?>");
+	            $('#hidden_file_name').val("<?php echo $file_name; ?>");
+	            $('#final_table_value_name_Sheet_name_rest').val("<?php echo substr($final_table_value_name_Sheet_name_rest, 0,strlen($final_table_value_name_Sheet_name_rest)-1); ?>");
+
+	            if (confirm('Do you really want to save data to the database?')) {
+	                document.getElementById("div_please_wait").style.display = 'block';
+	                return true;
+	            } else {
+	                return false;
+	            }
+		        }
+		        }else{
+		         $('#hidden_poi_lats').val("<?php echo implode(",", $poi_lats); ?>");
+		         $('#hidden_poi_lons').val("<?php echo implode(",", $poi_lons); ?>");
+
+		            $('#hidden_org').val("<?php echo $org;?>");
+		            $('#hidden_row_count').val("<?php echo $row_count; ?>");
+		            $('#hidden_file_name').val("<?php echo $file_name; ?>");
+		            $('#final_table_value_name_Sheet_name_rest').val("<?php echo substr($final_table_value_name_Sheet_name_rest, 0,strlen($final_table_value_name_Sheet_name_rest)-1); ?>");
+
+		            if (confirm('Do you really want to save data to the database?')) {
+		                document.getElementById("div_please_wait").style.display = 'block';
+		                return true;
+		            } else {
+		                return false;
+		            }
+			     }
+	   	        
+	    } else {
+	        if (confirm('You will probably lose the inserted data. Are you sure?')) {
+	            var frm = document.getElementById('preview') || null;
+	            frm.action = 'poimanager_general_information.php?showFrame=false';
+
+	            return true;
+	        } else {
+	            return false;
+	        }
+	    }
+
+	}
 </script>
 </body>
 </html>

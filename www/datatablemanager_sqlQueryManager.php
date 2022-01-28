@@ -99,24 +99,30 @@ function executeGetDeviceSheetNameQuery($query){
     return $device_sheet_name;
 }
 
-function executeGetDeviceLatQuery($query, $coord_type)
+function executeGetDeviceLatQuery($query)
 {
     $lat = "";
     $result = $GLOBALS['conn']->query($query);
 
-    if ($coord_type != "address") {
         if (mysqli_query($GLOBALS['conn'], $query)) {
             while ($row = $result->fetch_assoc()) {
-                $lat = $row['lat'];
-            }
-        }
-    } else {
-        if (mysqli_query($GLOBALS['conn'], $query)) {
-            while ($row = $result->fetch_assoc()) {
-                if ($row['lat'] != "") {
+//                 if ($row['lat'] != "") {
                     $lat = $row['lat'];
                     break;
-                }
+//                 }
+            }
+        }
+    return $lat;
+}
+
+function executeGetDeviceAddressLatQuery($query){
+    
+    $result = $GLOBALS['conn']->query($query);
+    
+    if (mysqli_query($GLOBALS['conn'], $query)) {
+        while ($row = $result->fetch_assoc()) {
+            if ($row['lon'] != "" && $row['lat'] != "") {
+            $lat = $row['lat'];
             }
         }
     }
@@ -124,28 +130,33 @@ function executeGetDeviceLatQuery($query, $coord_type)
 }
 
 
-function executeGetDeviceLonQuery($query, $coord_type)
+function executeGetDeviceLonQuery($query)
 {
     $lon = "";
     $result = $GLOBALS['conn']->query($query);
 
-    if ($coord_type != "address") {
-        if (mysqli_query($GLOBALS['conn'], $query)) {
-            while ($row = $result->fetch_assoc()) {
-                $lon = $row['lon'];
-            }
-        }
-    } else {
-        if (mysqli_query($GLOBALS['conn'], $query)) {
-            while ($row = $result->fetch_assoc()) {
-                if ($row['lon'] != "") {
-                    $lon = $row['lon'];
-                    break;
-                }
+    if (mysqli_query($GLOBALS['conn'], $query)) {
+        while ($row = $result->fetch_assoc()) {
+            if ($row['lon'] != "") {
+            $lon = $row['lon'];
             }
         }
     }
     return $lon;
+}
+
+function executeGetDeviceAddressLonQuery($query)
+{
+    $result = $GLOBALS['conn']->query($query);
+
+    if (mysqli_query($GLOBALS['conn'], $query)) {
+        while ($row = $result->fetch_assoc()) {
+            if ($row['lon'] != "" && $row['lat'] != "") {
+                $lat = $row['lon'];
+            }
+        }
+    }
+    return $lat;
 }
 
 function executeGetRowInstanceQuery($query){
@@ -285,17 +296,17 @@ function getConnection($configs)
     return $conn;
 }
 
-function executeGetUsernameToDelegate($query){
+// function executeGetUsernameToDelegate($query){
     
-    $user_names=array();
-    $result = $GLOBALS['conn']->query($query);
-    if (mysqli_query($GLOBALS['conn'], $query)) {
-        while ($row = $result->fetch_assoc()) {
-            array_push($user_names, $row['username']);
-        }
-    }
-    return $user_names;
-}
+//     $user_names=array();
+//     $result = $GLOBALS['conn']->query($query);
+//     if (mysqli_query($GLOBALS['conn'], $query)) {
+//         while ($row = $result->fetch_assoc()) {
+//             array_push($user_names, $row['username']);
+//         }
+//     }
+//     return $user_names;
+// }
 
 function executeGetUploadedFiles($query){
     

@@ -17,6 +17,7 @@ email_from="info@site.org"
 email_to="snap4city@site.org"
 
 [api]
+delegationOrgUrl="http://localhost/dashboardSmartCity/api/organizations.php?includeUsers=true&org="
 uploaderUserUrl="http://localhost/auth/realms/master/protocol/openid-connect/userinfo"
 delegationUrl="http://localhost/datamanager/api/v1/username/"
 locationUrl="http://localhost/smosm/api/v1/location/?"

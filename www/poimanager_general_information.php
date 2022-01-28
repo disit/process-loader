@@ -240,7 +240,7 @@ function load_lang_combo() {
 								<fieldset id="fieldset_coord">
 									<legend>Search area setup</legend>
 								</fieldset>	
-									<table id="table_coord" style="background: none;top: -265px;left: 15px;position: relative;">
+									<table id="table_coord" style="background: none;top: -297px;left: 15px;position: relative;">
 										<tr>
 											<td style="width: 800px; padding: 0px;">
 												<!-- 	START OF Coord Table -->
@@ -270,17 +270,14 @@ function load_lang_combo() {
 												</table> <!-- 			END OF Radius TABLE -->
 											</td>
 											<td>
-												<fieldset class="guideline" style="top: -48px; height: 142px;">
+												<fieldset class="guideline" style="height: 240px;">
 													<legend class="guideline">Guildelines for search area set up</legend>
 													<ul class="guideline" style="font-weight: 400; top: -25px;">
-														<li class="li_guideline">The file does not
-															contain latitude and longitude for each
-															row</li>
-														<li class="li_guideline">An
-															area of search for ust be specfied for resolving POIs described in the file</li>
-														<li class="li_guideline">To do so, a
-															latitude and a longitude for the center of search circle
-															and a search radius must be provided</li>
+														<li class="li_guideline">The file does not contain latitude and longitude for each POI</li>
+														<li class="li_guideline">An area of search for ust be specfied for resolving POIs described in the file</li>
+														<li class="li_guideline">To do so, a latitude and a longitude for the center of search circle and a search radius must be provided</li>
+														<li class="li_guideline">A possible coordinate for each POI is calculated by the tool that can be viewed and edited later</li>
+														<li class="li_guideline">Empty address cells are not recommended becuase the associated RDF file will not be created</li>
 													</ul>
 												</fieldset>
 											</td>

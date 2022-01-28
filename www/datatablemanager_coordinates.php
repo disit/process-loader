@@ -273,19 +273,20 @@ $sheet_names = $xlsx->sheetNames();
 										</tbody>
 									</table>
 									
-									<fieldset class="guideline" style="height: 215px;">
+									<fieldset class="guideline" style="height: 270px;">
 										<legend class="guideline">Guildelines for setting up the coordinates of devices (or instances)</legend>
 										<ul class="guideline">
-											<li class="li_guideline">The goal is coordinate is assigned to each row</li>
+											<li class="li_guideline">The goal is to assign a coordinate to each row (device or instance)</li>
 											<li class="li_guideline">To do so, select the column that describe the address for each row</li>
 											<li class="li_guideline">Also, an area of search is used to resolve devices (or instances) described in the file</li>
 											<li class="li_guideline">For this, a latitude and a longitude for the center of search circle and a search radius must be provided</li>
+											<li class="li_guideline">A possible coordinate for the row (device or instance) is calculated by the tool that can be viewed and edited later, during the data ingestion</li>
 											<li class="li_guideline">Empty address cells are not recommended becuase the associated device (or instance) will not be created</li>
 										</ul>
 									</fieldset>
 									
 									<!--end Table address column -->
-									<fieldset class="guideline" style="left: 0px; width: 747px; height: 300px;top: -100px;">
+									<fieldset class="guideline" style="left: 0px; width: 747px; height: 300px;top: -155px;">
 										<legend class="guideline">Search area setup</legend>
 									<table id="table_address_coord" class="blueTable" style="top: 10px; width: 700px; left: 15px; position: inherit;">
 										<!-- 	START OF Coord Table -->
@@ -592,10 +593,6 @@ function set_visibility(param) {
 					div_coordinate_row.style.display='none';	
 
 					document.getElementById("hidden_coordinate_type").value = 'address';
-
-
-
-
 					     }
 }
 /////////////Check if lat and lon are float////////////////////////////////////////////

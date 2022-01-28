@@ -104,6 +104,31 @@ function executeCheckIfElementIdExists($query,$element_id){
     return $found;
 }
 
+function executeGetUsernameToDelegate($query){
+    
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL,$query);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/x-www-form-urlencoded'));
+    curl_setopt($ch, CURLOPT_POST, 1);
+    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, TRUE);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    
+    $response = curl_exec ($ch);
+    $err = curl_error($ch);
+    curl_close ($ch);
+    
+    // further processing ....
+    if ($err) {
+        echo "cURL Error #:" . $err;
+    }
+    
+    $json = json_decode($response, true);
+
+    return $json[0]['users'];
+}
+
 function executeGetDataTablesLimitQuery($query){
 
     $ch = curl_init();
@@ -279,7 +304,6 @@ function executeGetNatureQuery(){
     }
     return  $natures;
 }
-
 
 function executeGetElementIdByUserNameQuery($query,$file_name){
 

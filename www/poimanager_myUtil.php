@@ -237,7 +237,6 @@ function getPoiDataTableJson($conn,$query,$headers){
     $r=$rows[0];
     $element_id = $r['element_id'];
     $status = $r['status'];
-//     $file_name = substr(explode("|", $element_id)[0], 0, strpos(explode("|", $element_id)[0], "."));
     $upload_timestamp = explode("|", $element_id)[1];
 
     $model_type = 'PoiTable';
@@ -253,7 +252,7 @@ function getPoiDataTableJson($conn,$query,$headers){
     $radius=$r['radius'];
     $lang=$r['language'];
     $org=$r['organization'];
-
+    
     $result = array(
         'result' => 'OK',
         'code' => '200'
@@ -328,9 +327,15 @@ function getPoiDataTableJson($conn,$query,$headers){
         $result['Instances'][$poi_index]['Values']['city'] = $row['city'];
         $result['Instances'][$poi_index]['Values']['streetAddress'] = $row['streetAddress'];
         $result['Instances'][$poi_index]['Values']['civicNumber'] = $row['civicNumber'];
-        $result['Instances'][$poi_index]['Values']['latitude'] = $row['latitude'];
-        $result['Instances'][$poi_index]['Values']['longitude'] = $row['longitude'];
-        
+
+        if ($coord_type == "caseb") {
+            $result['Instances'][$poi_index]['Values']['latitude'] = $row['calculated_lat'];
+            $result['Instances'][$poi_index]['Values']['longitude'] = $row['calculated_lon'];
+        } else {
+            $result['Instances'][$poi_index]['Values']['latitude'] = $row['latitude'];
+            $result['Instances'][$poi_index]['Values']['longitude'] = $row['longitude'];
+        }
+
     }
     return $result;
 }
@@ -1213,5 +1218,36 @@ function sendPoiErrorUserDelegationEmail($file, $org, $elementId,$user_name_uplo
     }
 }
 
+function getFirstPoiAddress($sheetRowData,$template_columns){
+    
+    $streetAddress_index=array_search('streetAddress', $template_columns);
+    $civicNumber_index=array_search('civicNumber', $template_columns);
+    $city_index=array_search('city', $template_columns);
+    $postalcode_index=array_search('postalcode', $template_columns);
+    
+    $streetAddress=$sheetRowData[$streetAddress_index];
+    $civicNumber=$sheetRowData[$civicNumber_index];
+    $city=$sheetRowData[$city_index];
+    $postalcode=$sheetRowData[$postalcode_index];
+    
+    $address=$streetAddress.' '.$civicNumber. ', '.$city;  
+ 
+    return $address;
+}
+
+function getSecondPoiAddress($sheetRowData,$template_columns){
+    
+    $secondStreetAddress_index=$template_columns['secondStreetAddress'];
+    $secondCivicNumber_index=$template_columns['secondCivicNumber'];
+    $city_index=$template_columns['city'];
+    
+    $secondStreetAddress=$sheetRowData[$secondStreetAddress_index];
+    $secondCivicNumber=$sheetRowData[$secondCivicNumber_index];
+    $city=$sheetRowData[$city_index];
+    
+    $address=$secondStreetAddress.' '.$secondCivicNumber. ', '.$city;
+    
+    return $address;
+}
 
 ?>

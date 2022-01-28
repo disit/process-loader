@@ -21,27 +21,26 @@ function getSelectElementIdsToProcessQuery($org){
 }
 
 function getDeviceSheetNameQuery($element_id,$device_name){
-    return "select distinct(sheet_name) from sheet_data where element_id='".$element_id."' and value_name='".$device_name."'";  
+    return "select distinct(sheet_name) from sheet_data where element_id='".$element_id."' and value_name='".$device_name."'";
 }
 
-function getDeviceLatQuery($element_id, $device_name, $coord_type)
+function getDeviceLatQuery($element_id, $device_name)
 {
-    if ($coord_type != 'address') {
-        return "select distinct(lat) from sheet_data where element_id='" . $element_id . "' and value_name='" . $device_name . "'";
-    } else {
-        // return the first non-empty lat,lon
-        return "select lat from sheet_data where element_id='" . $element_id . "' and value_name='" . $device_name . "'";
-    }
+    return "select distinct(lat) from sheet_data where element_id='" . $element_id . "' and value_name='" . $device_name . "'";
 }
 
-function getDeviceLonQuery($element_id, $device_name, $coord_type)
-{
-    if ($coord_type != 'address') {
-        return "select distinct(lon) from sheet_data where element_id='" . $element_id . "' and value_name='" . $device_name . "'";
-    } else {
-        // return the first non-empty lat,lon
-        return "select lon from sheet_data where element_id='" . $element_id . "' and value_name='" . $device_name . "'";
-    }
+function getDeviceAddressLatQuery($element_id, $device_name){
+    // return the first non-empty lat
+    return "select lat,lon from sheet_data where element_id='" . $element_id . "' and value_name='" . $device_name . "'";
+}
+
+function getDeviceLonQuery($element_id, $device_name){
+    return "select distinct(lon) from sheet_data where element_id='" . $element_id . "' and value_name='" . $device_name . "'";
+}
+
+function getDeviceAddressLonQuery($element_id, $device_name){
+    // return the first non-empty lon
+    return "select lon,lat from sheet_data where element_id='" . $element_id . "' and value_name='" . $device_name . "'";
 }
 
 function getDeateObsrevedforRowsQuery($element_id){
@@ -61,11 +60,11 @@ function getRowInstanceQuery($element_id,$device_name,$model_features){
 }
 
 function getDeviceAddressLatsQuery($element_id, $device_name){
-    return "SELECT distinct(lat) FROM `sheet_data` WHERE element_id='".$element_id."' AND value_name='".$device_name."'";
+    return "SELECT lat FROM `sheet_data` WHERE element_id='".$element_id."' AND value_name='".$device_name."'";
 }
 
 function getDeviceAddressLonsQuery($element_id, $device_name){
-    return "SELECT distinct(lon) FROM `sheet_data` WHERE element_id='".$element_id."' AND value_name='".$device_name."'";
+    return "SELECT lon FROM `sheet_data` WHERE element_id='".$element_id."' AND value_name='".$device_name."'";
 }
 
 function getDeviceAddressWarningsQuery($element_id, $device_name){
@@ -103,7 +102,7 @@ function getElementsToProcessQuery(){
 }
 
 function getStatusElementQuery($element_id){
-    return "select distinct(processed) from sheet_data where element_id='".$element_id."'";  
+    return "select distinct(processed) from sheet_data where element_id='".$element_id."'";
 }
 
 function getOrgQuery($element_id){
@@ -135,7 +134,7 @@ function getCheckIfValueNameExistQuery($value_name){
 }
 
 function getInsertValueNameQuery($value_name) {
-        return "INSERT INTO value_name(value) VALUES('$value_name')";
+    return "INSERT INTO value_name(value) VALUES('$value_name')";
 }
 
 function getInsertCellQuery($elementId,$value_name_type,$value_name,$sheet_name,$value_type_name,$value_type, $value_unit,$file_name,$cell_value,$sheet_name_type,$lat,$lon,$nature,$sub_nature,$observed_date,$observed_date_type,$data_type,$coord_type,$context_broker,$lat_row_for_file,$lon_row_for_file,$lat_row,$lon_row,$org,$observed_date_for_row_header,$address_warning){
@@ -146,9 +145,9 @@ function getInsertCellQuery($elementId,$value_name_type,$value_name,$sheet_name,
     return $query;
 }
 
-function getUsernameToDelegateQuery($org){
-    return "select username from user where organization='".$org."'; ";
-}
+// function getUsernameToDelegateQuery($org){
+//     return "select username from user where organization='".$org."'; ";
+// }
 
 function getDtmSelectUploadedFilesQuery(){
     return "select distinct(file_name) from sheet_data";

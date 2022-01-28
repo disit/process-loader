@@ -25,7 +25,7 @@ mysqli_set_charset($link, 'utf8');
 mysqli_select_db($link, $dbname_valueunit);
 $query = "SELECT dt.value as 'value_type',
 ( SELECT value from processloader_db.dictionary_table dt2 join dictionary_relations dr on dr.child=dt2.id where dr.parent=dt.id order by dt2.id LIMIT 1) as value_unit
-FROM processloader_db.dictionary_table dt where dt.type='value type' order by value_type";
+FROM processloader_db.dictionary_table dt where dt.type='value type' and status=1 order by value_type";
 		
 $result = mysqli_query($link, $query) or die(mysqli_error($link));
 echo "SPARQL

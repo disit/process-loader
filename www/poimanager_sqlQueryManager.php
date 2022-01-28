@@ -111,7 +111,6 @@ function executePoiSelectDataTableByElementIdQuery($query){
     $get_data_query = mysqli_query($conn, $query) or die(mysqli_error($query));
     
     if(mysqli_num_rows($get_data_query)!=0){
-        
         $headers=$configs['poi_template_column'];
         $json=getPoiDataTableJson($conn,$query,$headers);
     }

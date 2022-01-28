@@ -318,6 +318,25 @@ p {
     background: lightgreen;
 }
 
+td.list_table_buttons {
+    text-align-last: left;
+    width: 110px;
+    border: 1px solid black;
+}
+
+input.list_table_buttons{
+    border: none;
+    color: white;
+    font-family: Montserrat;
+    font-weight: bold;
+    text-transform: uppercase;
+    height: 48px;
+    width: 100%;
+    position: relative;
+    font-size: 14px;
+    text-align-last: center;
+}
+
 @-webkit-keyframes wait {
     0%   { left: -7px  }
     30%  { left: 52px  }

@@ -236,9 +236,9 @@ if (!isset($_GET['pageTitle'])){
 												characters)</li>
 											<li class="li_guideline">Avoid using line breaks in column
 												headers</li>
-											<li class="li_guideline">There must not be empty columns
+											<li class="li_guideline">Empty columns
 												(those without headers that contain values, including blank
-												spaces) in the file</li>
+												spaces) are not allowed</li>
 											<li class="li_guideline">Columns with number values must be
 												stored with number (not string) format</li>
 											<li class="li_guideline">Avoid using rounded values if they
@@ -346,7 +346,7 @@ if (!isset($_GET['pageTitle'])){
 						document.getElementById("submit_button").disabled = true;
 				        document.getElementById("submit_button").style.backgroundColor ="lightslategrey";
 						}else{
-						 document.getElementById('instructor').innerHTML = 'Please, upload your file, following the <a style="color:#f44336" href="">Refrence Template</a>! (You have uploaded ' +current+' files (Maximum: '+limit+'))';
+						 document.getElementById('instructor').innerHTML = 'Please, upload your file, following the <a style="color:white" href="https://www.snap4city.org/drupal/node/731">manual</a> and the <a style="color:white" href="https://www.snap4city.org/drupal/sites/default/files/files/POI-loader-template-new.zip">Refrence Template</a>! (You have uploaded ' +current+' files (Maximum: '+limit+'))';
 						}
 				    },
 				    error: function (xhr, error) {

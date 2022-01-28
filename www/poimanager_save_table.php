@@ -98,6 +98,9 @@ if(strlen($file_name)==0){
     $file_name=$_POST['hidden_file_to_uplolad_fromvalue_type_page'];
 }
 
+$poi_lats= explode(",", $_POST['hidden_poi_lats']);
+$poi_lons= explode(",", $_POST['hidden_poi_lons']);
+
 $file_name_in_table_interface=$file_name;
 
 $elementType = $configs['elementType'];
@@ -120,19 +123,20 @@ if (substr($my_result, 0, 5) == "Error") {
 
         $id = $my_result["id"];
         $delegator_username = $my_result["username"];
-
-        if (!$error) {
+        if (! $error) {
             // delegate users
-            foreach ($usernames_to_delegate as $username_to_delegate) {
+            if (strlen($usernames_to_delegate[0]) != 0) {
+                foreach ($usernames_to_delegate as $username_to_delegate) {
 
-                $delegateUserQuery = getPoiDelegelateuserQuery($delegator_username);
-                $delegate_result = delegateUser($delegateUserQuery, $username_to_delegate, $elementId, $delegator_username);
+                    $delegateUserQuery = getPoiDelegelateuserQuery($delegator_username);
+                    $delegate_result = delegateUser($delegateUserQuery, $username_to_delegate, $elementId, $delegator_username);
 
-                if (! $delegate_result) {
-                    $error = true;
-                    $error_show = "User delegation failed: " . $delegate_result;
-                    sendPoiErrorUserDelegationEmail($file_name, $org, $elementId, $delegator_username, $username_to_delegate, $delegate_result);
-                    break;
+                    if (! $delegate_result) {
+                        $error = true;
+                        $error_show = "User delegation failed: " . $delegate_result;
+                        sendPoiErrorUserDelegationEmail($file_name, $org, $elementId, $delegator_username, $username_to_delegate, $delegate_result);
+                        break;
+                    }
                 }
             }
 
@@ -141,7 +145,7 @@ if (substr($my_result, 0, 5) == "Error") {
                 $final_table = explode('|', $_POST['final_table_value_name_Sheet_name_rest']);
                 $row_count = $_POST['hidden_row_count'];
 
-                insertPoiDataTable($final_table, $row_count, $file_name, $elementId, $coord_type, $center_lat, $center_lon, $radius, $nature, $sub_nature, $lang, $org);
+                insertPoiDataTable($final_table, $row_count, $file_name, $elementId, $coord_type, $center_lat, $center_lon, $radius, $nature, $sub_nature, $lang, $org,$poi_lats,$poi_lons);
                 sendPoiSuccessUploadEmail($file_name, $org, $delegator_username, $id);
             }
         }

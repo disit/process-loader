@@ -110,9 +110,6 @@ if (!isset($_GET['pageTitle'])){
 
             $element_id = $_GET['elementId'];
             
-//             echo $element_id;
-//             die();
-            
             $query = getPoiSelectDataTableByUsernameAndFilenameQuery($element_id);
             $result = json_decode(executePoiSelectDataTableByElementIdQuery($query), true);
             
@@ -129,11 +126,15 @@ if (!isset($_GET['pageTitle'])){
             $style="style=\"width: max-content;background: #1C70D2;font-weight: bold\"";
             $style_black="style=\"color: black;font-family: Montserrat;font-weight:400; font-size: 14px;width: 120px;background: #1C70D2;\"";
             
+            $lat_index=array_search('latitude', $headers);
+            $lon_index=array_search('longitude', $headers);
+            
             if($coord_type=="caseb"){
-                echo '<tr><td style="background: white;border-top: none;border-left: none;" colspan="29"></td><td class=header style="background: darkcyan;width: 100px;font-weight: bold;height: 50px;" colspan="3">Search Area</td><td style="background: white; border-top: none; border-right: none;" colspan="2"></td></tr>';
-                echo '<tr class=header><td '.$style.'>Sheet Name</td><td '.$style.'>Service URI</td><th style="color: black;">' . implode('</th><th style="color: black;">', $headers) . '</th><td class=\"header\" '.$header_row_css.'>Center Latitude</td><td class=\"header\" '.$header_row_css.'>Center Longitude</td><td class=\"header\" '.$header_row_css.'>Radius (km)</td><td class=\"header\" '.$style_black.'> Nature</td><td class=\"header\" '.$style_black.'> Sub Nature</td><td class=\"header\" '.$style_black.'>Language</td></tr>';
+//                 echo '<tr><td style="background: white;border-top: none;border-left: none;" colspan="29"></td><td class=header style="background: darkcyan;width: 100px;font-weight: bold;height: 50px;" colspan="3">Search Area</td><td style="background: white; border-top: none; border-right: none;" colspan="2"></td></tr>';
+//                 echo '<tr class=header><td '.$style.'>Sheet Name</td><td '.$style.'>Service URI</td><th style="color: black;">' . implode('</th><th style="color: black;">', $headers) . '</th><td class=\"header\" '.$header_row_css.'>Center Latitude</td><td class=\"header\" '.$header_row_css.'>Center Longitude</td><td class=\"header\" '.$header_row_css.'>Radius (km)</td><td class=\"header\" '.$style_black.'>Nature</td><td class=\"header\" '.$style_black.'> Sub Nature</td><td class=\"header\" '.$style_black.'>Language</td></tr>';
+                echo '<tr class=header><td '.$style.'>Sheet Name</td><td '.$style.'>Service URI</td><th style="color: black;">' . implode('</th><th style="color: black;">', $headers) . '</th><td class=\"header\" '.$style_black.'>Nature</td><td class=\"header\" '.$style_black.'> Sub Nature</td><td class=\"header\" '.$style_black.'>Language</td><td class=\"header\" '.$style_black.'>Triples Will be Created?</td></tr>';
             }else{
-                echo '<tr class=header><td '.$style.'>Sheet Name</td><td '.$style.'>Service URI</td><th style="color: black;">' . implode('</th><th style="color: black;">', $headers) . '</th><td class=\"header\" '.$style_black.'> Nature</td><td class=\"header\" '.$style_black.'> Sub Nature</td><td class=\"header\" '.$style_black.'>Language</td></tr>';
+                echo '<tr class=header><td '.$style.'>Sheet Name</td><td '.$style.'>Service URI</td><th style="color: black;">' . implode('</th><th style="color: black;">', $headers) . '</th><td class=\"header\" '.$style_black.'>Nature</td><td class=\"header\" '.$style_black.'>Sub Nature</td><td class=\"header\" '.$style_black.'>Language</td></tr>';
             }
             
             // Append rows//////////////////////////////////////////////////////////////
@@ -200,22 +201,34 @@ if (!isset($_GET['pageTitle'])){
                 $row_array_to_be_inseted[24] =$city ;
                 $row_array_to_be_inseted[25] =$streetAddress;
                 $row_array_to_be_inseted[26] =$civicNumber;
-                $row_array_to_be_inseted[27] =$latitude;
-                $row_array_to_be_inseted[28] =$longitude;
+
+               
+                    if (strlen($latitude) == 0) {
+                        $row_array_to_be_inseted[27] = "<img style='width:25px;background: orangered;' src='img/datatabemanager_na.png'/>";
+                    }else{
+                        $row_array_to_be_inseted[27] = $latitude;
+                    }
+
+                    if (strlen($longitude) == 0) {
+                        $row_array_to_be_inseted[28] = "<img style='width:25px;background: orangered;' src='img/datatabemanager_na.png'/>";
+                    }else{
+                        $row_array_to_be_inseted[28] = $longitude;
+                    }
                 
-                        
-                        if($coord_type=='caseb'){
-                            $row_array_to_be_inseted[29]=$center_lat;
-                            $row_array_to_be_inseted[30]=$center_lon;
-                            $row_array_to_be_inseted[31]=$radius;
-                            $row_array_to_be_inseted[32]=$nature;
-                            $row_array_to_be_inseted[33]=$sub_nature;
-                            $row_array_to_be_inseted[34] =$lang;
-                        }else{
-                            $row_array_to_be_inseted[29]=$nature;
-                            $row_array_to_be_inseted[30]=$sub_nature;
-                            $row_array_to_be_inseted[31] =$lang;
-                        }
+                
+                    $row_array_to_be_inseted[29] = $nature;
+                    $row_array_to_be_inseted[30] = $sub_nature;
+                    $row_array_to_be_inseted[31] = $lang;
+                    
+                    if ($coord_type == 'caseb' && (strlen($latitude) == 0 || strlen($longitude) == 0)) {
+                        $row_array_to_be_inseted[32] = "<img style='width:25px' src='img/datatabemanager_red_cancel.png'/>";
+                    }else if($coord_type == 'caseb' && strlen($latitude) != 0 && strlen($longitude) != 0){
+                        $row_array_to_be_inseted[32] = "<img style='width:25px' src='img/datatablemanager_address_coord_ok.png'/>";
+                    }
+                    
+                    
+                    
+//                 }
                         echo '<tr><td>' . implode('</td><td>', $row_array_to_be_inseted) . '</td></tr>';
                     }
             ?>

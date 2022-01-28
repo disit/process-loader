@@ -96,7 +96,6 @@ if (isset($_SESSION['username']) && isset($_SESSION['role'])) {
 		$value_type = filter_var($value_type , FILTER_SANITIZE_STRING);
 		//
         if ($value_type == 1) {
-            //$value_type = "SELECT *, parent_id AS parent_value FROM dictionary_table WHERE type = 'value type' AND status = 1 ORDER BY value ASC";
 			$value_type = "SELECT *, parent_id AS parent_value FROM dictionary_table WHERE type = 'value type' AND status = 1";
         } else {
             $value_type = "";
@@ -192,7 +191,7 @@ if (isset($_SESSION['username']) && isset($_SESSION['role'])) {
 						WHERE tab1.type='data type' AND status=1 AND (tab1.parent_id = '' OR tab1.parent_id = 0 OR tab1.parent_id is null)
 						order by value;";
 			
-        } else {
+		} else {
             $query = "";
             if ($value_unit !== "") {
                 if ($query !== "") {
@@ -216,7 +215,6 @@ if (isset($_SESSION['username']) && isset($_SESSION['role'])) {
                 if ($query !== "") {
                     $query = $query . " UNION ";
                 }
-                //$query = $query . " " . $subnature." order by value";
 				$query = $query . " " . $subnature;
             }
 			if ($data_type !== "") {
@@ -225,7 +223,6 @@ if (isset($_SESSION['username']) && isset($_SESSION['role'])) {
                 }
                 $query = $query . " " . $data_type;
             }
-			$query = $query . " order by value";
             
             if ($query == "") {
                 
@@ -241,14 +238,17 @@ if (isset($_SESSION['username']) && isset($_SESSION['role'])) {
 						SELECT DISTINCT tab1.*, tab1.parent_id AS parent_value
 						FROM dictionary_table AS tab1
 						WHERE tab1.type='value unit' AND status=1 AND (tab1.parent_id = '' OR tab1.parent_id = 0 OR tab1.parent_id is null)
-						ORDER BY value;";
-            }
+						UNION
+						SELECT DISTINCT tab1.*, tab1.parent_id AS data_type
+						FROM dictionary_table AS tab1
+						WHERE tab1.type='data type' AND status=1 AND (tab1.parent_id = '' OR tab1.parent_id = 0 OR tab1.parent_id is null)
+						order by value;";
+            }else{
+				//echo($query);
+				$query = $query . " order by value;";
+			}
         }
 		
-        //echo($query);
-		//$myfile = fopen("newfile.txt", "w") or die("Unable to open file!");
-		//fwrite($myfile, $query);
-		//fclose($myfile);
 		
 		
         $process_list = array();
@@ -299,7 +299,7 @@ if (isset($_SESSION['username']) && isset($_SESSION['role'])) {
 									dictionary_table
 							 WHERE  dictionary_relations.parent='".$id_row."'
 						  	 AND    dictionary_table.id = dictionary_relations.child
-							 AND dictionary_table.type ='value unit'";
+							 AND (dictionary_table.type ='value unit' OR dictionary_table.type ='subnature')";
 				//
 				//
 				$result_value = mysqli_query($link, $query_value) or die(mysqli_error($link));
@@ -319,8 +319,8 @@ if (isset($_SESSION['username']) && isset($_SESSION['role'])) {
 			/////////////DATA TYPE PER I VALUE TYPE
 			if(($row['type'] == 'value type')){
 				//
-				$process_parent_id = array();
-				$process_parent_vl = array();
+				$process_dt_id = array();
+				$process_dt_vl = array();
 				//
 			$query_value =	"SELECT dictionary_relations.*,
 									dictionary_table.value
@@ -336,20 +336,20 @@ if (isset($_SESSION['username']) && isset($_SESSION['role'])) {
 							$parent_id1  = $row1['parent'];
 							$parent_vl1 =  $row1['value'];
 							//
-							array_push($process_parent_id, $parent_id1);
-							array_push($process_parent_vl, $parent_vl1);
+							array_push($process_dt_id, $parent_id1);
+							array_push($process_dt_vl, $parent_vl1);
 							//
 						}
-				$parent_id = "";
-				$parent_value = "";
-				$dt_value = $process_parent_vl;
+				//$parent_id = "";
+				//$parent_value = "";
+				$dt_value = $process_dt_vl;
 				//
 			}
 			//////////////DATA TYPE////
 			if(($row['type'] == 'data type')){
 				//
-				$process_parent_id = array();
-				$process_parent_vl = array();
+				$process_dt_id = array();
+				$process_dt_vl = array();
 				//
 			$query_value =	"SELECT dictionary_relations.*,
 									dictionary_table.value
@@ -364,12 +364,12 @@ if (isset($_SESSION['username']) && isset($_SESSION['role'])) {
 							$parent_id1  = $row1['parent'];
 							$parent_vl1 =  $row1['value'];
 							//
-							array_push($process_parent_id, $parent_id1);
-							array_push($process_parent_vl, $parent_vl1);
+							array_push($process_dt_id, $parent_id1);
+							array_push($process_dt_vl, $parent_vl1);
 							//
 						}
-				$parent_id = $process_parent_id;
-				$parent_value = $process_parent_vl;
+				$parent_id = $process_dt_id;
+				$parent_value = $process_dt_vl;
 				//$dt_value = $process_parent_vl;
 				//
 			}
@@ -399,13 +399,13 @@ if (isset($_SESSION['username']) && isset($_SESSION['role'])) {
 		//
 		$select_nature = null;
 		//
-		//$query_check="Select * FROM dictionary_table WHERE value LIKE'".$vn_create."' "; 
+		//
 		$query_check="Select * FROM dictionary_table WHERE value LIKE'".$vn_create."' AND status = 1";
 		$result_check = mysqli_query($link, $query_check) or die('ERROR NELLA QUERY');
 		$n_row = mysqli_num_rows($result_check);
 		
 		if($n_row >0){
-			echo($n_row);
+			//echo($n_row);
 			header("location:dictionary_editor.php".$showFrame);
 		}else{
         //
@@ -449,6 +449,7 @@ if (isset($_SESSION['username']) && isset($_SESSION['role'])) {
 		//
 		//
 		
+		////VALUE UNIT dictionary_relations
 		if($select_type_creation == 'value unit'){
 		   //
 			//
@@ -456,12 +457,9 @@ if (isset($_SESSION['username']) && isset($_SESSION['role'])) {
 			$query_retrieve_max = "SELECT MAX(id) as Id FROM dictionary_table";
 			$result_max = mysqli_query($link, $query_retrieve_max) or die(mysqli_error($link));
 			///
-			
-			print_r($result_max);
 			$id_r = "";
 			while ($row0 = mysqli_fetch_assoc($result_max)) {
 				$id_r = $row0['Id'];
-				echo($id_r);
 			}
 			//
 			$lun = count($select_vtype);
@@ -476,35 +474,62 @@ if (isset($_SESSION['username']) && isset($_SESSION['role'])) {
 			
 		}
 
+		////DATA TYPE dictionary_relations
 		if($select_type_creation == 'data type'){
 		   //
 			//
 			
 			$query_retrieve_max = "SELECT MAX(id) as Id FROM dictionary_table";
 			$result_max = mysqli_query($link, $query_retrieve_max) or die(mysqli_error($link));
-			echo($query_retrieve_max);
 			///
 			
 			print_r($result_max);
 			$id_r = "";
 			while ($row0 = mysqli_fetch_assoc($result_max)) {
 				$id_r = $row0['Id'];
-				echo($id_r);
+				//
 			}
 			//
 			$lun = count($select_vtype);
-			echo($lun);
-			var_dump($select_vtype);
 			//
 			for ($r = 0; $r < $lun; $r++){
 				$vt = $select_vtype[$r];
 				$query_relations='INSERT INTO dictionary_relations (child, parent) VALUE ("'.$id_r.'","'.$vt.'")';
 				$result_relations = mysqli_query($link, $query_relations) or die(mysqli_error($link));
-				echo($query_relations);
+				//echo($query_relations);
 				
 			}
 			
 		}
+		
+		////SUBNATURE dictionary_relations
+		if($select_type_creation == 'subnature'){
+			//
+			//
+			
+			$query_retrieve_max = "SELECT MAX(id) as Id FROM dictionary_table";
+			$result_max = mysqli_query($link, $query_retrieve_max) or die(mysqli_error($link));
+			///
+			
+			print_r($result_max);
+			$id_r = "";
+			while ($row0 = mysqli_fetch_assoc($result_max)) {
+				$id_r = $row0['Id'];
+				//
+			}
+			//
+			//$lun = count($select_vtype);
+			//
+			//for ($r = 0; $r < $lun; $r++){
+				$vt = $select_nature;
+				$query_relations='INSERT INTO dictionary_relations (child, parent) VALUE ("'.$id_r.'","'.$vt.'")';
+				$result_relations = mysqli_query($link, $query_relations) or die(mysqli_error($link));
+				echo($query_relations);
+				
+			//}
+			
+		}
+		
 		
 		//
      header("location:dictionary_editor.php".$showFrame);
@@ -532,18 +557,13 @@ if (isset($_SESSION['username']) && isset($_SESSION['role'])) {
 		$lb_create = filter_var($lb_create , FILTER_SANITIZE_STRING);
 		$select_type_creation = filter_var($select_type_creation , FILTER_SANITIZE_STRING);
 		$select_dt_e = filter_var($select_dt_e , FILTER_SANITIZE_STRING);
-		var_dump($select_dt_e);
 		//
-		//$myfile = fopen("newfile.txt", "w") or die("Unable to open file!");
-		//fwrite($myfile, $select_dt_e);
-		//$close($myfile);
         //
 		//
 		$select_nature = null;
 		if($select_type_creation == 'subnature'){
 		$select_nature = mysqli_real_escape_string($connessione_al_server, $_REQUEST['select_nature_e']);
 		//
-		 //$query  = "UPDATE dictionary_table SET value='" . $vn_create . "', label='" . $lb_create . "', type='" . $select_type_creation . "', parent_id='".$select_nature."'  WHERE id=" . $id;
 		 $query  = "UPDATE dictionary_table SET label='" . $lb_create . "', parent_id='".$select_nature."'  WHERE id=" . $id;
 		//
 		}
@@ -552,33 +572,31 @@ if (isset($_SESSION['username']) && isset($_SESSION['role'])) {
 		//
 		if($select_type_creation == 'value unit'){
 		//
-		//$query  = "UPDATE dictionary_table SET value='" . $vn_create . "', label='" . $lb_create . "', type='" . $select_type_creation . "'  WHERE id=" . $id;
 		$query  = "UPDATE dictionary_table SET label='" . $lb_create . "' WHERE id=" . $id;
 		//
 		}
 
 		
 		if(($select_type_creation == 'nature')||($select_type_creation == 'value type')||($select_type_creation == 'data type')){
-			 //$query  = "UPDATE dictionary_table SET value='" . $vn_create . "', label='" . $lb_create . "', type='" . $select_type_creation . "', parent_id=null  WHERE id=" . $id;
 			 $query  = "UPDATE dictionary_table SET label='" . $lb_create . "'  WHERE id=" . $id;
-			 //update data type in relazioni;
+			 //
 		}
 		//
 		///
-		//echo ($query);
 		 $result = mysqli_query($link, $query) or die(mysqli_error($link));
 		///
 		//
-		if($select_type_creation == 'value unit'){
+		//if($select_type_creation == 'value unit'){
+		if(($select_type_creation == 'value unit')||($select_type_creation == 'data type')){
 			/*ELIMINA TUTTI I LINK CHE CI SONO?*/
 			//
 			$select_vt_e = filter_var_array($_REQUEST['select_vt_e'], FILTER_SANITIZE_STRING);
 			$c_rel = count($select_vt_e);
-			print_r($select_vt_e);
-			echo($c_rel);
+			//print_r($select_vt_e);
+			//echo($c_rel);
 			//
 			$query_rel = "DELETE FROM dictionary_relations WHERE child=".$id;
-			echo($query_rel);
+			//echo($query_rel);
 			$result_rel = mysqli_query($link, $query_rel) or die(mysqli_error($link));
 			/*CREARLI EX_NOVO*/
 			for ($r = 0; $r < $c_rel; $r++){
@@ -592,13 +610,7 @@ if (isset($_SESSION['username']) && isset($_SESSION['role'])) {
 			//
 			$select_dt_e = filter_var_array($_REQUEST['select_dt_e']);
 			$c_rel = count($select_dt_e);
-			//print_r($select_dt_e);
-			//echo($c_rel);
 			//
-			//$query_rel = "DELETE FROM dictionary_relations WHERE child=".$id;
-			//echo($query_rel);
-			//$result_rel = mysqli_query($link, $query_rel) or die(mysqli_error($link));
-			/*CREARLI EX_NOVO*/
 			$query_rel = "DELETE FROM dictionary_relations WHERE parent='".$id."' AND child IN (SELECT id FROM dictionary_table WHERE type = 'data type')";
 							$result_rel = mysqli_query($link, $query_rel) or die(mysqli_error($link));
 			//
@@ -625,7 +637,7 @@ if (isset($_SESSION['username']) && isset($_SESSION['role'])) {
         //
     } elseif ($action == 'dt_voice') {
 		//
-		//echo('dt_voice OK!');
+		//
 		$process_list = array();
         $query = "SELECT DISTINCT * FROM dictionary_table WHERE type='data type' AND status = 1";
 		$result_rel = mysqli_query($link, $query) or die(mysqli_error($link));

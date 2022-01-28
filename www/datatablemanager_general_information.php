@@ -421,8 +421,6 @@ function load_cb_combo(){
 			</div>
 		</div>
 
-
-
 	<script type='text/javascript'>
 
     $(document).ready(function () {
@@ -570,7 +568,7 @@ function setDateObservedDivVisibility(param){
 		  var div_date_observed_for_file=document.getElementById('div_date_observed_for_file');
 		  div_date_observed_for_file.style.display='none';
 
-     	  document.getElementById("hidden_observed_date_type").value = 'row'; 
+//      	  document.getElementById("hidden_observed_date_type").value = 'row'; 
 
 //      	x=document.getElementById("warning_span");
 // 		x.style.display = "none";
@@ -612,9 +610,7 @@ function setDateObservedDivVisibility(param){
 
 function validateForm() {
 
-	if (document.getElementById('radiobutton_yes').checked) {
-		document.getElementById("hidden_observed_date_type").value = 'row'; 
-		}else{
+	if (document.getElementById('radiobutton_no').checked) {
 			document.getElementById("hidden_observed_date_type").value = 'file'; 
 		}
 	
@@ -750,22 +746,24 @@ function check_if_is_in_utc_format(){
 var selected_header = document.getElementById("combo_observed_date_column").value;
 var file = '<?php echo $_POST['hidden_file_name']; ?>';
 var target_dir = '<?php echo $target_dir; ?>';
+
 $.ajax({  
  type:"GET",  
  url:"datatablemanager_checkIsoTimeFormat.php",  
  data:"selected_header="+selected_header+"&file=" +file+"&target_dir=" +  target_dir,  
  success:function(data){  
  	if(data=='false'){
-				alert('The column values must be in UTC format!');
-// 				x=document.getElementById("warning_span");
-// 				x.style.display = "block";
+				alert('The column values must be convertable to or in UTC format!');
 		  		$("#combo_observed_date_column").val($("#combo_observed_date_column option:first").val());
 				document.getElementById("submit_button").disabled = true;
-     	}else{
-// 			x=document.getElementById("warning_span");
-// 			x.style.display = "none";
-			document.getElementById("submit_button").disabled = false;
-         	}
+     	}else if(data=='true'){
+				document.getElementById("submit_button").disabled = false;
+         		document.getElementById("hidden_observed_date_type").value = 'row'; 
+         		
+         	}else{
+         		document.getElementById("submit_button").disabled = false;
+         		document.getElementById("hidden_observed_date_type").value = 'row_converted'; 
+             	}
  }  
 });  
 }

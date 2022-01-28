@@ -35,7 +35,7 @@ if (isset($access_token) && $access_token != "") {
 
     $element_Ids_delegated_query = getUserDelegelatedListQuery($iot_app_username);
     $element_Ids_delegated = getElementIdsByDelegatedUsers($element_Ids_delegated_query, $access_token);
-
+    
     $query = getSelectElementIdsToProcessQuery($iot_app_username_org);
     $result = executeElementIdsToProcessQuery($query, $element_Ids_delegated);
     

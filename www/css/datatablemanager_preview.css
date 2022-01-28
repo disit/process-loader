@@ -133,7 +133,7 @@ font-family: Montserrat;font-weight:bold; font-size: 14px;
 	text-align-last: center;
 	font-family: arial, sans-serif;
 	border-collapse: collapse;
-	    width: max-content;
+	width: max-content;
 	position: relative;
 	font-family: Montserrat;
 	font-weight: 400;
@@ -316,6 +316,25 @@ p {
     -webkit-animation-delay: 0.8s;
     animation-delay: 0.8s;
     background: lightgreen;
+}
+
+td.list_table_buttons {
+    text-align-last: left;
+    width: 110px;
+    border: 1px solid black;
+}
+
+input.list_table_buttons{
+    border: none;
+    color: white;
+    font-family: Montserrat;
+    font-weight: bold;
+    text-transform: uppercase;
+    height: 48px;
+    width: 100%;
+    position: relative;
+    font-size: 14px;
+    text-align-last: center;
 }
 
 @-webkit-keyframes wait {

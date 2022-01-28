@@ -19,7 +19,7 @@
 $file = $_GET['file_name'];
 $target_dir = $_GET['target_dir'];
 $selected_headers = explode(",", $_GET['selected_headers']);
-
+require_once ('datatablemanager_myUtil.php');
 require_once ('datatablemanager_SimpleXLSX.php');
 $xlsx = SimpleXLSX::parse($target_dir . $file);
 $sheet_rows_data = $xlsx->rows(0);
@@ -27,7 +27,7 @@ $sheet_rows_data = $xlsx->rows(0);
 $sheetNames = $xlsx->sheetNames();
 $all_headers_array = $sheet_rows_data[0];
 
-$distinct_headers = array();
+$ColsWithSpecialCharsOrNonDistinct = array();
 $selected_header_indexes = array();
 
 foreach ($selected_headers as $selected_header) {
@@ -54,25 +54,24 @@ for ($selected_header_index = 0; $selected_header_index < count($selected_header
         }
     }
 
-    if (checkIfColIsUniq($sheet_col_data)) {
-        array_push($distinct_headers, $selected_header);
+    if (checkIfColIsUniqOrHasSpecialChars($sheet_col_data)) {
+        array_push($ColsWithSpecialCharsOrNonDistinct, $selected_header);
     }
 }
 
-if (count($distinct_headers) >= 1) {
+if (count($ColsWithSpecialCharsOrNonDistinct) >= 1) {
     echo 'true';
 } else {
-    var_dump($distinct_headers);
+    var_dump($ColsWithSpecialCharsOrNonDistinct);
 }
 
-function checkIfColIsUniq($col_data)
-{
+function checkIfColIsUniqOrHasSpecialChars($col_data){
     foreach ($col_data as $value) {
-        if (1 < count(array_keys($col_data, $value))) {
-            return false;
+        if (1 < count(array_keys($col_data, $value))||detectDtmUtf8($value) == 1 || checkIfStringContainsSpecialCharacters($value)) {
+            return true;
         }
     }
-    return true;
+    return false;
 }
 
 ?>

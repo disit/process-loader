@@ -34,38 +34,6 @@ $utente = $_SESSION['username'];
 $sum_own = 0;
 ///INIZIO ERRORE /////
 
-if (isset($_SESSION['accessToken'])){
-$token = $_SESSION['accessToken'];
-
-if(($json_api == null)||($json_api == "")){
-	//OPERAZIONI PER IL REFRESH//
-			$oidc = new OpenIDConnectClient($ssoEndpoint, $ssoClientId, $ssoClientSecret);	
-            $oidc->providerConfigParam(array('token_endpoint' => $oicd_address.'/auth/realms/master/protocol/openid-connect/token'));
-			$tkn = $oidc->refreshToken($_SESSION['refreshToken']);
-			$accessToken = $tkn->access_token;
-            $_SESSION['refreshToken'] = $tkn->refresh_token;
-			$url_api =($personalDataApiBaseUrl.'/v1/list/?type=HeatmapID&accessToken='.$accessToken);
-			//DELEGATION PUBBLICHE + DELEGATION ALL'UTENTE
-			//
-			$json_api = file_get_contents($url_api);
-	}else{
-		    $url_api =($personalDataApiBaseUrl.'/v1/list/?type=HeatmapID&accessToken='.$token);
-		    $json_api = file_get_contents($url_api);
-	}
-	
-	$list_api = json_decode($json_api);
-	//print_r($list_api);
-	$total_list = count($list_api);
-	$sum_own = $total_list;
-	
-		for($c=0; $c<$total_list; $c++){
-			//echo($c);
-			$elementId = $list_api[$c]->elementId; 
-			$username = $list_api[$c]->username;
-			$list_api2[$elementId]=$username;
-		}			
-}
-
 if (isset ($_SESSION['username'])){
   $utente_att = $_SESSION['username'];	
 }else{
@@ -146,25 +114,8 @@ $start_from = ($page-1) * $limit;
     $num_rows     = $result->num_rows;
 	$num_r = 0;
 ////////////
-	$service_url2 = $delegationDataApiUrl .'/v1/username/'.$utente.'/delegated?sourceRequest=ProcessLoader&accessToken='.$accessToken;
-	$json_api2 = file_get_contents($service_url2);
-	//
-	//print_r($json_api2);
-	//	
-	$a_pub2 = json_decode($json_api2);
 
-		//
-		$num_del = count($a_pub2);
-		for($h=0; $h<$num_del; $h++){
-				$elId = $a_pub2[$h]->elementId;
-				$delUs = $a_pub2[$h]->usernameDelegated;
-				$delegator = $a_pub2[$h]->usernameDelegator;
-				$array_del[$elId]['name'] = $elId;
-				$array_del[$elId]['delegated'] = $delUs;	
-				$array_del[$elId]['delegator']= $delegator;
-				$array_delegator[$elId] = $delegator;
-		}
-		
+/////////////////*******************////////////////		
 		$number_rows_pub = 0;
 		
 		if ($result->num_rows > 0) {
@@ -176,100 +127,28 @@ $start_from = ($page-1) * $limit;
 				/***QUERY PER OTTENERE I DATI***/
 				
 					$organization = '';
+					$nature = '';
+					$subnature = '';
 				
 					$count_number = $row['count_number'];
 					$min_date = $row['min_date'];
 					$max_date = $row['max_date'];
 					
-					$query_istances = "SELECT metric_name, min_date, max_date, num AS count_number FROM heatmap.stats WHERE map_name='".$map_name."'";
-					$result_istances = mysqli_query($link, $query_istances) or die(mysqli_error($link));
+					//$query_istances = "SELECT metric_name, min_date, max_date, num AS count_number FROM heatmap.stats WHERE map_name='".$map_name."'";
+					//$result_istances = mysqli_query($link, $query_istances) or die(mysqli_error($link));
 					//
-					$query_mt = "SELECT metadata.org, metadata.metric_name FROM heatmap.metadata where heatmap.metadata.map_name='".$map_name."' order by date desc limit 1";
+					$query_mt = "SELECT metadata.org, metadata.metric_name, metadata.nature, metadata.subnature FROM heatmap.metadata where heatmap.metadata.map_name='".$map_name."' order by date desc limit 1";
+					//$query_mt = "SELECT metadata.org, metadata.metric_name, metadata.nature, metadata.subnature FROM heatmap.metadata order by date desc limit 1";
 					$result_mt = mysqli_query($link, $query_mt) or die(mysqli_error($link));
 					//
-						while ($row2 = mysqli_fetch_assoc($result_istances)) {
-											$count_number = $row2['count_number'];
-											$min_date = $row2['min_date'];
-											$max_date = $row2['max_date'];
-										}
 						while ($row3 = mysqli_fetch_assoc($result_mt)) {
 											$organization = $row3['org'];
 											$metric_name = $row3['metric_name'];
+											$nature = $row3['nature'];
+											$subnature = $row3['subnature'];
 										}
 						
-					//////
-						
-						$idDash = $map_name;
-						$service_url = $delegationDataApiUrl.'/v1/apps/'.$idDash.'/access/check?sourceRequest=ProcessLoader&accessToken='.$accessToken;
-						$res_pain = file_get_contents($service_url);				
-						$a_pub = json_decode($res_pain);
-						$array_pub[$idDash] = $a_pub->message;
-						if(($array_pub[$idDash] != '')||($array_pub[$idDash] != null)){
-							$number_rows_pub++;
-						}
-					//////			
-					if($role_att !== "RootAdmin"){
-								$ind = $row['name'];
-								$visibility = $array_pub[$ind];
-								$delegate = $array_del[$ind];
-								$delegator = $delegate['delegator'];
-								//
-								//for($x=0; $x<$num_result; $x++){
-									$a = $list_api2[$ind];
-									$name = $a ->elementId;
-										if(($visibility=='PUBLIC')||($visibility=='OWNER')||($visibility=='DELEGATED')||($visibility=='GROUP-DELEGATED')){
-													$gd = 'no';
-													if($visibility=='OWNER'){
-															$utente_ownership = $list_api2[$ind];
-													}elseif($visibility=='PUBLIC'){
-															/****/
-															$utente_ownership = $visibility;															
-															/****/
-													}else{
-															$utente_ownership = $a ->username;
-													}
-													if($visibility=='GROUP-DELEGATED'){
-														$gd ='yes';
-													}else{
-														$gd ='no';
-													}
-													
-													if($visibility=='DELEGATED'){
-														$del='yes';
-														$delegate = $array_del[$ind];
-														$utente_ownership = $delegate['delegator'];
-													}else{
-														$del='no';
-													}
-													
-													$utente_ownership = $visibility;
-
-															$listFile = array(
-																"map_name" => $row['name'],
-																//"metric_name" => $row['metric_name'],
-																"metric_name" => $metric_name,
-																"min_date" => $min_date,
-																"max_date" => $max_date,
-																"count_number" => $count_number,
-																"username" => $utente_ownership,
-																"organization" =>$organization,
-																"visibility" => $visibility,
-																"delegated" => $del,
-																"group_delegated"=> $gd
-															);
-															
-															
-															if($map_name){
-																$process_list[$num_r] = $listFile;
-																$num_r++;
-															}
-
-													}	
-										
-										//}
-									
-							/***/						
-							}else{
+					
 										for($x=0; $x<$total_list; $x++){
 												$ind = $row['name'];
 												$visibility = $array_pub[$ind];
@@ -295,15 +174,18 @@ $start_from = ($page-1) * $limit;
 																  "organization" =>$organization,
 																  "visibility" => $visibility,
 																  "delegated" => $deleg_val,
+																  "nature"=>$nature,
+																  "subnature"=>$subnature, 
 																  "group_delegated"=> 'no');
 												
 											array_push($process_list, $listFile);
-										//$num_rows++;
-						}	
+										
 					
         }
     }
 	//
+	//echo json_encode($process_list);
+	//echo('<br />');
 	if($role_att =='RootAdmin'){
 			
 		//
@@ -500,7 +382,7 @@ $result_cm = mysqli_query($link, $query_cm) or die(mysqli_error($link));
 						?>
                                 </div>
                             </div>
-                            <div class="row">
+                            <div class="row" style="width: 98%;">
                                 <!-- -->
                                 <div class="col-xs-12" id="mainContentCnt" style='background-color: rgba(138, 159, 168, 1); padding-top:20px;'>
 									<!--
@@ -512,6 +394,7 @@ $result_cm = mysqli_query($link, $query_cm) or die(mysqli_error($link));
                                         </select>
                                     </div>
 									 -->
+									 <div>
                                 <table id="heatmap_table" class="table table-striped table-bordered display responsive no-wrap" style="width: 100%;">
                                 <thead class="dashboardsTableHeader">
                              <?php
@@ -530,10 +413,12 @@ $result_cm = mysqli_query($link, $query_cm) or die(mysqli_error($link));
 									$corr_page1= $_REQUEST["page"];
 									$pagina_attuale2='heatmap.php?showFrame='.$sf.'&page='.$corr_page1.'&orderBy=id&order='.$by_par.'&limit='.$limit.'';
 												
-										echo ('<tr>		
+										/*echo ('<tr>		
 													<th class="map_name"><div><a>Map name</a></div></th>
 													<th class="metric_name"><div><a>Color Map</a></div></th>
 													<th class="user"><div><a>Owner</a></div></th>
+													<th class="nature"><div><a>Nature</a></div></th>
+													<th class="subnature"><div><a>Subnature</a></div></th>
 													<th class="organization"><div><a>Organization</a></div></th>
 													<th class="min_date"><div><a>Minimum date</a></div></th>
 													<th class="max_date"><div><a>Maximum date</a></div></th>
@@ -541,7 +426,33 @@ $result_cm = mysqli_query($link, $query_cm) or die(mysqli_error($link));
 													<th><a>Management</a></th>
 													<th class="view"><div><a>View Data</a></div></th>
 													<th class="delete"><div><a>Delete</a></div></th>
-												</tr>');
+												</tr>');*/
+												if(($role == 'RootAdmin')){
+												echo ('<tr>		
+													<th class="map_name"><div><a>Map name</a></div></th>
+													<th class="metric_name"><div><a>Color Map</a></div></th>
+													<th class="user"><div><a>Owner</a></div></th>
+													<th class="nature"><div><a>Nature</a></div></th>
+													<th class="subnature"><div><a>Subnature</a></div></th>
+													<th class="organization"><div><a>Organization</a></div></th>
+													<th><div><a>Details</a></div></th>
+													<th><a>Management</a></th>
+													<th class="view"><div><a>View Data</a></div></th>
+													<th class="delete"><div><a>Delete</a></div></th>
+													</tr>');
+												}else{
+												echo ('<tr>		
+													<th class="map_name"><div><a>Map name</a></div></th>
+													<th class="metric_name"><div><a>Color Map</a></div></th>
+													<th class="nature"><div><a>Nature</a></div></th>
+													<th class="subnature"><div><a>Subnature</a></div></th>
+													<th class="organization"><div><a>Organization</a></div></th>
+													<th><div><a>Details</a></div></th>
+													<th class="view"><div><a>View Data</a></div></th>
+													</tr>');	
+												}
+												
+												//////////
 							?>
                             </thead>
                             <tbody>
@@ -564,6 +475,7 @@ $result_cm = mysqli_query($link, $query_cm) or die(mysqli_error($link));
 															}else{
 																$group_del = '';
 															}
+															$viewOwner ="<button type='button' class='viewDashBtn viewList' data-target='#view_user-modal' data-toggle='modal' onclick='viewOwner(\"".$process_list[$i]['map_name']."\")'>VIEW</button>";
 															
 													echo ("<tr>
 																<td>".$process_list[$i]['map_name']."".$del."".$group_del."</td>
@@ -572,12 +484,15 @@ $result_cm = mysqli_query($link, $query_cm) or die(mysqli_error($link));
 																<button type='button' class='editDashBtn editColor' data-target='#edit-colormap' data-toggle='modal' map_name='".$process_list[$i]['map_name']."' value='".$process_list[$i]['metric_name']."'>EDIT</button>
 																<p style='display: inline; margin-left: 2%;'>".$process_list[$i]['metric_name']."</p>
 																</td>");
-															echo("<td>".$process_list[$i]['username']."</td>");
+															echo("<td>".$viewOwner."</td>");
+															echo("<td>".$process_list[$i]['nature']."</td>");
+															echo("<td>".$process_list[$i]['subnature']."</td>");
 															echo("<td>".$process_list[$i]['organization']."</td>");
-															echo("<td>".$process_list[$i]['min_date']."</td>");
-															echo("<td>".$process_list[$i]['max_date']."</td>");
-															echo("<td>".$process_list[$i]['count_number']."</td>");
-															echo("<td><button type='button' class='editDashBtn delegateBtn' data-target='#delegationsModal' data-toggle='modal' value='".$process_list[$i]['map_name']."' user='".$process_list[$i]['username']."' visibility='".$process_list[$i]['visibility']."' org='".$process_list[$i]['organization']."'>EDIT</button></td>");
+															//echo("<td>".$process_list[$i]['min_date']."</td>");
+															//echo("<td>".$process_list[$i]['max_date']."</td>");
+															//echo("<td>".$process_list[$i]['count_number']."</td>");
+															echo("<td><button type='button' class='viewDashBtn viewList' data-target='#view-details' data-toggle='modal' onclick=viewdetails('".$process_list[$i]['map_name']."') value='".$process_list[$i]['map_name']."'>VIEW</button></td>");
+															echo("<td><button type='button' class='editDashBtn delegateBtn' data-target='#delegationsModal' data-toggle='modal' value='".$process_list[$i]['map_name']."' user='".$process_list[$i]['username']."' visibility='".$process_list[$i]['visibility']."' org='".$process_list[$i]['organization']."' nature='".$process_list[$i]['nature']."' subnature='".$process_list[$i]['subnature']."'>EDIT</button></td>");
 															echo("<td><button type='button' class='viewDashBtn viewList' data-target='#view-modal' data-toggle='modal' value='".$process_list[$i]['map_name']."'>VIEW</button></td>");
 															echo("<td><button type='button' class='delDashBtn del_metdata' data-target='#delete-modal' data-toggle='modal' value='".$process_list[$i]['map_name']."'>DEL</button></td>");
 															echo("</tr>");
@@ -586,52 +501,50 @@ $result_cm = mysqli_query($link, $query_cm) or die(mysqli_error($link));
 												}
 									}else{
 											for ($i = 0; $i <= $num_rows; $i++) {
-													if ($process_list[$i]['map_name']){
-														if($process_list[$i] != $process_list[$i-1]){
+												
+												if ($process_list[$i]['map_name']){
+													if($process_list[$i] != $process_list[$i-1]){
+															$del = '';
+															if ($process_list[$i]['delegated'] == 'yes'){
+																$del = '	(Delegated)';
+															}else{
 																$del = '';	
-														if($process_list[$i]['username']=='OWNER'){
-																	echo ("<tr>
-																		<td>".$process_list[$i]['map_name']."".$del."</td>
-																		<td>
-																		<button type='button' class='viewDashBtn viewType' data-target='#typology-modal' data-toggle='modal' value='".$process_list[$i]['metric_name']."'>VIEW</button>  
-																		<button type='button' class='editDashBtn editColor' data-target='#edit-colormap' data-toggle='modal' map_name='".$process_list[$i]['map_name']."' value='".$process_list[$i]['metric_name']."'>EDIT</button>
-																		<p style='display: inline; margin-left: 2%;'>".$process_list[$i]['metric_name']."</p>
-																		</td>");
-																	echo("<td>".$process_list[$i]['username']."</td>");
-																	echo("<td>".$process_list[$i]['organization']."</td>");
-																	echo("<td>".$process_list[$i]['min_date']."</td>");
-																	echo("<td>".$process_list[$i]['max_date']."</td>");
-																	echo("<td>".$process_list[$i]['count_number']."</td>");
-																	echo("<td><button type='button' class='editDashBtn delegateBtn' data-target='#delegationsModal' data-toggle='modal' value='".$process_list[$i]['map_name']."' user='".$process_list[$i]['username']."' visibility='".$process_list[$i]['visibility']."' org='".$process_list[$i]['organization']."'>EDIT</button></td>");
-																	echo("<td><button type='button' class='viewDashBtn viewList' data-target='#view-modal' data-toggle='modal' value='".$process_list[$i]['map_name']."'>VIEW</button></td>");
-																	echo("<td><button type='button' class='delDashBtn del_metdata' data-target='#delete-modal' data-toggle='modal' value='".$process_list[$i]['map_name']."'>DEL</button></td>");
-																	echo("</tr>");
-																}else{
-																echo ("<tr>
-																			<td>".$process_list[$i]['map_name']."".$del."</td>
-																			<td>
-																			<button type='button' class='viewDashBtn viewType' data-target='#typology-modal' data-toggle='modal' value='".$process_list[$i]['metric_name']."'>VIEW</button>  
-																			<p style='display: inline; margin-left: 2%;'>".$process_list[$i]['metric_name']."</p>
-																			</td>");
-																		echo("<td>".$process_list[$i]['username']."</td>");
-																		echo("<td>".$process_list[$i]['organization']."</td>");
-																		echo("<td>".$process_list[$i]['min_date']."</td>");
-																		echo("<td>".$process_list[$i]['max_date']."</td>");
-																		echo("<td>".$process_list[$i]['count_number']."</td>");
-																		echo("<td></td>");
-																		echo("<td><button type='button' class='viewDashBtn viewList' data-target='#view-modal' data-toggle='modal' value='".$process_list[$i]['map_name']."'>VIEW</button></td>");
-																		echo("<td></td>");
-																		echo("</tr>");
-																		}
 															}
+															$group_del = '';
+															if($process_list[$i]['group_delegated']=='yes'){
+																$group_del = '	(Group Delegated)';
+															}else{
+																$group_del = '';
+															}
+															$viewOwner ="<button type='button' class='viewDashBtn viewList' data-target='#view_user-modal' data-toggle='modal' onclick='viewOwner(\"".$process_list[$i]['map_name']."\")'>VIEW</button>";
+															
+													echo ("<tr>
+																<td>".$process_list[$i]['map_name']."".$del."".$group_del."</td>
+																<td>
+																<button type='button' class='viewDashBtn viewType' data-target='#typology-modal' data-toggle='modal' value='".$process_list[$i]['metric_name']."'>VIEW</button>  
+																<p style='display: inline; margin-left: 2%;'>".$process_list[$i]['metric_name']."</p>
+																</td>");
+															//echo("<td>".$viewOwner."</td>");
+															echo("<td>".$process_list[$i]['nature']."</td>");
+															echo("<td>".$process_list[$i]['subnature']."</td>");
+															echo("<td>".$process_list[$i]['organization']."</td>");
+															//echo("<td>".$process_list[$i]['min_date']."</td>");
+															//echo("<td>".$process_list[$i]['max_date']."</td>");
+															//echo("<td>".$process_list[$i]['count_number']."</td>");
+															echo("<td><button type='button' class='viewDashBtn viewList' data-target='#view-details' data-toggle='modal' onclick=viewdetails('".$process_list[$i]['map_name']."') value='".$process_list[$i]['map_name']."'>VIEW</button></td>");
+															//echo("<td><button type='button' class='editDashBtn delegateBtn' data-target='#delegationsModal' data-toggle='modal' value='".$process_list[$i]['map_name']."' user='".$process_list[$i]['username']."' visibility='".$process_list[$i]['visibility']."' org='".$process_list[$i]['organization']."' nature='".$process_list[$i]['nature']."' subnature='".$process_list[$i]['subnature']."'>EDIT</button></td>");
+															echo("<td><button type='button' class='viewDashBtn viewList' data-target='#view-modal' data-toggle='modal' value='".$process_list[$i]['map_name']."'>VIEW</button></td>");
+															//echo("<td><button type='button' class='delDashBtn del_metdata' data-target='#delete-modal' data-toggle='modal' value='".$process_list[$i]['map_name']."'>DEL</button></td>");
+															echo("</tr>");
 														}
 													}
+												}
 									}
 
 							?>
                                  </tbody>
                              </table>   
-                            
+                            </div>
 						</div>
                                         <!----->
 										
@@ -655,6 +568,32 @@ $result_cm = mysqli_query($link, $query_cm) or die(mysqli_error($link));
                                     </div>
                                 </div>
                                 <!-- -->
+								      <!--VIEW DETAILS--->
+										
+                                <div class="modal fade bd-example-modal-lg" id="view-details" role="dialog" aria-labelledby="exampleModalLongTitle" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                        <form name="Modify Metadata" method="post" action="#" id="view_metadata">
+                                            <div class="modal-content">
+                                                <div class="modal-header" style="background-color: white">View Details</div>
+                                                <div class="modal-body" style="background-color: white">
+                                                    <div>
+                                                        <input type="text" id="id_heat" class="hidden" />
+														<div class="container" id="spin1"></div>
+														<div id="metadatadiv">
+														<div class="input-group"><span class="input-group-addon">Minimum Date:</span><input id="min_d" type="text" class="form-control" name="min_d" readonly></div><br />
+														<div class="input-group"><span class="input-group-addon">Maximum Date:</span><input id="max_d" type="text" class="form-control" name="max_d" readonly></div><br />
+														<div class="input-group"><span class="input-group-addon">Instances:   </span><input id="inst" type="text" class="form-control" name="inst" readonly></div><br />
+														</div>
+														<br />
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer" style="background-color: white">
+                                                    <button type="button" class="btn cancelBtn" data-dismiss="modal" id="close_metadata">Cancel</button>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
                                 <!-- View -->
                                 <div class="modal fade bd-example-modal-lg" id="view-modal" role="dialog" aria-labelledby="exampleModalLongTitle" aria-hidden="true">
                                     <div class="modal-dialog modal-lg">
@@ -665,7 +604,9 @@ $result_cm = mysqli_query($link, $query_cm) or die(mysqli_error($link));
                                                     <div>
                                                         <table id="value_table" class="table table-striped table-bordered" style="width: 100%;">
                                                             <thead class="dashboardsTableHeader">
-                                                                <th class="date_value">
+															<?php
+															if(($role == 'RootAdmin')){
+                                                                echo('<th class="date_value">
                                                                     <div><a>Date</a></div>
                                                                 </th>
                                                                 <th class="description">
@@ -689,6 +630,31 @@ $result_cm = mysqli_query($link, $query_cm) or die(mysqli_error($link));
                                                                 <th class="delete_value">
                                                                     <div><a>Delete</a></div>
                                                                 </th>
+																<th class="reload_value">
+                                                                    <div><a>Reload</a></div>
+                                                                </th>');
+															}else{
+																 echo('<th class="date_value">
+                                                                    <div><a>Date</a></div>
+                                                                </th>
+                                                                <th class="description">
+                                                                    <div><a>Description</a></div>
+                                                                </th>
+                                                                <th class="status">
+                                                                    <div><a>Status</a></div>
+                                                                </th>
+																<th class="indexed">
+                                                                    <div><a>Indexed</a></div>
+                                                                </th>
+                                                                <th class="bbox">
+                                                                    <div><a>BBox</a></div>
+                                                                </th>
+                                                                <th class="value_value">
+                                                                    <div><a>Size</a></div>
+                                                                </th>
+                                                                ');
+															}
+																?>
                                                             </thead>
                                                             <tbody>
                                                             </tbody>
@@ -828,6 +794,26 @@ $result_cm = mysqli_query($link, $query_cm) or die(mysqli_error($link));
                                         </form>
                                     </div>
                                 </div>
+								<!-- -->
+								 <!-- ##view_user-modal -->
+                                <div class="modal bd-example-modal-lg" id="view_user-modal" role="dialog" aria-labelledby="exampleModalLongTitle" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                        <form name="Modify Metadata" method="post" action="#">
+                                            <div class="modal-content">
+                                                <div class="modal-header" style="background-color: white" id="colormap_header">View Ownership</div>
+                                                <div class="modal-body" style="background-color: white">
+                                                    <div>
+														<div class="input-group"><span class="input-group-addon">Owner:</span><input id="own_d" type="text" class="form-control" name="own_d" readonly=""></div>
+                                                    </div>
+                                                </div>
+												<br />
+                                                <div class="modal-footer" style="background-color: white">
+                                                    <button type="button" class="btn cancelBtn" id="owner_close" data-dismiss="modal">Cancel</button>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
                                 <!-- -->
 								<!-- Modale gestione deleghe dashboard -->
 										<div class="modal fade" id="delegationsModal" tabindex="-1" role="dialog" aria-labelledby="modalAddWidgetTypeLabel" aria-hidden="true">
@@ -842,6 +828,7 @@ $result_cm = mysqli_query($link, $query_cm) or die(mysqli_error($link));
 															<li id="visibilityTab"><a data-toggle="tab" href="#visibilityCnt" class="dashboardWizardTabTxt">Visibility</a></li>
 															<li id="delegationsTab"><a data-toggle="tab" href="#delegationsCnt" class="dashboardWizardTabTxt">Delegations</a></li>
 															<li id="groupTab"><a data-toggle="tab" href="#groupDelegationsCnt" class="dashboardWizardTabTxt">Group Delegation</a></li>
+															<li id="metadataTab"><a data-toggle="tab" href="#metadataCnt" class="dashboardWizardTabTxt">Metadata</a></li>
 														</ul> 
 														<!-- Fine tabs -->
 														
@@ -991,7 +978,27 @@ $result_cm = mysqli_query($link, $query_cm) or die(mysqli_error($link));
 																	   </div>
 																	</div>
 																<!-- -->
-																
+																<!-- Metadata cnt -->
+																<div id="metadataCnt" class="tab-pane fade in">																
+																	<div class="row" id="delegationsFormRow">
+																		<div class="col-xs-12 centerWithFlex modalFirstLbl" id="newDelegationLbl">
+																			<b>Edit Metadata</b>																		</div>
+																		<div class="col-xs-12" id="editmetadataCnt">
+																			<div class="input-group">
+																				
+																			</div>  
+																		</div>
+																		<br /><br />
+																		<div class="col-xs-12" id="currentMetadata">
+																			<label for="fnature">Nature:</label>
+																			<select id="fnature" name="fnature"></select>
+																			<br />
+																			<label for="fsubnature">Subnature:</label>
+																			<select id="fsubnature" name="fsubnature"></select>
+																		</div>
+																		<button type="button" id="confirmEditMetadata" class="btn confirmBtn">Confirm</button>
+																	</div>
+																</div>
 																<!-- Ownership cnt -->
 																<div id="groupCnt" class="tab-pane fade in active">
 																	<div class="row" id="ownershipFormRow">
@@ -1245,6 +1252,8 @@ $result_cm = mysqli_query($link, $query_cm) or die(mysqli_error($link));
 					$(document).on('click', '.delegateBtn', function() {
 						var map_name = $(this).val();
 						var org = $(this).attr('org');
+						var nature = $(this).attr('nature');
+						var subnature = $(this).attr('subnature');
 						var visibility = $(this).attr('visibility');
 						if(visibility == 'PUBLIC'){
 							$('#newVisibility').val('public');
@@ -1259,6 +1268,9 @@ $result_cm = mysqli_query($link, $query_cm) or die(mysqli_error($link));
 						$('#delegationsDashboardTitle').text(map_name);
 						$('#delegationsDashPic').text(user_name);
 						$('#newDelegationOrganization').val(org);
+						//
+						//console.log('Nature: '+nature+', Subnature: '+subnature);
+						//
 						$('#current_group').text(org);
 						if((role == 'RootAdmin')||(role == 'ToolAdmin')){
 								console.log(role);
@@ -1391,10 +1403,88 @@ $result_cm = mysqli_query($link, $query_cm) or die(mysqli_error($link));
 											}
 						});
 						
-						
+						///GET NATURE AND SUBNATURE
+								$.ajax({
+													url: 'api/dictionary/index.php',
+													dataType: 'json',
+													data: {
+														type: 'nature'
+														
+													},
+													type: "GET",
+													async: true,
+													success: function(data) {
+																		if(data.code == '200'){
+																			var array_nat = [];
+																			array_nat = data.content;
+																			var lung = array_nat.length;
+																			for(var i=0; i<lung; i++){
+																				var valnat = array_nat[i];
+																				//console.log(valnat);
+																				$('#fnature').append('<option value="'+valnat.value+'" >'+valnat.label+'</option>');		
+																			}
+																			//console.log('nature: '+nature);
+																			$('#fnature').val(nature).change();													
+																		}
+															}
+													});
+								$.ajax({
+													url: 'api/dictionary/index.php',
+													dataType: 'json',
+													data: {
+														type: 'subnature'
+														
+													},
+													type: "GET",
+													async: true,
+													success: function(data) {
+																		if(data.code == '200'){
+																			var array_nat = [];
+																			array_nat = data.content;
+																			var lung = array_nat.length;
+																			for(var i=0; i<lung; i++){
+																				var valnat = array_nat[i];
+																				$('#fsubnature').append('<option value="'+valnat.value+'">'+valnat.label+'</option>');	
+																			}
+																			$('#fsubnature').val(subnature).change();
+																		}
+															}
+													});
+						////
 						/*********/
 						//			
-                    });
+                    
+					//***CHANGE NATURE//
+					$("select#fnature").on("change",function(event){
+											$.ajax({
+												url: "api/dictionary/index.php?get_all",
+												type: "GET",
+												async: true,
+												dataType: "JSON",
+												success: function(cats) 
+												{
+													if(cats.result == "OK") {
+														cats.content.forEach(function(cat){
+															if( $("select#fnature").val() == cat["value"] && cat["type"] == "nature") {
+																$("#fsubnature").empty();
+																//$("select#fsubnature").append($("<option value=\"\"></option>"));
+																cat["children_id"].forEach(function(childCatId) {
+																	cats.content.forEach(function(childCat){
+																		if(childCat.id == childCatId) {
+																			$("#fsubnature").append($('<option value="'+childCat["value"]+'">'+childCat["label"]+'</option>'));
+																		}
+																	});									
+																});
+																$('#fsubnature').val(subnature).change();
+															}
+														});
+													}
+												}
+											});
+										});
+					
+					///****//
+					});
 					
 					
 						$(document).on('change','#newDelegationOrganization', function() {
@@ -1430,9 +1520,16 @@ $result_cm = mysqli_query($link, $query_cm) or die(mysqli_error($link));
 						$('#groupDelegationsTable tbody').empty();
 						$('#newDelegationOrganization').empty();
 						$('#newDelegationGroup').empty();
+						$('#fnature').empty();
+						$('#fsubnature').empty();
                     });
 					/****/
-					
+					$(document).on('click','#close_metadata', function(){
+							$('#min_d').empty();
+							$('#max_d').empty();
+							$('#inst').empty();
+					});
+					/*****/
 					//change color_map
 					//edit_color_map
 					$(document).on('click', '#edit_color_map', function() {
@@ -1625,11 +1722,43 @@ $result_cm = mysqli_query($link, $query_cm) or die(mysqli_error($link));
 									}
 								});
 						});
+						
+						//confirmEditMetadata
+						$(document).on('click', '#confirmEditMetadata', function() {
+							//
+							var heatmap = $('#delegationsDashboardTitle').text();
+							var nature = $('#fnature').val();
+							var subnature = $('#fsubnature').val();
+							//
+							 $.ajax({
+									url: 'get_heatmap.php',
+									data: {
+										heatmap: heatmap,
+										nature: nature,
+										subnature: subnature,
+										action: 'edit_metadata'
+									},
+									type: "POST",
+									async: true,
+									success: function(data) {
+										location.reload();
+											/*if(data.includes('Ok')){
+												location.reload();
+											}else{
+												alert('Error occurred during operation exection. Please, control parameters correctness');
+											}*/
+									}
+								});
+						});
+						
 			    /*************/
 				/**************************/
 
                 });
-				
+				//
+				$(document).on('click', '#owner_close', function() {
+							$('#own_d').empty();
+						});
                 //
                 function list_scroll(page, name,order,order_value) {
 					$('.loader').show();
@@ -1685,13 +1814,21 @@ $result_cm = mysqli_query($link, $query_cm) or die(mysqli_error($link));
                                         index_text = 'Indexed';
                                     } else if (index == '0') {
                                         index_text = 'Not Indexed';
-                                    } else {
+                                    } else if (index == '-1'){
+										index_text = 'Failed';
+									}else if (index == '-2'){
+										index_text = 'Too failures';
+									} else{
                                         index_text = 'Not in GeoServer';
                                     }
 									//status_text = status;
                                     var function_a = "function_data('" + id_completed + "','" + array[i]['date'] + "'," + status + "," + index + ")";
                                     //
-                                    $('#value_table tbody').append('<tr><td>' + array[i]['date'] + '</td><td>' + array[i]['description'] + '</td><td ' + style + '>' + status_text + '</td><td>'+index_text+'</td><td>' + array[i]['bbox'] + '</td><td>' + array[i]['value'] + '</td><td><button type="button" class="editDashBtn editValues"data-target="#edit-valus" onclick="' + function_a + '" data-toggle="modal">EDIT</button></td><td><button type="button" class="delDashBtn det_data" data-target="#data_elimination" data-toggle="modal">DEL</button></td></tr>');
+									if (role_active == 'RootAdmin'){
+                                    $('#value_table tbody').append('<tr><td>' + array[i]['date'] + '</td><td>' + array[i]['description'] + '</td><td ' + style + '>' + status_text + '</td><td>'+index_text+'</td><td>' + array[i]['bbox'] + '</td><td>' + array[i]['value'] + '</td><td><button type="button" class="editDashBtn editValues"data-target="#edit-valus" onclick="' + function_a + '" data-toggle="modal">EDIT</button></td><td><button type="button" class="delDashBtn det_data" data-target="#data_elimination" data-toggle="modal">DEL</button></td><td><button class="viewDashBtn" data-toggle="modal">RELOAD</button></td></tr>');
+									}else{
+									$('#value_table tbody').append('<tr><td>' + array[i]['date'] + '</td><td>' + array[i]['description'] + '</td><td ' + style + '>' + status_text + '</td><td>'+index_text+'</td><td>' + array[i]['bbox'] + '</td><td>' + array[i]['value'] + '</td></tr>');
+									}
                                     count++;
                                 }
 								//
@@ -1865,6 +2002,71 @@ $result_cm = mysqli_query($link, $query_cm) or die(mysqli_error($link));
                     }
                     return rtn;
                 }
+				////
+				//viewdetails
+				function viewdetails(id) {
+					console.log(id);
+					//$('#id_heat').text(id);
+					$('#min_d').val('');
+					$('#max_d').val('');
+					$('#inst').val('');
+					var x = document.getElementById("metadatadiv");
+					x.style.display = "none";
+					$('#spin1').html('<div><p>Loading metadata, please wait...</p><i class="fa fa-circle-o-notch fa-spin" style="font-size:48px; color:#1E90FF"></i></div><br>');
+					//
+					$.ajax({
+						url: 'get_heatmap.php',
+						data: {
+							action: 'getdetails',
+							id: id
+						},
+						type: "GET",
+						async: true,
+						success: function(data) {
+							//
+							var obj = JSON.parse(data);
+										console.log(obj);
+										$('#min_d').val(obj[0]['min_date']);
+										$('#max_d').val(obj[0]['max_date']);
+										$('#inst').val(obj[0]['count_number']);
+										$('#spin1').empty();
+										x.style.display = "block";
+									}
+					});
+                    /*var rtn = sourceURL.split("?")[0],
+                        param,
+                        params_arr = [],
+                        queryString = (sourceURL.indexOf("?") !== -1) ? sourceURL.split("?")[1] : "";
+                    if (queryString !== "") {
+                        params_arr = queryString.split("&");
+                        for (var i = params_arr.length - 1; i >= 0; i -= 1) {
+                            param = params_arr[i].split("=")[0];
+                            if (param === key) {
+                                params_arr.splice(i, 1);
+                            }
+                        }
+                        rtn = rtn + "?" + params_arr.join("&");
+                    }
+                    return rtn;*/
+                }
+				
+				function viewOwner(id){
+					console.log('View Owner:	'+id);
+					$.ajax({
+						url: 'get_heatmap.php',
+						data: {
+							action: 'get_owner',
+							id: id
+						},
+						type: "GET",
+						async: true,
+						success: function(data) {
+							//
+							var obj = JSON.parse(data);
+							$('#own_d').val(obj.user);
+							}
+					});
+				}
                 ///
                 $(window).on('load', function() {
                     var sf = ''

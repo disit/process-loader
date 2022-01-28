@@ -19,6 +19,8 @@ $configs = parse_ini_file('poimanager_config.ini.php');
 $processLoaderNatureURI=$configs['processLoaderNatureURI'];
 $ownershipApiUrl=$configs['ownershipApiUrl'];
 $ownershipListApiUrl=$configs['ownershipListApiUrl'];
+$locationUrl=$configs['locationUrl'];
+
 include_once 'poimanager_sqlClient.php';
 include_once 'poimanager_sqlQueryManager.php';
 
@@ -517,6 +519,37 @@ function getPoiElementIdsByDelegatedUsers($url){
         array_push($delegated_users,$item['elementId']);
     }
     return $delegated_users;
+}
+
+function getPoiAddressCoord($address,$center_lat,$center_lon,$center_radius){
+    
+    $url=$GLOBALS['locationUrl']."search=".urlencode($address)."&maxResults=1&excludePOI=false&searchMode=AND&categories=StreetNumber&position=".$center_lat.";".$center_lon."&sortByDistance=true&maxDists=".$center_radius;
+    
+    $toReturn=array();
+    
+    $ch = curl_init();
+    $headers = array(
+        'Accept: application/json',
+        'Content-Type: application/json',
+    );
+    
+    curl_setopt($ch, CURLOPT_URL, $url);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+    curl_setopt($ch, CURLOPT_HEADER, 0);
+    curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "GET");
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    
+    $response = curl_exec ($ch);
+    curl_close ($ch);
+    
+    $response_decode=json_decode($response, true);
+    $lon= $response_decode['features'][0]['geometry']['coordinates'][0];
+    $lat= $response_decode['features'][0]['geometry']['coordinates'][1];
+    
+    $toReturn[0]=$lat;
+    $toReturn[1]=$lon;
+    
+    return $toReturn;
 }
 
 ?>
