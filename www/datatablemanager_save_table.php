@@ -73,6 +73,7 @@ $error=false;
 $error_show="";
 
 if(strlen($accessToken)==0){
+
     $error=true;
     $error_show="Access token is not valid or available! Please, re-login and try again!";
 } else {
@@ -102,8 +103,10 @@ if(strlen($accessToken)==0){
     
     if($observed_date_type=='row_converted'){
         $observed_date_type='row';
-        echo $observed_date_type;
+        //echo $observed_date_type;
     }
+    
+
     
     $observed_date_for_file_name = getFormatedFileDateObserved($_POST['hidden_observed_date_for_file_name'], $observed_date_type, $coord_type, $_POST['hidden_lat_row_for_file'], $_POST['hidden_lon_row_for_file'], $_POST['hidden_lat_file'], $_POST['hidden_lon_file']);
     $observed_date_for_sheets_date_time_pickers = explode("|", $_POST['hidden_observed_date_for_sheets_date_time_pickers']);
@@ -112,6 +115,8 @@ if(strlen($accessToken)==0){
 
     $address_lats = explode(",", $_POST['hidden_address_lats']);
     $address_lons = explode(",", $_POST['hidden_address_lons']);
+    
+
     
     $address_warnings = explode(",", $_POST['hidden_address_warnings']);
 
@@ -130,7 +135,6 @@ if(strlen($accessToken)==0){
     $usernameQuery = getUsernameToDelegateQuery($org);
     $usernames_to_delegate = executeGetUsernameToDelegate($usernameQuery);
 
-    
     $file_name = $_POST['hidden_file_name'];
 
     if (strlen($file_name) == 0) {
@@ -158,6 +162,8 @@ if(strlen($accessToken)==0){
     $my_result = executeRegisterDataTableID($insertElementTypeIDParams, $accessToken);
 
     if (substr($my_result, 0, 5) == "Error") {
+        echo 'error';
+        die();
         $error = true;
         if (strpos($my_result, 'token') !== false) {
             $error_show = $my_result . ". Please, re-login and try again!";
@@ -165,6 +171,8 @@ if(strlen($accessToken)==0){
             $error_show = $my_result . ". Please, contact us!";
         }
     } else {
+       
+  
         $id = $my_result["id"];
         $delegator_username = $my_result["username"];
 
@@ -172,14 +180,12 @@ if(strlen($accessToken)==0){
             // delegate users
             if (strlen($usernames_to_delegate[0])!=0) {
                 
-                var_dump(strlen($usernames_to_delegate[0]));
-
                 foreach ($usernames_to_delegate as $username_to_delegate) {
 
                     $delegateUserQuery = getDelegelateuserQuery($delegator_username);
                     $delegate_result = delegateUser($delegateUserQuery, $username_to_delegate, $elementId, $delegator_username);
 
-                    if (! $delegate_result) {
+                    if (!$delegate_result) {
                         $error = true;
                         $error_show = "User delegation failed: " . $delegate_result;
                         sendDTMErrorUserDelegationEmail($file_name, $org, $elementId, $delegator_username, $username_to_delegate, $delegate_result);

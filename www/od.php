@@ -109,6 +109,13 @@ $process_list = array();
 $num_rows     = $link->query($query_n_count)->fetchColumn();
 $num_r = 0;
 
+if (!function_exists('str_contains')) {
+    function str_contains(string $haystack, string $needle): bool
+    {
+        return '' === $needle || false !== strpos($haystack, $needle);
+    }
+}
+
 if ($num_rows > 0) {
     foreach ($result as $row) {
         $od_id = $row['od_id'];
@@ -123,8 +130,21 @@ if ($num_rows > 0) {
         $transport = $row['transport'];
         $purpose = $row['purpose'];
         $metric_name = "ODcolormap1";
-        if($row['table_id'] == "od_data") {
+        if($row['table_id'] == "od_data") { // modifica per considerare poi, ace, ecc...
             $shape = "communes";
+            if(str_contains($od_id,"poi")){
+                $shape = "POIs";
+            } else if (str_contains($od_id,"section")){
+                $shape = "Sections";
+            } else if (str_contains($od_id,"ace")){
+                $shape = "ACEs";
+            } else if (str_contains($od_id,"municipality")){
+                $shape = "Municipalities";
+            } else if (str_contains($od_id,"province")){
+                $shape = "Provinces";
+            } else if (str_contains($od_id,"region")){
+                $shape = "Regions";
+            } 
         }else if($row['table_id'] == "od_data_mgrs"){
             $shape = "square";
         }
@@ -433,6 +453,7 @@ if ($num_rows > 0) {
     var limit_val = $('#limit_select').val();
     var role = "<?=$role_att; ?>";
 
+    // console.log("In script");
 
     $(document).ready(function () {
 
@@ -490,12 +511,12 @@ if ($num_rows > 0) {
             var od_id = $(this).val();
             var precision;
             var table_id;
-            if($(this).attr('shape') !== 'communes'){
-                table_id = 'od_data_mgrs';
-                precision = $(this).attr('precision');
-            }else {
+            if($(this).attr('shape') == 'communes' || $(this).attr('shape') == 'Sections' || $(this).attr('shape') == 'ACEs' || $(this).attr('shape') == 'Municipalities' || $(this).attr('shape') == 'Provinces' || $(this).attr('shape') == 'Regions' || $(this).attr('shape') == 'POIs'){
                 table_id = 'od_data';
                 precision = 'is null';
+            }else {
+                table_id = 'od_data_mgrs';
+                precision = $(this).attr('precision');
             }
             $('#list_header').text('Other information on: ' + od_id);
             $.ajax({

@@ -131,7 +131,7 @@ if (substr($my_result, 0, 5) == "Error") {
                     $delegateUserQuery = getPoiDelegelateuserQuery($delegator_username);
                     $delegate_result = delegateUser($delegateUserQuery, $username_to_delegate, $elementId, $delegator_username);
 
-                    if (! $delegate_result) {
+                    if (!$delegate_result) {
                         $error = true;
                         $error_show = "User delegation failed: " . $delegate_result;
                         sendPoiErrorUserDelegationEmail($file_name, $org, $elementId, $delegator_username, $username_to_delegate, $delegate_result);

@@ -432,7 +432,11 @@ if (isset($_SESSION['username']) && isset($_SESSION['role'])) {
 		}
 		//
 		$vn_create = filter_var($vn_create , FILTER_SANITIZE_STRING);
+		$vn_create = str_replace(' ', '', $vn_create);
+		//
 		$lb_create = filter_var($lb_create , FILTER_SANITIZE_STRING);
+		$lb_create = str_replace(' ', '', $lb_create);
+		//
 		$select_type_creation = filter_var($select_type_creation , FILTER_SANITIZE_STRING);
 		$insert_date = date("Y-m-d h:i:s");
 		//
@@ -554,7 +558,11 @@ if (isset($_SESSION['username']) && isset($_SESSION['role'])) {
 
 		//
 		$vn_create = filter_var($vn_create , FILTER_SANITIZE_STRING);
+		$vn_create = str_replace(' ', '', $vn_create);
+		//
 		$lb_create = filter_var($lb_create , FILTER_SANITIZE_STRING);
+		$lb_create = str_replace(' ', '', $lb_create);
+		//
 		$select_type_creation = filter_var($select_type_creation , FILTER_SANITIZE_STRING);
 		$select_dt_e = filter_var($select_dt_e , FILTER_SANITIZE_STRING);
 		//
@@ -588,6 +596,7 @@ if (isset($_SESSION['username']) && isset($_SESSION['role'])) {
 		//
 		//if($select_type_creation == 'value unit'){
 		if(($select_type_creation == 'value unit')||($select_type_creation == 'data type')){
+		//if(($select_type_creation == 'value unit')||($select_type_creation == 'data type')||($select_type_creation == 'subnature')){
 			/*ELIMINA TUTTI I LINK CHE CI SONO?*/
 			//
 			$select_vt_e = filter_var_array($_REQUEST['select_vt_e'], FILTER_SANITIZE_STRING);
@@ -631,7 +640,24 @@ if (isset($_SESSION['username']) && isset($_SESSION['role'])) {
 				}
 		}
 		
-		//
+		/////////////////////MODIFY NATURE for SUBNATURE//////////////////////////////////////////
+		if($select_type_creation == 'subnature'){
+			/*ELIMINA TUTTI I LINK CHE CI SONO?*/
+			//
+			$nat = $_REQUEST['select_nature_e'];
+			$c_rel = count($select_vt_e);
+			echo('nat: '.$nat);
+			//echo($c_rel);
+			//
+			$query_rel = "DELETE FROM dictionary_relations WHERE child=".$id;
+			//echo($query_rel);
+			$result_rel = mysqli_query($link, $query_rel) or die(mysqli_error($link));
+			/*CREARLI EX_NOVO*/
+				$query_relations='INSERT INTO dictionary_relations (child, parent) VALUE ("'.$id.'",'.$nat.')';
+				echo($query_relations);
+				$result_relations = mysqli_query($link, $query_relations) or die(mysqli_error($link));
+		}
+		/////////////
        
     header("location:dictionary_editor.php".$showFrame);
         //
