@@ -256,8 +256,9 @@ if($process['functionalities'][$role_att] == 0){
 				<div id="message_control" style="color:#AA3939"></div>
 				<br />
 				<div class="input-group"><span class="input-group-addon">Description: </span><input id="label_create" type="text" class="form-control" name="lb_create" required></input></div><br />
-				<div class="input-group" id="list_nature" ><span class="input-group-addon">Select Nature: </span>
-							<select id="select_nature" name="select_nature" class="form-control"></select>
+				<div class="input-group" id="list_nature">
+					<span class="input-group-addon">Select Nature: </span>
+					<select id="select_nature" name="select_nature" class="form-control"></select>
 				</div>
 				<div class="input-group" id="list_vt"><span class="input-group-addon">Select Value Type: </span>
 							<select id="select_vtype" name="select_vtype[]" class="form-control" multiple="multiple" size="24" data-show-subtext="true" data-live-search="true">
@@ -307,9 +308,40 @@ if($process['functionalities'][$role_att] == 0){
 								  <option value="value unit">value unit</option>
 							</select>-->
 				</div><br />
-				<div class="input-group" id="list_nature_e"><span class="input-group-addon">Select Nature: </span>
-							<select id="select_nature_e" name="select_nature_e" class="form-control" >
-							</select><br />
+				<div id="list_nature_e">
+					<div class="input-group">
+               	<div style="display: table-row;">
+							<span class="input-group-addon">Select Nature: </span>
+							<select id="select_nature_e" name="select_nature_e" class="form-control" ></select>
+						</div>
+					</div>
+
+               <p style="color:white;margin-top:10px;margin-bottom:0;">Subnature attributes: </p>
+					<div id="delete_subnature_attr" class="input-group" style="border-collapse: separate;border-spacing: 0 10px;width:100%;">
+						<!--JS-->
+					</div>
+               <p style="color:white;">New subnature attribute: </p>
+					<div style="display: table-row;">
+						<span class="input-group-addon">Label: </span>
+						<input id="subnature_attr_label" type="text" placeholder="Label" class="form-control"></input>
+					</div>
+					<br />
+					<div style="display: table-row;">
+						<span class="input-group-addon">Uri: </span>
+						<!-- <input id="subnature_attr_uri" type="text" ></input> -->
+						<div class="uri-autocomplete">
+							<input id="subnature_attr_uri" type="text" name="subnature_attr_uri" placeholder="Uri" class="form-control">
+						</div>
+					</div>
+					<br />
+					<div style="display: table-row;">
+						<span class="input-group-addon">Type: </span>
+						<input id="subnature_attr_type" type="text" class="form-control" placeholder="http://www.w3.org/2001/XMLSchema#string" value="http://www.w3.org/2001/XMLSchema#string"></input>
+					</div>
+					<br />
+					<button type="button" class="btn confirmBtn" style="width:100%; margin-bottom: 8px;" onclick="onAddSubnatureAttr()">Add</button>
+
+				</div>
 				</div>
 				<div class="input-group" id="list_vt_e"><span class="input-group-addon">Select Value Type: </span>
 							<select id="select_vt_e" name="select_vt_e[]" class="form-control" multiple="multiple" size="24">
@@ -320,7 +352,6 @@ if($process['functionalities'][$role_att] == 0){
 
 							</select>
 				</div>
-				<br /><br />
 				</div>				
 				<div class="modal-footer">
 					<button type="button" class="btn cancelBtn" data-dismiss="modal">Cancel</button>
@@ -331,6 +362,42 @@ if($process['functionalities'][$role_att] == 0){
 	</div>
 
 </div>
+<style>
+	.uri-autocomplete {
+		/*the container must be positioned relative:*/
+		position: relative;
+		display: inline-block;
+		width: 100%;
+	}
+	.uri-autocomplete-items {
+		position: absolute;
+		border: 1px solid #d4d4d4;
+		border-bottom: none;
+		border-top: none;
+		z-index: 99;
+		/*position the autocomplete items to be the same width as the container:*/
+		top: 100%;
+		left: 0;
+		right: 0;
+		max-height: 200px;
+		overflow: scroll;
+	}
+	.uri-autocomplete-items div {
+		padding: 10px;
+		cursor: pointer;
+		background-color: #fff; 
+		border-bottom: 1px solid #d4d4d4; 
+	}
+	.uri-autocomplete-items div:hover {
+		/*when hovering an item:*/
+		background-color: #e9e9e9; 
+	}
+	.uri-autocomplete-active {
+		/*when navigating through the items using the arrow keys:*/
+		background-color: DodgerBlue !important; 
+		color: #ffffff; 
+	}
+</style>
 <!-- DELETE -->
 <div class="modal fade fade bd-example-modal-lg" id="delete-modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" style="display: none;">
 		<div class="modal-dialog">
@@ -395,6 +462,9 @@ if($process['functionalities'][$role_att] == 0){
 <!-- -->
 <script type='text/javascript'>
 var nascondi= "<?=$hide_menu; ?>";
+var sessionToken = "<?php  if (isset($_SESSION['refreshToken'])) echo $_SESSION['refreshToken']; else echo ""; ?>";
+var accessToken = "<?php  if (isset($_SESSION['accessToken'])) echo $_SESSION['accessToken']; else echo ""; ?>";
+var lang = "<?php  if (isset($_SESSION['lang'])) echo $_SESSION['lang']; else echo "en_US"; ?>".split("_")[0];
 var array_check = new Array();
 		
 		if (nascondi == 'hide'){
@@ -403,25 +473,25 @@ var array_check = new Array();
 		}
 	
 $('body').on('click', function (e) {
-			//only buttons
-		if ($(e.target).data('toggle') !== 'popover' && $(e.target).parents('.popover.in').length === 0) { 
-			$('[data-toggle="popover"]').popover('hide');
-			//console.log('NOO!');
-		}
-	});
+      //only buttons
+   if ($(e.target).data('toggle') !== 'popover' && $(e.target).parents('.popover.in').length === 0) { 
+      $('[data-toggle="popover"]').popover('hide');
+      //console.log('NOO!');
+   }
+});
 
 
-	$(function () {
-				$("[data-toggle='tooltip']").tooltip();
-				});
-				
-				$('body').on('click', function (e) {
-					//only buttons
-					if ($(e.target).data('toggle') !== 'popover'
-						&& $(e.target).parents('.popover.in').length === 0) { 
-						$('[data-toggle="popover"]').popover('hide');
-					}
-				});	
+$(function () {
+   $("[data-toggle='tooltip']").tooltip();
+});
+         
+$('body').on('click', function (e) {
+   //only buttons
+   if ($(e.target).data('toggle') !== 'popover'
+      && $(e.target).parents('.popover.in').length === 0) { 
+      $('[data-toggle="popover"]').popover('hide');
+   }
+});	
 		
 function myFunction() {
 	// Declare variables 
@@ -465,7 +535,199 @@ function myFunctionDate() {
   }
 }
 
-function editData(id, value, label, type, parent, data_type){
+function onAddSubnatureAttr(){
+	const uri = $("#subnature_attr_uri").val();
+	const type = $("#subnature_attr_type").val() || "http://www.w3.org/2001/XMLSchema#string";
+	let labels = $("#subnature_attr_label").val();
+	const subnature = $("#vn_create_e").val();
+
+	if (uri.length > 0 && type.length > 0 && labels.length > 0) {
+		if (isJsonString(labels)) {
+			let labelJson = JSON.parse(labels);
+			labels = [];
+			for (let i = 0; i < Object.keys(labelJson).length; i++) {
+				labels.push({
+					text: labelJson[Object.keys(labelJson)[i]],
+					lang: Object.keys(labelJson)[i]
+				});
+			}
+		} else {
+			if (lang === "en") {
+				labels = [{
+					text: labels,
+					lang: "en"
+				}];
+			} else {
+				labels = [{
+					text: labels,
+					lang: "en"
+				},{
+					text: labels,
+					lang: lang
+				}];
+			}
+		}
+		$.ajax({
+			url: "get_dictionary.php",
+			data: {
+				action: 'insert_static_attr',
+				graph: "http://www.disit.org/km4city/resource/addedStaticAttrs",
+				subnature: "http://www.disit.org/km4city/schema#" + subnature,
+				attribute: uri, //"http://www.disit.org/km4city/schema#maxCapacity",
+				range: type,
+				label: labels,
+				accessToken: accessToken
+			},
+			type: "POST",
+			async: true,
+			dataType: 'json',
+			success: function (data) {
+				let newLabel = labels.find(x => x.lang === lang) ? labels.find(x => x.lang === lang).text : labels[0].text;
+
+				$("#delete_subnature_attr").append(
+					'<div id="attr-'+document.querySelector('#delete_subnature_attr').children.length+'" style="display: flex;margin-bottom: 4px;">'+
+						'<div class="input-group-addon" style="width:100%">'+
+							'<p>'+newLabel+'</p>'+
+							'<span>'+uri+'</span>'+
+						'</div>'+
+						`<button onclick='onDeleteSubnatureAttr(`+
+							JSON.stringify({
+								uri: uri,
+								type: "http://www.w3.org/2001/XMLSchema#string",
+								label: newLabel
+							})+
+						`,`
+						+document.querySelector('#delete_subnature_attr').children.length+
+						`)' type="button" class="btn cancelBtn"><span class="glyphicon glyphicon-trash"></span></button>`+
+					'</div>'
+				);
+
+				document.querySelector('#subnature_attr_uri').value = '';
+				document.querySelector('#subnature_attr_label').value = '';
+         },
+         error: function (mydata)
+         {
+				console.log(JSON.stringify(mydata));
+				alert("Network errors. <br/> Get in touch with the Snap4City Administrator<br/>" + JSON.stringify(mydata));
+         }
+      });
+	}
+}
+
+function onDeleteSubnatureAttr(attribute, index) {
+	const subnature = $("#vn_create_e").val();
+
+	if (confirm('Are you sure you want to delete the attribute "'+attribute.label+'"?')) {
+		$.ajax({
+			url: "get_dictionary.php",
+			data: {
+				action: 'delete_static_attr',
+				graph: "http://www.disit.org/km4city/resource/addedStaticAttrs",
+				subnature: "http://www.disit.org/km4city/schema#" + subnature,
+				attribute: attribute.uri, //"http://www.disit.org/km4city/schema#maxCapacity",
+				label: { text: attribute.label, lang: lang},
+				accessToken: accessToken
+			},
+			type: "POST",
+			async: true,
+			dataType: 'json',
+			success: function (data) {
+				document.querySelector('#attr-'+index).remove();
+         },
+         error: function (mydata)
+         {
+				console.log(JSON.stringify(mydata));
+				alert("Network errors. <br/> Get in touch with the Snap4City Administrator<br/>" + JSON.stringify(mydata));
+         }
+      });
+	}
+}
+
+function isJsonString(str) {
+    try {
+        JSON.parse(str);
+    } catch (e) {
+        return false;
+    }
+    return true;
+}
+
+function autocomplete(inp, arr) {
+  var currentFocus;
+  ['input', 'focus'].forEach(event => {
+		inp.addEventListener(event, function(e) {
+			var a, b, i, val = this.value;
+			closeAllLists();
+			//if (!val) { return false;}
+			currentFocus = -1;
+			a = document.createElement("DIV");
+			a.setAttribute("id", this.id + "uri-autocomplete-list");
+			a.setAttribute("class", "uri-autocomplete-items");
+			this.parentNode.appendChild(a);
+			for (i = 0; i < arr.length; i++) {
+			if (arr[i].toUpperCase().includes(val.toUpperCase()) && arr[i].toUpperCase() !== val.toUpperCase()) {
+				b = document.createElement("DIV");
+				b.innerHTML += arr[i];
+				b.innerHTML += "<input type='hidden' value='" + arr[i] + "'>";
+					b.addEventListener("click", function(e) {
+					inp.value = this.getElementsByTagName("input")[0].value;
+					closeAllLists();
+				});
+				a.appendChild(b);
+			}
+			}
+	});
+  });
+
+  inp.addEventListener("keydown", function(e) {
+      var x = document.getElementById(this.id + "uri-autocomplete-list");
+      if (x) x = x.getElementsByTagName("div");
+      if (e.keyCode == 40) {
+        currentFocus++;
+        addActive(x);
+      } else if (e.keyCode == 38) { 
+        currentFocus--;
+        addActive(x);
+      } else if (e.keyCode == 13) {
+        e.preventDefault();
+        if (currentFocus > -1) {
+          if (x) x[currentFocus].click();
+        }
+      }
+  });
+
+  function addActive(x) {
+    if (!x) return false;
+    removeActive(x);
+    if (currentFocus >= x.length) currentFocus = 0;
+    if (currentFocus < 0) currentFocus = (x.length - 1);
+    x[currentFocus].classList.add("uri-autocomplete-active");
+  }
+
+  function removeActive(x) {
+    for (var i = 0; i < x.length; i++) {
+      x[i].classList.remove("uri-autocomplete-active");
+    }
+  }
+
+  function closeAllLists(elmnt) {
+    var x = document.getElementsByClassName("uri-autocomplete-items");
+    for (var i = 0; i < x.length; i++) {
+      if (elmnt != x[i] && elmnt != inp) {
+        x[i].parentNode.removeChild(x[i]);
+      }
+    }
+  }
+
+	document.addEventListener("click", function (e) {
+		closeAllLists(e.target);
+	});
+}
+
+const autocompleteArray = ['http://www.disit.org/km4city/schema#', 'http://schema.org/', 'http://purl.org/dc/terms/', 'http://xmlns.com/foaf/0.1/'];
+autocomplete(document.getElementById("subnature_attr_uri"), autocompleteArray);
+
+function editData(id, value, label, type, parent, data_type, attributes){
 	//alert('data_type: '+data_type);
 	$('#id_create_e').val(id);
 	$('#vn_create_e').val(value);
@@ -479,40 +741,86 @@ function editData(id, value, label, type, parent, data_type){
 	if(type == "subnature"){
 		var array_act = new Array();
 		$("#list_nature_e").show();
-	$.ajax({
-									url: "get_dictionary.php",
-										data: { action: "get_values",
-												value_unit: 0,
-												select_all: 0,
-												nature:1,
-												subnature:0,
-												value_type: 0,
-												data_type: 0
-											 },
-										type: "GET",
-										async: true,
-										dataType: 'json',
-										success: function (data) {
-											
-											for (var i = 0; i < data.length; i++)
-											{
-												 array_act[i] = {
-												 id: data[i]['id'],
-												 value: data[i]['value']
-											};
-											$("#select_nature_e").append('<option value="'+array_act[i]['id']+'">'+array_act[i]['value']+'</option>');
-											
-										}
-										$("#select_nature_e").val(parent);
-								}
-							/////////////
-						});
+      $.ajax({
+            url: "get_dictionary.php",
+               data: { action: "get_values",
+                     value_unit: 0,
+                     select_all: 0,
+                     nature:1,
+                     subnature:0,
+                     value_type: 0,
+                     data_type: 0
+                     },
+               type: "GET",
+               async: true,
+               dataType: 'json',
+               success: function (data) {
+                  
+                  for (var i = 0; i < data.length; i++)
+                  {
+                        array_act[i] = {
+                        id: data[i]['id'],
+                        value: data[i]['value']
+                  };
+                  $("#select_nature_e").append('<option value="'+array_act[i]['id']+'">'+array_act[i]['value']+'</option>');
+                  
+               }
+               $("#select_nature_e").val(parent);
+         }
+      /////////////
+      });
+
+		$.ajax({
+			url: "get_dictionary.php",
+			data: {
+				action: 'get_available_static',
+				token: sessionToken,
+				subnature: vn_create_e
+			},
+			type: "POST",
+			async: true,
+			dataType: 'json',
+			success: function (mydata) {
+				if (mydata["status"] === 'ok')
+               {
+						$("#delete_subnature_attr").empty();
+                  //if called in edit, populate static attributes
+                  currentDictionaryStaticAttribEdit = JSON.parse(mydata["availibility"]);
+                  for (let i = 0; i < currentDictionaryStaticAttribEdit.length; i++) {
+                     //$("#select_subnature_e")
+                     //   .append('<option id="v_'+currentDictionaryStaticAttribEdit[i]['uri']+`" value='`+JSON.stringify(currentDictionaryStaticAttribEdit[i])+`'`+
+							//	(attributes.find(x => x.uri === currentDictionaryStaticAttribEdit[i]['uri']) ? 'selected' : '') +
+							//	`>`+currentDictionaryStaticAttribEdit[i]['label']+'</option>');
+						$("#delete_subnature_attr").append(
+							'<div id="attr-'+i+'" style="display: flex;margin-bottom: 4px;">'+
+							 	'<div class="input-group-addon" style="width:100%">'+
+									'<p>'+currentDictionaryStaticAttribEdit[i]['label']+'</p>'+
+									'<span>'+currentDictionaryStaticAttribEdit[i]['uri']+'</span>'+
+								'</div>'+
+								`<button onclick='onDeleteSubnatureAttr(`+JSON.stringify(currentDictionaryStaticAttribEdit[i])+`,`+i+`)' type="button" class="btn cancelBtn"><span class="glyphicon glyphicon-trash"></span></button>`+
+							'</div>'
+						);
+                  }
+                  //$('#select_subnature_e').multiselect('rebuild');
+               } else
+               {
+                  console.log(JSON.stringify(mydata));
+                  alert("Unknown error. <br/> Get in touch with the Snap4City Administrator<br/>" + JSON.stringify(mydata));
+                  $("#addNewStaticBtn").hide();
+               }
+         },
+         error: function (mydata)
+         {
+				console.log(JSON.stringify(mydata));
+				alert("Network errors. <br/> Get in touch with the Snap4City Administrator<br/>" + JSON.stringify(mydata));
+				$("#addNewStaticBtn").hide();
+			}
+      });
 	}else{
 		$("#list_nature_e").hide();
 	}
 //select_vt_e	
-	//if(type == "value unit"){
-		if((type == "value unit")||(type == "data type")){
+	if(type == "value unit"){
 		var array_act = new Array();
 		$("#list_vt_e").show();
 	$.ajax({
@@ -593,12 +901,12 @@ function editData(id, value, label, type, parent, data_type){
 						});
 		//   //SELECT DATA TYPE//
 		//var nameArr = data_type.split(',');
-		/*var lang_Arr = nameArr.length;
-		$('#select_dt_e').multiselect('rebuild');
-		for(i = 0; i < lang_Arr; i++){
-			var d1 = nameArr[i];
-			$(":checkbox[value="+d1+"]").prop("checked","true");
-		}*/
+		//var lang_Arr = nameArr.length;
+		//$('#select_dt_e').multiselect('rebuild');
+		//for(i = 0; i < lang_Arr; i++){
+			//var d1 = nameArr[i];
+			//$(":checkbox[value="+d1+"]").prop("checked","true");
+		//}
 		//
 		//
 		//$('#select_dt_e').multiselect('rebuild');
@@ -648,7 +956,7 @@ function filtroDataAll(){
                 async: true,
                 dataType: 'json',
                 success: function (data) {
-					console.log(data);
+					
                     for (var i = 0; i < data.length; i++)
                     {
 						 array_act[i] = {
@@ -659,18 +967,19 @@ function filtroDataAll(){
 						 parent_id: data[i]['parent_id'],
 						 parent_value: data[i]['parent_value'],
 						 child_value: data[i]['child_value'],
-						 data_type: data[i]['data_type']
+						 attributes: data[i]['attributes']
 					};
 					
 					var parV = "";
+               console.log(array_act[i]);
 					//
 					var string_type = String(array_act[i]['type']);
 					var string_value = String(array_act[i]['value']);
 					var string_label = String(array_act[i]['label']);
 					//var edit_finction= array_act[i]['id']+",'"+string_value+"','"+string_label+"','"+string_type+"'","'"+parV+"'";
 					var parV = array_act[i]['parent_value'];
-					var datT = array_act[i]['data_type'];
 					var parDt = "";
+               var parAttr = array_act[i]['attributes'];
 					//
 					if(parV == null){
 						parV = "";
@@ -695,13 +1004,14 @@ function filtroDataAll(){
 					}else{
 						parDt = parDt.toString().replace(/,/g, ', ');
 					}
-					if((datT == null)||(datT == "undefined")){
-						datT = "";
-					}else{
-						datT = datT.toString().replace(/,/g, ', ');
+
+					if((parAttr == null)||(parAttr == "undefined")){
+						parAttr = "[]";
+					} else {
+						parAttr = parAttr.replaceAll('"',"'");
 					}
 					
-					var edit_finction= array_act[i]['id']+",'"+string_value+"','"+string_label+"','"+string_type+"','"+id_prent+"','"+parDt+"'";
+					var edit_finction= array_act[i]['id']+",'"+string_value+"','"+string_label+"','"+string_type+"','"+id_prent+"','"+parDt+"',"+parAttr;
 					//alert(array_act);
 					//var button_put = '<button type="button" class="pubDashBtn put_file" data-target="#put-modal" data-toggle="modal" value="'+i+'" onclick="">PUT</button>';
 					var button_edit = '<button type="button" class="editDashBtn edit_file" data-target="#edit-modal" data-toggle="modal" value="'+i+'" onclick="editData('+edit_finction+')">EDIT</button>';
@@ -709,7 +1019,7 @@ function filtroDataAll(){
 					//var button_dispacth = '<button type="button" class="viewDashBtn dispatch_file" data-target="#dispatch-modal" data-toggle="modal" value="'+i+'" onclick="">DISPATCH</button>';
 					var button_put ="";
 					var button_dispacth = "";
-					$("#value_table").append('<tr><td class="pop_link ellipsis">'+array_act[i]['value']+'</td><td class="pop_link ellipsis">'+array_act[i]['type']+'</td><td>'+array_act[i]['label']+'</td><td>'+datT+'</td><td class="pop_link ellipsis" title="'+parV+'" data-content="'+parV+'" data-toggle="popover" data-original-title>'+parV+'</td><td href="#" class="pop_link ellipsis" data-toggle="popover" data-content="'+childV+'" title="'+childV+'"  data-original-title>'+childV+'</td><td>'+button_edit+' '+button_dispacth+' '+button_put+' ' +button_del+'</td></tr>');
+					$("#value_table").append('<tr><td class="pop_link ellipsis">'+array_act[i]['value']+'</td><td class="pop_link ellipsis">'+array_act[i]['type']+'</td><td>'+array_act[i]['label']+'</td><td></td><td class="pop_link ellipsis" title="'+parV+'" data-content="'+parV+'" data-toggle="popover" data-original-title>'+parV+'</td><td href="#" class="pop_link ellipsis" data-toggle="popover" data-content="'+childV+'" title="'+childV+'"  data-original-title>'+childV+'</td><td>'+button_edit+' '+button_dispacth+' '+button_put+' ' +button_del+'</td></tr>');
 					}
 					var table = $('#value_table').DataTable({
 						"searching": true,
@@ -954,7 +1264,8 @@ function filtroData(){
 						 parent_id: data[i]['parent_id'],
 						 parent_value: data[i]['parent_value'],
 						 child_value: data[i]['child_value'],
-						 data_type: data[i]['data_type']
+						 data_type: data[i]['data_type'],
+						 attributes: data[i]['attributes']
 					};
 					var parV = "";
 					//
@@ -962,6 +1273,8 @@ function filtroData(){
 					var string_value = String(array_act[i]['value']);
 					var string_label = String(array_act[i]['label']);
 					var parV = array_act[i]['parent_value'];
+               var parAttr = array_act[i]['attributes'];
+               
 					if(parV == null){
 						parV = "";
 					}else{
@@ -981,14 +1294,20 @@ function filtroData(){
 					}else{
 						childV = childV.toString().replace(/,/g, ', ');
 					}
+
+					if((parAttr == null)||(parAttr == "undefined")){
+						parAttr = "[]";
+					} else {
+						parAttr = parAttr.replaceAll('"',"'");
+					}
 					
 					//var edit_finction= array_act[i]['id']+",'"+string_value+"','"+string_label+"','"+string_type+"','"+id_prent+"'";
-					var edit_finction= array_act[i]['id']+",'"+string_value+"','"+string_label+"','"+string_type+"','"+id_prent+"','"+array_act[i]['data_type']+"'";
+					var edit_finction= array_act[i]['id']+",'"+string_value+"','"+string_label+"','"+string_type+"','"+id_prent+"','"+array_act[i]['data_type']+"',"+parAttr;
 					var button_edit = '<button type="button" class="editDashBtn edit_file" data-target="#edit-modal" data-toggle="modal" value="'+i+'" onclick="editData('+edit_finction+')">EDIT</button>';
 					var button_del = '<button type="button" class="delDashBtn delete_file" data-target="#delete-modal" data-toggle="modal" value="'+i+'" onclick="deleteData('+array_act[i]['id']+')">DELETE</button>';
 					var button_put ="";
 					var button_dispacth = "";
-					$("#value_table").append('<tr><td class="pop_link ellipsis">'+array_act[i]['value']+'</td><td class="pop_link ellipsis">'+array_act[i]['type']+'</td><td>'+array_act[i]['label']+'</td><td>'+array_act[i]['data_type']+'</td><td class="pop_link ellipsis" title="'+parV+'"  data-content="'+parV+'" data-toggle="popover" data-original-title>'+parV+'</td><td href="#" class="pop_link ellipsis" data-toggle="popover" data-content="'+childV+'" title="'+childV+'"  data-original-title>'+childV+'</td><td>'+button_edit+' '+button_dispacth+' '+button_put+' ' +button_del+'</td></tr>');
+					$("#value_table").append('<tr><td class="pop_link ellipsis">'+array_act[i]['value']+'</td><td class="pop_link ellipsis">'+array_act[i]['type']+'</td><td>'+array_act[i]['label']+'</td><td></td><td class="pop_link ellipsis" title="'+parV+'"  data-content="'+parV+'" data-toggle="popover" data-original-title>'+parV+'</td><td href="#" class="pop_link ellipsis" data-toggle="popover" data-content="'+childV+'" title="'+childV+'"  data-original-title>'+childV+'</td><td>'+button_edit+' '+button_dispacth+' '+button_put+' ' +button_del+'</td></tr>');
 					}
 					var table = $('#value_table').DataTable({
 						"searching": true,
@@ -1032,6 +1351,16 @@ function filtroData(){
 		}
 			
 		/**************************/
+		/* $(function () { 
+		$('#select_subnature_e').multiselect({
+			includeSelectAllOption: true,
+			enableFiltering: true,
+			enableCaseInsensitiveFiltering: true,
+			maxHeight: 450,
+			maxWidth: 300 
+			});
+			}); */
+
 		$(function () { 
 		$('#select_vt_e').multiselect({
 			includeSelectAllOption: true,
@@ -1119,7 +1448,8 @@ function filtroData(){
 						 parent_id: data[i]['parent_id'],
 						 parent_value: data[i]['parent_value'],
 						 child_value: data[i]['child_value'],
-						 data_type: data[i]['data_type']
+						 data_type: data[i]['data_type'],
+						 attributes: data[i]['attributes']
 					};
 					//alert(array_act);
 					var parV = "";
@@ -1129,9 +1459,15 @@ function filtroData(){
 					var string_value = String(array_act[i]['value']);
 					var string_label = String(array_act[i]['label']);
 					var string_datatype = String(array_act[i]['data_type']);
+               var string_attributes = array_act[i]['attributes'];
 					
 					if ((string_datatype == null)||(string_datatype == "undefined")){
 						string_datatype ="";
+					}
+					if ((string_attributes == null)||(string_attributes == "null")){
+						string_attributes ="[]";
+					} else {
+						string_attributes = string_attributes.replaceAll('"',"'");
 					}
 					//var edit_finction= array_act[i]['id']+",'"+string_value+"','"+string_label+"','"+string_type+"'";
 					var parent_id = array_act[i]['parent_id'];
@@ -1155,7 +1491,7 @@ function filtroData(){
 						childV = childV.toString().replace(/,/g, ', ');
 					}
 					//
-					var edit_finction= array_act[i]['id']+",'"+string_value+"','"+string_label+"','"+string_type+"','"+parent_id+"','"+string_datatype+"'";
+					var edit_finction= array_act[i]['id']+",'"+string_value+"','"+string_label+"','"+string_type+"','"+parent_id+"','"+string_datatype+"',"+string_attributes;
 					//
 					//var button_put = '<button type="button" class="pubDashBtn put_file" data-target="#put-modal" data-toggle="modal" value="'+i+'" onclick="">PUT</button>';
 				    var button_edit = '<button type="button" class="editDashBtn edit_file" data-target="#edit-modal" data-toggle="modal" value="'+i+'" onclick="editData('+edit_finction+')">EDIT</button>';
@@ -1206,6 +1542,7 @@ function filtroData(){
 		////////////
 		$('#edit-modal').on('hidden.bs.modal', function () {
 			  $("#select_nature_e").empty();
+           //$("#select_subnature_e").empty();
 			  $("#select_vt_e").empty();
 			  $('#message_control_e').empty();
 			  $('#edit_voice').attr("disabled", false);
@@ -1349,34 +1686,32 @@ function filtroData(){
 							console.log(type);
 							if(type == "subnature"){
 								var array_act = new Array();
-									$("#list_nature").show();
-													$.ajax({
-															url: "get_dictionary.php",
-																data: { action: "get_values",
-																		value_unit: 0,
-																		value_type: 0,
-																		select_all: 0,
-																		nature:1,
-																		subnature:0,
-																		data_type: 0
-																	 },
-																type: "GET",
-																async: true,
-																dataType: 'json',
-																success: function (data) {
-																	
-																	for (var i = 0; i < data.length; i++)
-																	{
-																		 array_act[i] = {
-																		 id: data[i]['id'],
-																		 value: data[i]['value']
-																	};
-																	$("#select_nature").append('<option value="'+array_act[i]['id']+'">'+array_act[i]['value']+'</option>');
-																	
-																}
-														}
-												});
-									///////////
+                        $("#list_nature").show();
+                        $.ajax({
+                           url: "get_dictionary.php",
+                              data: { action: "get_values",
+                                    value_unit: 0,
+                                    value_type: 0,
+                                    select_all: 0,
+                                    nature:1,
+                                    subnature:0,
+                                    data_type: 0
+                                    },
+                              type: "GET",
+                              async: true,
+                              dataType: 'json',
+                              success: function (data) {
+                                 
+                                 for (var i = 0; i < data.length; i++) {
+                                    array_act[i] = {
+                                       id: data[i]['id'],
+                                       value: data[i]['value']
+                                    };
+                                    $("#select_nature").append('<option value="'+array_act[i]['id']+'">'+array_act[i]['value']+'</option>');
+                                 }
+                           }
+                        });
+								///////////
 							}else{
 								$("#select_nature").empty();
 								$("#list_nature").hide();
@@ -1491,3 +1826,4 @@ function filtroData(){
 	
 </script>
 </body>
+</html>

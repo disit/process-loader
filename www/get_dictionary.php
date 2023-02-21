@@ -25,6 +25,72 @@ $showFrame="";
 					$showFrame="?showFrame=true";
 				}
 	}
+
+function missingParameters($requiredParams) {
+    $toreturn = array();
+
+    foreach ($requiredParams as $param)
+        if (!isset($_REQUEST[$param]))
+            array_push($toreturn, $param);
+
+    return $toreturn;
+}
+
+function retrieveAvailableStaticAttribute($url, $subnature, &$result) {
+    $local_result = "";
+    if (!array_key_exists("msg", $result))
+        $result["msg"] = "";
+    if (!array_key_exists("log", $result))
+        $result["log"] = "";
+    try {
+        $url .= "list-static-attr?subnature=" . $subnature;
+
+        $local_result = file_get_contents($url);
+        $result["log"] .= $local_result;
+
+        //TODO how to catch an 504
+        if (($local_result !== FALSE) && (strpos($http_response_header[0], '200') == true || strpos($http_response_header[0], '204') == true)) {
+            $result["status"] = 'ok';
+            $result["content"] = $local_result;
+            $result["msg"] .= '\n ok, returning dictionary';
+            $result["log"] .= '\n ok, returning dictionary';
+        } else {
+            $result["status"] = 'ko';
+            $result["error_msg"] = " ServiceMap not reacheable NOT reacheable";
+            $result["msg"] .= '\n ko SM not reacheable';
+            $result["log"] .= '\n ko SM not reacheable';
+        }
+    } catch (Exception $ex) {
+        $result["status"] = 'ko';
+        $result["error_msg"] = ' Error in accessing the SM. ';
+        $result["msg"] .= '\n error in accessing the SM ';
+        $result["log"] .= '\n error in accessing the SM ' . $ex;
+    }
+    return $result;
+}
+
+function my_log($result) {
+    simple_log($result);
+    echo json_encode($result);
+}
+
+function simple_log($result) {
+    //TODO rotate
+    $fp = fopen($GLOBALS["pathLog"], "a");
+    if (!$fp) {
+        //TODO create
+        $result["status"] = 'ko';
+        $result["error_msg"] = "\n Unable to open LOG file. Please contact an administrator";
+    } else {
+        flock($fp, LOCK_EX);
+        $output = date("Y-m-d h:i:sa") . ": " . $result["log"] . "\r\n";
+        fwrite($fp, $output);
+        unset($result["log"]);
+        flock($fp, LOCK_UN);
+        fclose($fp);
+    }
+}
+
 if (isset($_SESSION['username']) && isset($_SESSION['role'])) {
     $link = mysqli_connect($host_valueunit, $username_valueunit, $password_valueunit) or die("failed to connect to server !!");
     mysqli_set_charset($link, 'utf8');
@@ -679,7 +745,128 @@ if (isset($_SESSION['username']) && isset($_SESSION['role'])) {
 				}
 			echo json_encode($process_list);
 		//
-    } else {
+    }
+	 
+	 // GET STATIC ATTRIBUTES
+    else if ($action == 'get_available_static') {
+		$missingParams = missingParameters(array('subnature'));
+
+		$newresult = array("status" => "", "msg" => "", "content" => "", "log" => "", "error_msg" => "");
+		$newresult['status'] = 'ok';
+
+		if (!empty($missingParams)) {
+			$newresult["status"] = "ko";
+			$newresult['msg'] = "Missing Parameters";
+			$newresult["error_msg"] .= "Problem getting available static (Missing parameters: " . implode(", ", $missingParams) . " )";
+			$newresult["log"] = "action=get_available_static - error Missing Parameters: " . implode(", ", $missingParams) . " \r\n";
+		} else {
+			$subnature = mysqli_real_escape_string($link, $_REQUEST['subnature']);
+
+			$urls = explode(";", $kb_urls);
+			foreach ($urls as &$url) {
+				retrieveAvailableStaticAttribute($url, $subnature, $result);
+				if ($result["status"] == 'ok') {
+					break;
+				} 
+			}
+
+			if ($result["status"] == 'ok') {
+					$newresult['availibility'] = $result["content"];
+					$newresult['log'] .= "\n Returning " . $result["content"];
+			} else {
+					$newresult['status'] = 'ko';
+					$newresult['error_msg'] = 'Problem contacting the Snap4City server (Service map list-static-attr). Please try later';
+					$newresult['log'] .= '\n Problem contacting the Snap4City server (Service map list-static-attr)';
+			}
+
+			$newresult['log'] .= '\n\naction:get_available_static';
+		}
+		my_log($newresult);
+    }
+    
+    // INSERT STATIC ATTRIBUTES
+    else if ($action == 'insert_static_attr') {
+      $urls = explode(";", $kb_urls);
+      if (isset($_REQUEST['graph']) && isset($_REQUEST['subnature']) && isset($_REQUEST['attribute']) && isset($_REQUEST['range']) && isset($_REQUEST['label']) ){
+			$graph = $_REQUEST['graph'];
+			$subnature = $_REQUEST['subnature'];
+			$attribute = $_REQUEST['attribute'];
+			$range = $_REQUEST['range'];
+			$label = $_REQUEST['label'];
+			$accessToken = $_SESSION['accessToken'];
+			foreach ($urls as &$url) {
+				$url = $url."insert-static-attr";
+				$data = array(
+					"graph" => $graph,
+					"subnature" => $subnature,
+					"attribute" => $attribute,
+					"range" => $range,
+					"label" => $label
+				);
+				$data_string = json_encode($data);
+				$ch = curl_init($url);
+				curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
+				curl_setopt($ch, CURLOPT_POSTFIELDS, $data_string);
+				curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+				curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+					'Content-Type: application/json',
+					'Content-Length: ' . strlen($data_string),
+					'Authorization: Bearer ' . $accessToken
+				));
+				$result = curl_exec($ch);
+				if ($result !== $attribute) {
+					echo $url.'\n'.$result;
+				}
+				
+				curl_close($ch);
+			}
+			echo json_encode('OK');
+		} else {
+			echo ('ERROR');
+		}
+    }
+
+	 // DELETE STATIC ATTRIBUTES
+    else if ($action == 'delete_static_attr') {
+      $urls = explode(";", $kb_urls);
+      if (isset($_REQUEST['graph']) && isset($_REQUEST['subnature']) && isset($_REQUEST['attribute']) && isset($_REQUEST['label']) ){
+			$graph = $_REQUEST['graph'];
+			$subnature = $_REQUEST['subnature'];
+			$attribute = $_REQUEST['attribute'];
+			$label = $_REQUEST['label'];
+			$accessToken = $_SESSION['accessToken'];
+			foreach ($urls as &$url) {
+				$url = $url."delete-static-attr";
+				$data = array(
+					"graph" => $graph,
+					"subnature" => $subnature,
+					"attribute" => $attribute,
+					"label" => $label
+				);
+				$data_string = json_encode($data);
+				$ch = curl_init($url);
+				curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
+				curl_setopt($ch, CURLOPT_POSTFIELDS, $data_string);
+				curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+				curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+					'Content-Type: application/json',
+					'Content-Length: ' . strlen($data_string),
+					'Authorization: Bearer ' . $accessToken
+				));
+				$result = curl_exec($ch);
+				if ($result !== $attribute) {
+					echo $url.'\n'.$result;
+				}
+				
+				curl_close($ch);
+			}
+			echo json_encode('OK');
+		} else {
+			echo ('ERROR');
+		}
+    }
+ 
+	 else {
         echo ('ERROR');
     } 
 } else {
