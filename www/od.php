@@ -165,6 +165,7 @@ if ($num_rows > 0) {
         array_push($process_list, $listFile);
     }
 }
+
 ?>
 <html lang="en">
 <head>
@@ -332,6 +333,7 @@ if ($num_rows > 0) {
 													<th class="purpose"><div><a>Purpose</a></div></th>
 													<th class="metric_name"><div><a>Color Map</a></div></th>
 													<th class="other_info"><div><a>Other info</a></div></th>
+                                                    <th class="other_info"><div><a>Preview</a></div></th>
 												</tr>');
                         ?>
                         </thead>
@@ -354,6 +356,7 @@ if ($num_rows > 0) {
                                     echo("<td>" . $process_list[$i]['purpose'] . "</td>");
                                     echo("<td><button type='button' class='viewDashBtn viewType' data-target='#typology-modal' data-toggle='modal' value='".$process_list[$i]['metric_name']."'>VIEW</button></td>");
                                     echo("<td><button type='button' class='viewDashBtn viewList' data-target='#view-modal' data-toggle='modal' value='".$process_list[$i]['od_id']."' shape='".$process_list[$i]['shape']."' precision='".$process_list[$i]['precision']."'>VIEW</button></td>");
+                                    echo("<td><button type='button' class='editDashBtn previewList' data-target='#preview-modal' data-toggle='modal' value='".$process_list[$i]['od_id']."' org='".$process_list[$i]['organization']."' shape='".$process_list[$i]['shape']."'>PREVIEW</button></td>");
                                     echo("</tr>");
                                 }
                             }
@@ -401,6 +404,25 @@ if ($num_rows > 0) {
                         </form>
                     </div>
                 </div>
+                <!-- -->
+                <div class="modal bd-example-modal-lg" id="preview-modal" role="dialog" aria-labelledby="exampleModalLongTitle" aria-hidden="true">
+												<div class="modal-dialog modal-xl" style="width: 80%; height: auto">
+													<form name="Preview Heatmap" method="post" action="#">
+														<div class="modal-content">
+															<div class="modal-header" style="background-color: white" id="preview_header">Preview OD</div>
+															<div class="modal-body" style="background-color: white">
+																<div class="embed-responsive embed-responsive-16by9">	
+																	<iframe class="embed-responsive-item" id="iframeContainer" src="" frameborder="0"></iframe>
+																</div>
+															</div>
+															<div class="modal-footer" style="background-color: white">
+																<button type="button" class="btn cancelBtn" id="owner_close" data-dismiss="modal">Cancel</button>
+															</div>
+														</div>
+													</form>
+												</div>
+											</div>
+											<!-- -->
                 <!----->
                 <div class="modal fade bd-example-modal-lg" id="typology-modal" role="dialog" aria-labelledby="exampleModalLongTitle" aria-hidden="true">
                     <div class="modal-dialog">
@@ -452,6 +474,7 @@ if ($num_rows > 0) {
     var start_from = "<?=$start_from; ?>";
     var limit_val = $('#limit_select').val();
     var role = "<?=$role_att; ?>";
+    var preview_path = "<?=$preview_path; ?>";
 
     // console.log("In script");
 
@@ -556,6 +579,47 @@ if ($num_rows > 0) {
             $('.modal-backdrop').remove();
             $('.loader').show();
         });
+
+        $(document).on('click','.previewList', function() {
+						// Event listener for the button
+								var myModal = document.getElementById('preview-modal');
+								var myIframe = document.getElementById('iframeContainer');
+								var map_name = $(this).val();
+								var od = $(this).val();
+								var layers = $(this).val();
+								var org = $(this).attr('org');
+                                var shape = $(this).attr('shape');
+                                var from_date = '';
+                                try {
+                                $.ajax({
+                                    url: 'get_od.php',
+                                    data: {
+                                        od_id: od,
+                                        precision: shape,
+                                        table_id: 'od_data',
+                                        action: 'get_date_info'
+                                    },
+                                    type: "POST",
+                                    async: false,
+                                    dataType: 'json',
+                                    success: function(data) {
+                                                var obj = data; 
+                                                var min_date = obj[0]['min_date'];
+                                                from_date = min_date;  
+                                             return from_date;   
+                                                //
+                                            }
+                                });
+                            }catch (e) {
+                                    console.error("Eccezione durante la chiamata AJAX: " + e.message);
+                                }
+                                //preview_path = '../dashboardSmartCity/view/preview.php';
+                                console.log(preview_path);
+                                                var od_action = 'dates';
+                                                myIframe.src = preview_path+'?OD='+od+'&action='+od_action+'&organization='+org+'&from_date='+from_date+'&precision='+shape;
+                                                console.log(myIframe.src);
+                                                $(myModal).modal('show');
+							});
 
         $(document).on('click', '.viewType', function() {
             var metric = $(this).val();

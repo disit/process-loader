@@ -1,13 +1,30 @@
 <!DOCTYPE html>
-
 <?php
+/* Resource Manager - Process Loader
+   Copyright (C) 2018 DISIT Lab http://www.disit.org - University of Florence
+
+   This program is free software: you can redistribute it and/or modify
+   it under the terms of the GNU Affero General Public License as
+   published by the Free Software Foundation, either version 3 of the
+   License, or (at your option) any later version.
+
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU Affero General Public License for more details.
+
+   You should have received a copy of the GNU Affero General Public License
+   along with this program.  If not, see <http://www.gnu.org/licenses/>. */
+
+require 'sso/autoload.php';
+use Jumbojett\OpenIDConnectClient;
 
 include('config.php'); // Includes Login Script
 include('external_service.php');
 
 if (isset($_SESSION['accessToken'])) {
-
     // METADATA API
+    //
     $url_api = $host_trafficflowmanager . 'trafficflowmanager/api/metadata';
     $json_api = file_get_contents($url_api);
     $list_api = json_decode($json_api);
@@ -159,6 +176,7 @@ if (isset ($_SESSION['username'])){
                                     <th><div><a>Metric</a></div></th>
                                     <th><div><a>ColorMap</a></div></th>
                                     <th><div><a>Delete</a></div></th>
+                                    <th><div><a>Preview</a></div></th>
                                     <th><div><a>Unit of Measure</a></div></th>
                                     <th><div><a>Static Graph Name</a></div></th>
                                 </tr>
@@ -182,6 +200,7 @@ if (isset ($_SESSION['username'])){
 										<p style='display: inline; margin-left: 2%;'>". $list_api[$i]->colorMap ."</p>
 									  </td>");
                                 echo("<td><button type='button' class='delDashBtn del_metdata' data-target='#delete-modal' data-toggle='modal' value='". $list_api[$i]->fluxName ."'>DEL</button></td>");
+                                echo("<td><button type='button' class='editDashBtn previewList' data-target='#preview-modal' data-toggle='modal' value='".$list_api[$i]->fluxName."'>PREVIEW</button></td>");
                                 echo("<td>" . $list_api[$i]->unitOfMeasure . "</td>");
                                 echo("<td>" . $list_api[$i]->staticGraphName . "</td>");
                                 echo("</tr>");
@@ -343,11 +362,32 @@ if (isset ($_SESSION['username'])){
         </div>
     </div>
 
+    <!-- -->
+    <div class="modal bd-example-modal-lg" id="preview-modal" role="dialog" aria-labelledby="exampleModalLongTitle" aria-hidden="true">
+												<div class="modal-dialog modal-xl" style="width: 80%; height: auto">
+													<form name="Preview Heatmap" method="post" action="#">
+														<div class="modal-content">
+															<div class="modal-header" style="background-color: white" id="preview_header">Preview Traffic flow</div>
+															<div class="modal-body" style="background-color: white">
+																<div class="embed-responsive embed-responsive-16by9">	
+																	<iframe class="embed-responsive-item" id="iframeContainer" src="" frameborder="0"></iframe>
+																</div>
+															</div>
+															<div class="modal-footer" style="background-color: white">
+																<button type="button" class="btn cancelBtn" id="owner_close" data-dismiss="modal">Cancel</button>
+															</div>
+														</div>
+													</form>
+												</div>
+											</div>
+	<!-- -->
+
     <!-- JavaScript -->
     <script type='text/javascript'>
 
         const host_trafficflowmanager = "<?=$host_trafficflowmanager;?>";
         const role = "<?=$role_att;?>";
+        var preview_path = "<?=$preview_path; ?>";
 
         $(document).ready(function() {
 
@@ -528,6 +568,26 @@ if (isset ($_SESSION['username'])){
                     }
                 });
             });
+
+            //////////
+            $(document).on('click','.previewList', function() {
+						// Event listener for the button
+								var myModal = document.getElementById('preview-modal');
+								var myIframe = document.getElementById('iframeContainer');
+								var map_name = '';
+								var fluxname = $(this).val();
+								var layers = '';
+								var org = '';
+                                var shape = '';
+                                
+                                //preview_path = '../dashboardSmartCity/view/preview.php';
+                                //var od = 'od_Tuscany_1000';
+                                var od_action = 'dates';
+                                //&organization=Tuscany&action=dates&perc=True&precision=1000';
+								myIframe.src = preview_path+'?trafficFlow='+fluxname;
+                                console.log(myIframe.src);
+								$(myModal).modal('show');
+							});
 
             // Function called when clicking VIEW JSON inside HEATMAP
             $(document).on('click', '.view-json', function() {

@@ -357,6 +357,11 @@ $result_cm = mysqli_query($link, $query_cm) or die(mysqli_error($link));
 		#groupDelegationsTable{
 			width: 100%;
 		}
+
+		iframe {
+  width: 100vw;
+  height: 100vh;
+}
 		
 		
     </style>
@@ -385,15 +390,7 @@ $result_cm = mysqli_query($link, $query_cm) or die(mysqli_error($link));
                             <div class="row" style="width: 98%;">
                                 <!-- -->
                                 <div class="col-xs-12" id="mainContentCnt" style='background-color: rgba(138, 159, 168, 1); padding-top:20px;'>
-									<!--
-                                    <div>
-                                        <select name="limit" id="limit_select">
-                                            <option value="5">5</option>
-                                            <option value="10">10</option>
-                                            <option value="15">15</option>
-                                        </select>
-                                    </div>
-									 -->
+									
 									 <div>
                                 <table id="heatmap_table" class="table table-striped table-bordered display responsive no-wrap" style="width: 100%;">
                                 <thead class="dashboardsTableHeader">
@@ -413,20 +410,7 @@ $result_cm = mysqli_query($link, $query_cm) or die(mysqli_error($link));
 									$corr_page1= $_REQUEST["page"];
 									$pagina_attuale2='heatmap.php?showFrame='.$sf.'&page='.$corr_page1.'&orderBy=id&order='.$by_par.'&limit='.$limit.'';
 												
-										/*echo ('<tr>		
-													<th class="map_name"><div><a>Map name</a></div></th>
-													<th class="metric_name"><div><a>Color Map</a></div></th>
-													<th class="user"><div><a>Owner</a></div></th>
-													<th class="nature"><div><a>Nature</a></div></th>
-													<th class="subnature"><div><a>Subnature</a></div></th>
-													<th class="organization"><div><a>Organization</a></div></th>
-													<th class="min_date"><div><a>Minimum date</a></div></th>
-													<th class="max_date"><div><a>Maximum date</a></div></th>
-													<th><div><a>Instances</a></div></th>
-													<th><a>Management</a></th>
-													<th class="view"><div><a>View Data</a></div></th>
-													<th class="delete"><div><a>Delete</a></div></th>
-												</tr>');*/
+										
 												if(($role == 'RootAdmin')){
 												echo ('<tr>		
 													<th class="map_name"><div><a>Map name</a></div></th>
@@ -493,7 +477,7 @@ $result_cm = mysqli_query($link, $query_cm) or die(mysqli_error($link));
 															//echo("<td>".$process_list[$i]['count_number']."</td>");
 															echo("<td><button type='button' class='viewDashBtn viewList' data-target='#view-details' data-toggle='modal' onclick=viewdetails('".$process_list[$i]['map_name']."') value='".$process_list[$i]['map_name']."'>VIEW</button></td>");
 															echo("<td><button type='button' class='editDashBtn delegateBtn' data-target='#delegationsModal' data-toggle='modal' value='".$process_list[$i]['map_name']."' user='".$process_list[$i]['username']."' visibility='".$process_list[$i]['visibility']."' org='".$process_list[$i]['organization']."' nature='".$process_list[$i]['nature']."' subnature='".$process_list[$i]['subnature']."'>EDIT</button></td>");
-															echo("<td><button type='button' class='viewDashBtn viewList' data-target='#view-modal' data-toggle='modal' value='".$process_list[$i]['map_name']."'>VIEW</button></td>");
+															echo("<td><button type='button' class='viewDashBtn viewList' data-target='#view-modal' data-toggle='modal' value='".$process_list[$i]['map_name']."'>VIEW</button>	<button type='button' class='editDashBtn previewList' data-target='#preview-modal' data-toggle='modal' value='".$process_list[$i]['map_name']."' org='".$process_list[$i]['organization']."'>PREVIEW</button></td>");
 															echo("<td><button type='button' class='delDashBtn del_metdata' data-target='#delete-modal' data-toggle='modal' value='".$process_list[$i]['map_name']."'>DEL</button></td>");
 															echo("</tr>");
 														}
@@ -533,7 +517,8 @@ $result_cm = mysqli_query($link, $query_cm) or die(mysqli_error($link));
 															//echo("<td>".$process_list[$i]['count_number']."</td>");
 															echo("<td><button type='button' class='viewDashBtn viewList' data-target='#view-details' data-toggle='modal' onclick=viewdetails('".$process_list[$i]['map_name']."') value='".$process_list[$i]['map_name']."'>VIEW</button></td>");
 															//echo("<td><button type='button' class='editDashBtn delegateBtn' data-target='#delegationsModal' data-toggle='modal' value='".$process_list[$i]['map_name']."' user='".$process_list[$i]['username']."' visibility='".$process_list[$i]['visibility']."' org='".$process_list[$i]['organization']."' nature='".$process_list[$i]['nature']."' subnature='".$process_list[$i]['subnature']."'>EDIT</button></td>");
-															echo("<td><button type='button' class='viewDashBtn viewList' data-target='#view-modal' data-toggle='modal' value='".$process_list[$i]['map_name']."'>VIEW</button></td>");
+															//echo("<td><button type='button' class='viewDashBtn viewList' data-target='#view-modal' data-toggle='modal' value='".$process_list[$i]['map_name']."'>VIEW</button></td>");
+															echo("<td><button type='button' class='viewDashBtn viewList' data-target='#view-modal' data-toggle='modal' value='".$process_list[$i]['map_name']."'>VIEW</button>	<button type='button' class='editDashBtn previewList' data-target='#preview-modal' data-toggle='modal' value='".$process_list[$i]['map_name']."' org='".$process_list[$i]['organization']."'>PREVIEW</button></td>");
 															//echo("<td><button type='button' class='delDashBtn del_metdata' data-target='#delete-modal' data-toggle='modal' value='".$process_list[$i]['map_name']."'>DEL</button></td>");
 															echo("</tr>");
 														}
@@ -1020,6 +1005,26 @@ $result_cm = mysqli_query($link, $query_cm) or die(mysqli_error($link));
 											</div>
 										</div>
 										<!-- Fine modale gestione deleghe dashboard -->
+										 <!-- ##view_user-modal -->
+										 <div class="modal bd-example-modal-lg" id="preview-modal" role="dialog" aria-labelledby="exampleModalLongTitle" aria-hidden="true">
+												<div class="modal-dialog modal-xl" style="width: 80%; height: auto">
+													<form name="Preview Heatmap" method="post" action="#">
+														<div class="modal-content">
+															<div class="modal-header" style="background-color: white" id="preview_header">Preview Heatmap</div>
+															<div class="modal-body" style="background-color: white">
+																<div class="embed-responsive embed-responsive-16by9">	
+																	<iframe class="embed-responsive-item" id="iframeContainer" src="" frameborder="0"></iframe>
+																</div>
+															</div>
+															<div class="modal-footer" style="background-color: white">
+																<button type="button" class="btn cancelBtn" id="owner_close" data-dismiss="modal">Cancel</button>
+															</div>
+														</div>
+													</form>
+												</div>
+											</div>
+											<!-- -->
+										<!--- ---->
                             </div>
                         </div>
                 </div>
@@ -1036,6 +1041,7 @@ $result_cm = mysqli_query($link, $query_cm) or die(mysqli_error($link));
                 var limit_val = $('#limit_select').val();
 				var role = "<?=$role_att; ?>";
 				var array_del="<?=$array_del; ?>";
+				var preview_path = "<?=$preview_path; ?>";
 				
 
                 $(document).ready(function() {
@@ -1119,6 +1125,19 @@ $result_cm = mysqli_query($link, $query_cm) or die(mysqli_error($link));
                         $('.loader').show();
                     });
                     /*****/
+					$(document).on('click','.previewList', function() {
+						// Event listener for the button
+								var myModal = document.getElementById('preview-modal');
+								var myIframe = document.getElementById('iframeContainer');
+								var map_name = $(this).val();
+								var heatmap = $(this).val();
+								var layers = $(this).val();
+								var org = $(this).attr('org');
+								//myIframe.src = 'http://dashboard/dashboardSmartCity/view/preview.php?heatmap='+heatmap+'&layers='+layers+'&organization='+org;
+								myIframe.src = preview_path+'?heatmap='+heatmap+'&layers='+layers+'&organization='+org;
+								$(myModal).modal('show');
+							});
+					/******/
                     $(document).on('click', '.viewType', function() {
 						var metric = $(this).val();
                         $('#typology_header').text('Color Map:	' + metric);
@@ -1453,7 +1472,25 @@ $result_cm = mysqli_query($link, $query_cm) or die(mysqli_error($link));
 						////
 						/*********/
 						//			
-                    
+                    // Function to open the modal and insert the iframe
+							function openModalWithIframe(url) {
+							// Get the iframe container element
+							var iframeContainer = document.getElementById('iframeContainer');
+
+							// Create an iframe element
+							var iframe = document.createElement('iframe');
+							iframe.src = url;
+							iframe.width = '100%';
+							iframe.height = '400px';
+							iframe.frameborder = '0';
+
+							// Append the iframe to the container
+							iframeContainer.appendChild(iframe);
+
+							// Open the modal
+							//$('#m').modal('show');
+							}
+
 					//***CHANGE NATURE//
 					$("select#fnature").on("change",function(event){
 											$.ajax({

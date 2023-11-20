@@ -501,7 +501,7 @@ if (isset($_SESSION['username']) && isset($_SESSION['role'])) {
 		$vn_create = str_replace(' ', '', $vn_create);
 		//
 		$lb_create = filter_var($lb_create , FILTER_SANITIZE_STRING);
-		$lb_create = str_replace(' ', '', $lb_create);
+		//$lb_create = str_replace(' ', '', $lb_create);
 		//
 		$select_type_creation = filter_var($select_type_creation , FILTER_SANITIZE_STRING);
 		$insert_date = date("Y-m-d h:i:s");
@@ -627,7 +627,7 @@ if (isset($_SESSION['username']) && isset($_SESSION['role'])) {
 		$vn_create = str_replace(' ', '', $vn_create);
 		//
 		$lb_create = filter_var($lb_create , FILTER_SANITIZE_STRING);
-		$lb_create = str_replace(' ', '', $lb_create);
+		//$lb_create = str_replace(' ', '', $lb_create);
 		//
 		$select_type_creation = filter_var($select_type_creation , FILTER_SANITIZE_STRING);
 		$select_dt_e = filter_var($select_dt_e , FILTER_SANITIZE_STRING);
