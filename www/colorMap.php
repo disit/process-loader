@@ -87,8 +87,19 @@ if (isset($_REQUEST["page"])) {
 	} else { 
 		$page=1; 
 	};  
+
+$filter = '';
+if (isset($_REQUEST["filter"])) { 
+	$filter  = $_REQUEST["filter"]; 
+} else { 
+	$filter= ''; 
+};  
 $start_from = ($page-1) * $limit; 
-$query_n = "SELECT DISTINCT colors.metric_name FROM heatmap.colors ORDER BY colors.metric_name ".$by." LIMIT " . $start_from . ", " . $limit;
+if($filter != ''){
+$query_n = "SELECT DISTINCT colors.metric_name FROM heatmap.colors WHERE colors.metric_name LIKE '%" .$filter."%' ORDER BY colors.metric_name ".$by." LIMIT " . $start_from . ", " . $limit;
+}else{
+	$query_n = "SELECT DISTINCT colors.metric_name FROM heatmap.colors ORDER BY colors.metric_name ".$by." LIMIT " . $start_from . ", " . $limit;
+}
 
     $result = mysqli_query($link, $query_n) or die(mysqli_error($link));
     $process_list = array();
@@ -103,13 +114,42 @@ $query_n = "SELECT DISTINCT colors.metric_name FROM heatmap.colors ORDER BY colo
     }
 
 //
-$query_n0 = "SELECT DISTINCT colors.metric_name FROM heatmap.colors";
+if($filter != ''){
+	$query_n0 = "SELECT DISTINCT colors.metric_name FROM heatmap.colors WHERE colors.metric_name LIKE '%" .$filter."%'";
+}else{
+	$query_n0 = "SELECT DISTINCT colors.metric_name FROM heatmap.colors";
+}
 $total_rows_query = $query_n0;
 $result0 = mysqli_query($link, $total_rows_query) or die(mysqli_error($link));
 if ($result0->num_rows >0){
 $total_rows = $result0->num_rows;
 }
 
+//LIST OF USERS
+$query_users = "SELECT * FROM heatmap.colormapUsers";
+$result_users = mysqli_query($link, $query_users) or die(mysqli_error($link));
+$data_users = array(); // Array vuoto per i risultati
+// Controlla se ci sono risultati
+if ($result_users->num_rows > 0) {
+    while($row = $result_users->fetch_assoc()) {
+        $data_users[] = $row;
+    }
+}
+// Converti l'array in JSON
+$json_users = json_encode($data_users);
+
+//LIST OF AUTHORIZED_USERS
+$query_Auth_users = "SELECT * FROM heatmap.authorizedUsers";
+$result_Auth_user = mysqli_query($link, $query_Auth_users) or die(mysqli_error($link));
+$data_Auth_users = array(); // Array vuoto per i risultati
+// Controlla se ci sono risultati
+if ($result_Auth_user->num_rows > 0) {
+    while($row = $result_Auth_user->fetch_assoc()) {
+        $data_Auth_users[] = $row;
+    }
+}
+// Converti l'array in JSON
+$json_Auth_users = json_encode($data_Auth_users);
 ?>
 
 <html lang="en">
@@ -221,13 +261,19 @@ $total_rows = $result0->num_rows;
 					<!-- -->
 					<div class="col-xs-12" id="mainContentCnt" style='background-color: rgba(138, 159, 168, 1); padding-top:20px;'>
 						<!---->	
-							<div>
+							<div id="selector" style="float:left">
 								<select name="limit" id="limit_select" >
 								<option value="5">5</option>
 								<option value="10">10</option>
 								<option value="15">15</option>
 								</select>
 							</div>
+							<!-- -->
+							<div id="search" style="float:right">
+							<span style="font-weight:bold">Search:</span>
+							<input type="search" id="search-value" placeholder="search..." onkeydown="handleSearchOnEnter(event)">
+							</div>
+							<!-- -->
 								<table id="heatmap_table" class="table table-striped table-bordered" style="width: 100%;">
 													<thead class="dashboardsTableHeader">
 					<?php
@@ -255,18 +301,51 @@ $total_rows = $result0->num_rows;
 					</thead>	
 					<tbody>
 					<?php
-					
-						for ($i = 0; $i <= $num_rows; $i++) {
-							if ($process_list[$i]['metric_name']){
-								echo ("<tr><td><p>".$process_list[$i]['metric_name']."</p></td>");
-								echo("<td><button type='button' class='editDashBtn editColor' data-target='#edit-colormap' data-toggle='modal' value='".$process_list[$i]['metric_name']."'>EDIT</button></td>");
-								echo("<td><button type='button' class='viewDashBtn viewType' data-target='#typology-modal' data-toggle='modal' value='".$process_list[$i]['metric_name']."'>VIEW</button></td>");
-								echo("<td><button type='button' class='delDashBtn del_metdata' data-target='#delete-colormap' data-toggle='modal' value='".$process_list[$i]['metric_name']."'>DEL</button></td>");
-								echo("</tr>");
+							$found = false;
+							$found_user = false;
+
+							// Usa in_array o isset se $element_auth è un array associativo
+							$json_Auth_users2 = json_decode($json_Auth_users);
+							//var_dump($json_Auth_users2);
+							foreach ($json_Auth_users2 as $element_auth) {
+								$elementJson = $element_auth->username;
+								if ($utente_att === $elementJson) {
+									$found = true;
+									break;
 								}
 							}
-								
+
+							$arrayData = json_decode($json_users, true); // Decodifica JSON una sola volta
+
+							for ($i = 0; $i < $num_rows; $i++) {
+								if (isset($process_list[$i]['metric_name'])) { // Verifica se 'metric_name' esiste
+									foreach ($arrayData as $element) {
+										if ((($element['username'] == $utente_att) && ($element['colormap'] == $process_list[$i]['metric_name']))) {
+											$found_user = true;
+											break;
+										}else{
+											$found_user = false;
+										}
+									}
+									$view_legend = "<button type='button' class='viewDashBtn viewLegend' data-target='#legend-modal' data-toggle='modal' value='" . $process_list[$i]['metric_name'] . "'>VIEW LEGENDA</button>";
+
+									if ($found_user || $role_att == 'RootAdmin' || $found) {
+										echo ("<tr><td><p>" . $process_list[$i]['metric_name'] . "</p></td>");
+										echo ("<td><button type='button' class='editDashBtn editColor' data-target='#edit-colormap' data-toggle='modal' value='" . $process_list[$i]['metric_name'] . "'>EDIT</button>	<button type='button' class='viewDashBtn loadColor' data-target='#load-colormap' data-toggle='modal' value='" . $process_list[$i]['metric_name'] . "'>LOAD LEGENDA</button> <button type='button' class='editDashBtn clone_colormap' data-target='#clone-colormap' data-toggle='modal' value='" . $process_list[$i]['metric_name'] . "'>SAVE AS</button></td>");
+										echo ("<td><button type='button' class='viewDashBtn viewType' data-target='#typology-modal' data-toggle='modal' value='" . $process_list[$i]['metric_name'] . "'>VIEW</button> ".$view_legend."</td>");
+										echo ("<td>	<button type='button' class='delDashBtn del_metdata' data-target='#delete-colormap' data-toggle='modal' value='" . $process_list[$i]['metric_name'] . "'>DEL</button></td>");
+										echo ("</tr>");
+									} else {
+										echo ("<tr><td><p>" . $process_list[$i]['metric_name'] . "</p></td>");
+										echo ("<td><button type='button' class='editDashBtn clone_colormap' data-target='#clone-colormap' data-toggle='modal' value='" . $process_list[$i]['metric_name'] . "'>SAVE AS</button></td>");
+										echo ("<td><button type='button' class='viewDashBtn viewType' data-target='#typology-modal' data-toggle='modal' value='" . $process_list[$i]['metric_name'] . "'>VIEW</button> ".$view_legend."</td>");
+										echo ("<td></td>");
+										echo ("</tr>");
+									}
+								}
+							}
 							?>
+
 						</tbody>
 						</table>
 						<!------>
@@ -276,10 +355,11 @@ $total_rows = $result0->num_rows;
 								$prev_page = $_REQUEST["page"] -1;
 								$suc_page = $_REQUEST["page"] +1;
 								$corr_page= $_REQUEST["page"];
+								$filter_string = $REQUEST["filter"];
 								$array_link = array ();
 								/////
 							if ($prev_page >=1){
-							echo ('	<div class="pagination" value="'.$prev_page.'">&#09;<a href="colorMap.php?showFrame='.$_REQUEST['showFrame'].'&page=1&orderBy='.$order.'&order='.$by.'&limit='.$_REQUEST['limit'].'">First 	</a></div>');
+							echo ('	<div class="pagination" value="'.$prev_page.'">&#09;<a href="colorMap.php?showFrame='.$_REQUEST['showFrame'].'&page=1&orderBy='.$order.'&order='.$by.'&limit='.$_REQUEST['limit'].'&filter='.$filter_string.'">First 	</a></div>');
 							echo ('	<div class="pagination" value="'.$prev_page.'">&#09;<a href="colorMap.php?showFrame='.$_REQUEST['showFrame'].'&page='.$prev_page.'&orderBy='.$order.'&order='.$by.'&limit='.$_REQUEST['limit'].'">	<< 	Prev</a></div>');
 							}		
 										if ($corr_page >11){
@@ -293,7 +373,7 @@ $total_rows = $result0->num_rows;
 										$style='';
 									}
 										if (($j<11)||(($corr_page-$j)>=0)||(($corr_page == $j)&&($corr_page < $total_pages-3))||(($corr_page >= $total_pages-3))){
-											echo ("&#09;<a class='page_n' value='".$j."' href='colorMap.php?showFrame=".$_REQUEST['showFrame']."&page=".$j."&orderBy=".$order."&order=".$by."&limit=".$_REQUEST['limit']."' style='".$style."'>".$j."</a>&#09;");
+											echo ("&#09;<a class='page_n' value='".$j."' href='colorMap.php?showFrame=".$_REQUEST['showFrame']."&page=".$j."&orderBy=".$order."&order=".$by."&limit=".$_REQUEST['limit']."&filter=".$filter_string."' style='".$style."'>".$j."</a>&#09;");
 										}else{echo(" ");}
 											
 							}; 
@@ -302,13 +382,13 @@ $total_rows = $result0->num_rows;
 											echo ("...");
 											for ($y=$last_pages; $y<=$total_pages; $y++) {  
 												
-												echo ("&#09;<a class='page_n' value='".$y."' href='colorMap.php?showFrame=".$_REQUEST['showFrame']."&page=".$y."&orderBy=".$order."&order=".$by."&limit=".$_REQUEST['limit']."'>".$y."</a>&#09;");		 
+												echo ("&#09;<a class='page_n' value='".$y."' href='colorMap.php?showFrame=".$_REQUEST['showFrame']."&page=".$y."&orderBy=".$order."&order=".$by."&limit=".$_REQUEST['limit']."&filter=".$filter_string."' >".$y."</a>&#09;");		 
 											};
 									}
 							if ($suc_page <=$total_pages){
 							
-									echo ('	<div class="pagination" value="'.$suc_page.'">&#09;<a href="colorMap.php?showFrame='.$_REQUEST['showFrame'].'&page='.$suc_page.'&orderBy='.$order.'&order='.$by.'&limit='.$_REQUEST['limit'].'">Next 	>>	</a></div>');
-									echo ('	<div class="pagination" value="'.$suc_page.'">&#09;<a href="colorMap.php?showFrame='.$_REQUEST['showFrame'].'&page='.$total_pages.'&orderBy='.$order.'&order='.$by.'&limit='.$_REQUEST['limit'].'">   	Last</a></div>');
+									echo ('	<div class="pagination" value="'.$suc_page.'">&#09;<a href="colorMap.php?showFrame='.$_REQUEST['showFrame'].'&page='.$suc_page.'&orderBy='.$order.'&order='.$by.'&limit='.$_REQUEST['limit']."&filter=".$filter_string.'" >Next 	>>	</a></div>');
+									echo ('	<div class="pagination" value="'.$suc_page.'">&#09;<a href="colorMap.php?showFrame='.$_REQUEST['showFrame'].'&page='.$total_pages.'&orderBy='.$order.'&order='.$by.'&limit='.$_REQUEST['limit'].'&filter='.$filter_string.'" >   	Last</a></div>');
 							}
 						?>
 						<!----->
@@ -366,6 +446,23 @@ $total_rows = $result0->num_rows;
 							</div>
 					  </div>
 					<!-- -->
+					<!-- view modal -->
+					<div class="modal fade bd-example-modal-sm" id="legend-modal" role="dialog" aria-labelledby="exampleModalLongTitle" aria-hidden="true">
+							<div class="modal-dialog modal-sm">
+									<div class="modal-content">
+									<div class="modal-header" style="background-color: white" id="leged_header">View Legenda</div>
+									<div class="modal-body" style="background-color: white">
+									<div id="image_leged" style="display: flex; align-items: center; justify-content: center;">
+									</div>
+									</div>
+									<div class="modal-footer" style="background-color: white">
+									<button type="button" class="btn cancelBtn" id="typology_close" data-dismiss="modal">Cancel</button>
+									<!--<input type="submit" value="Confirm" class="btn confirmBtn"/>-->
+									</div>
+									</div>
+							</div>
+					  </div>
+					<!-- -->
 					<div class="modal fade bd-example-modal-lg" id="edit-colormap" role="dialog" aria-labelledby="exampleModalLongTitle" aria-hidden="true">
 							<div class="modal-dialog modal-lg">
 									<form name="Modify Color Map" method="post" action="get_heatmap.php?showFrame=<?php echo($sf); ?>&page=<?php echo($page); ?>&orderBy=<?php echo($order); ?>&order=<?php echo($by); ?>&limit=<?php echo($limit); ?>&action=modify_colormap" id="color_Heatmap">
@@ -389,10 +486,8 @@ $total_rows = $result0->num_rows;
 										</tbody>
 									</table>
 									</div>
-									<!-- -->
 									<div id="list_deleted">
 									</div>
-									<!-- -->
 										<div>
 											<p>
 											<button type="button" class="btn confirmBtn" id="add_color">Add Color</button>
@@ -453,7 +548,52 @@ $total_rows = $result0->num_rows;
 							</div>
 					  </div>
 					<!-- --> 
-				</div>	
+						<!-- CLONE MODAL-->
+						<div class="modal fade bd-example-modal-lg" id="clone-colormap" role="dialog" aria-labelledby="exampleModalLongTitle" aria-hidden="true">
+							<div class="modal-dialog modal-lg">
+									<div class="modal-content">
+									<div class="modal-header" style="background-color: white" id="color_header_create">Clone Color map</div>
+									<div class="modal-body" style="background-color: white">
+									<!-- -->
+									<div class="input-group"><span class="input-group-addon">Color map Name: </span><input name="name_color_map_ro" id="name_color_map_ro" type="text" class="form-control" readonly/></div>
+									<br />
+									<div class="input-group"><span class="input-group-addon">Save as: </span><input name="name_color_map_new" id="name_color_map_new" type="text" class="form-control"/></div>
+									<div class="modal-footer" style="background-color: white">
+									<button type="button" class="btn cancelBtn" id="color_close0" data-dismiss="modal">Cancel</button>
+									<input type="submit" value="Confirm" class="btn confirmBtn" id="command_clone"/>
+									</div>
+									</div>
+							</div>
+						</div>
+						</div>
+						<!-- FINE CLONE MODAL -->
+										<!-- SAVE MODAL-->
+							<div class="modal fade bd-example-modal-lg" id="load-colormap" role="dialog" aria-labelledby="exampleModalLongTitle" aria-hidden="true">
+									<div class="modal-dialog modal-lg">
+											<div class="modal-content">
+												<div class="modal-header" style="background-color: white" id="color_header_create">Load colormap in repository</div>
+												<div class="modal-body" style="background-color: white">
+												<div>Are you sure you want to load this color map in the repository?</div>
+												<br />
+													<!-- -->
+													<div class="input-group" style="display:none;"><input name="colormap_to_load" id="colormap_to_load" type="text" class="form-control" readonly/></div>
+													<div class="input-group">
+															<label class="form-label" for="fileInput">Upload: </label>
+															<input type="file" name="form-control" class="form-control" id="fileInput" />
+													</div>
+													<div class="input-group" id="fileLinkDiv" style="display:none;">
+													</div>
+													<br />
+													<!-- -->
+												</div>
+												<div class="modal-footer" style="background-color: white">
+													<button type="button" class="btn cancelBtn" id="color_close0" data-dismiss="modal">Cancel</button>
+													<input type="submit" value="Confirm" class="btn confirmBtn" id="command_save"/>
+												</div>
+											</div>
+									</div>
+								</div>
+						<!-- FINE SAVE MODAL -->
 		</div>
 		</div>
 
@@ -487,6 +627,12 @@ $(document).ready(function () {
 		var role_active = $("#role_att").text();
 	if (role_active == 'ToolAdmin'){
 		$('#sc_mng').show();
+	}
+	var search_val ="<?=$filter; ?>";
+	
+	if(search_val !== ''){
+		$('#search-value').val(search_val);
+		$('#search-value').focus();
 	}
 	//
 	var limit_default= "<?=$limit; ?>";
@@ -537,6 +683,29 @@ $(document).ready(function () {
 		  $('#link_list').empty();
 		  location.reload();
 	  });
+	  /*****/
+	  $(document).on('click','.viewLegend', function(){
+		$('#image_leged').empty();
+		var metric = $(this).val();
+		//
+		$.ajax({
+				url:'get_heatmap.php',
+				data: {metric:metric, action:'view_legend'},
+				type: "POST",
+				async: true,
+				dataType: 'json',
+				success: function (data) {
+					if(data.status == 'success'){
+						$('#image_leged').html('<img src="'+data.link+'" width="auto" height="auto" style="text-align: center;">');
+					}else{
+						$('#image_leged').html('<p>Currently there is not a legenda image for this colormap</p>');
+					}
+				}
+		});
+		//
+		console.log(metric);
+	  });
+
 	  /*****/
 	  $(document).on('click','.viewType',function(){
 			//var metric = $(this).parent().parent().first().children().eq(0).children().eq(0).html();
@@ -596,6 +765,7 @@ $(document).ready(function () {
 		$('#limit_select').change(function() {
 					var limit_val = $('#limit_select').val();
 					var links = [];
+					var searchTerm_label = document.getElementById("search-value").value;
 					links = $("a.page_n");
 					for(var i=0; i < links.length; i++){
 						var str = links[i].href;
@@ -603,10 +773,10 @@ $(document).ready(function () {
 						links[i].href = new_link;
 					}
 					if((window.self !== window.top)||(nascondi == 'hide')){	
-							window.location.href = 'colorMap.php?showFrame=false&page='+corrent_page+'&limit='+limit_val;						
+							window.location.href = 'colorMap.php?showFrame=false&page='+corrent_page+'&limit='+limit_val+'&filter='+searchTerm_label;						
 						}
 						else{
-							window.location.href = 'colorMap.php?showFrame=true&page='+corrent_page+'&limit='+limit_val;	
+							window.location.href = 'colorMap.php?showFrame=true&page='+corrent_page+'&limit='+limit_val+'&filter='+searchTerm_label;	
 					}
 			});
 	/*****/
@@ -745,12 +915,14 @@ $(document).on('click','#add_color',function(){
 	var count_rows = $('#count_rows').val();
 	//
 	var min = count-1;
-	if(min >= 0){
+	console.log('min:',min);
+	if((min >= 0) && !isNaN(min)){
 		var value0 = $('input[name="paramMax['+min+']"]').val();
-		console.log(value0);
-		if(value0 == null){
+		if((value0 == null)&&(typeof value0 !== 'undefined')){
 				value0 = $('input[name="paramMaxMod['+min+']"]').val();
 				//paramMaxMod
+			}else{
+				value0 = "";
 			}
 	}else{
 		value0 = "";
@@ -788,7 +960,158 @@ $(document).on('click','#add_color0',function(){
 	$('#count_rows0').val(count + 1);
 	//
 });
+////
+/*$(document).on('click','#edit_colorMap', function(){
+	//modify_colormap
+	alert('send_data');
+	var metric_name = $('#metric_name').val();
+	//
+	var paramColor = [];
+	var paramId = [];
+	var paramMin = [];
+	var paramMax = [];
+	var paramRgb = [];
+	var paramOrder = [];
+	var paramMinMod = [];
+	var paramMaxMod = [];
+	var paramRgbMod = [];
+	var paramColorMod = [];
+	var paramOrderMod = [];
+
+		$('.paramId').each(function() {
+			paramId.push($(this).val());
+		});
+		$('.paramMin').each(function() {
+			paramMin.push($(this).val());
+		});
+		$('.paramMax').each(function() {
+			paramMax.push($(this).val());
+		});
+		$('.paramRgb').each(function() {
+			paramRgb.push($(this).val());
+		});
+		$('.paramColor').each(function() {
+			paramColor.push($(this).val());
+		});
+		$('.paramOrder').each(function() {
+			paramOrder.push($(this).val());
+		});
+		$('.paramMinMod').each(function() {
+			paramMinMod.push($(this).val());
+		});
+		$('.paramMaxMod').each(function() {
+			paramMaxMod.push($(this).val());
+		});
+		$('.paramRgbMod').each(function() {
+			paramRgbMod.push($(this).val());
+		});
+		$('.paramColorMod').each(function() {
+			paramColorMod.push($(this).val());
+		});
+		$('.paramOrderMod').each(function() {
+			paramOrderMod.push($(this).val());
+		});
+	//
+	$.ajax({
+				url:'get_heatmap.php',
+				data: {metric_name: metric_name,
+						paramId: paramId,
+						paramMin: paramMin,
+						paramMax: paramMax,
+						paramRgb: paramRgb,
+						paramColor: paramColor,
+						paramOrder: paramOrder,
+						paramMinMod: paramMinMod,
+						paramMaxMod: paramMaxMod,
+						paramRgbMod: paramRgbMod,
+						paramColorMod: paramColorMod,
+						paramOrderMod: paramOrderMod,
+					  action:'modify_colormap'
+				},
+				type: "POST",
+				async: false,
+				dataType: 'json',
+				success: function (data) {
+						console.log(data);
+						alert(data.message);
+						location.reload();
+				}
+			});
+});*/
 ///
+$(document).on('click','.clone_colormap', function(){
+	var metric = $(this).val();
+	$('#name_color_map_ro').val(metric);
+	//var name_color_map = $('#name_color_map').val();
+});
+
+$(document).on('click','.loadColor',function(){
+	var metric = $(this).val();
+	console.log(metric);
+	$('#fileLinkDiv').css('display','none');
+	$('#fileLinkDiv').empty();
+	$('#colormap_to_load').val(metric);
+});
+
+$(document).on('click','#command_save', function(){
+const fileInput = document.getElementById('fileInput');
+const file = fileInput.files[0];
+const metric = $('#colormap_to_load').val();
+
+if (file) {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('metric', metric);
+    formData.append('action', 'load_colormap'); // Aggiungi tutti i parametri direttamente a formData
+
+    $.ajax({
+        url: 'get_heatmap.php',
+        type: 'POST',
+        data: formData,
+        processData: false, // Impostato a false per evitare che jQuery trasformi i dati in una stringa
+        contentType: false, // Impostato a false per permettere a jQuery di determinare il contentType corretto
+        dataType: 'json',
+        success: function (data) {
+            console.log(data.message);
+			//$('#fileLinkDiv').css('display','block');
+			//$('#fileLinkDiv').html('<a href="'+data.link+'" target="_blank">Open Link</a>');
+            alert(data.message);
+            location.reload();
+        },
+        error: function (error) {
+			alert(error.responseText);
+			
+            console.error("Errore durante l'invio del file:", error);
+        }
+    });
+}
+
+
+});
+
+//command_clone
+$(document).on('click','#command_clone', function(){
+	var metric = $('#name_color_map_ro').val();
+	var name_color_map = $('#name_color_map_new').val();
+	//
+	$.ajax({
+				url:'get_heatmap.php',
+				data: {metric:metric, 
+					  name_color_map:name_color_map, 
+					  action:'clone_colormap'
+				},
+				type: "POST",
+				async: false,
+				dataType: 'json',
+				success: function (data) {
+						console.log(data);
+						alert(data.message);
+						location.reload();
+				}
+			});
+
+	//
+});
 
 $(document).on('click','.del_color0',function(){
 	var id= $(this).parent().parent();
@@ -837,7 +1160,7 @@ $(document).on('click','.del_color1',function(){
 });
 //
 //
-$(document).on('change','.ed_max',function(){
+$(document).on('keyup','.ed_max',function(){
 	var str = $(this).attr('name');
 	var val = $(this).val();
 	var mySubString = str.substring(
@@ -853,7 +1176,7 @@ $(document).on('change','.ed_max',function(){
 	
 });
 //
-$(document).on('change','.mod_max',function(){
+$(document).on('keyup','.mod_max',function(){
 	var str = $(this).attr('name');
 	var val = $(this).val();
 	var mySubString = str.substring(
@@ -998,6 +1321,29 @@ function removeParam(key, sourceURL) {
     }
     return rtn;
 }
+////
+function handleSearchOnEnter(event) {
+	search_val = document.getElementById("search-value").value;
+        if (event.key === 'Enter') { // Verifica se è stato premuto Enter
+            handleSearch();
+        }
+    }
+
+function handleSearch() {
+            const searchTerm = document.getElementById("search-value").value;
+			////
+			var limit_select = $('#limit_select').val();
+			const currentURL = window.location.href;
+			var new_current = currentURL + '&filter='+searchTerm;
+			console.log("new_current: ", new_current);
+			if((window.self !== window.top)||(nascondi == 'hide')){	
+							window.location.href = 'colorMap.php?showFrame=false&page='+corrent_page+'&limit='+limit_select+ '&filter='+searchTerm;						
+						}
+						else{
+							window.location.href = 'colorMap.php?showFrame=true&page='+corrent_page+'&limit='+limit_select+ '&filter='+searchTerm;	
+					}
+            // Aggiungi qui la logica per gestire la ricerca
+        }
 ///
 $(window).on('load', function() {
 	var sf =''

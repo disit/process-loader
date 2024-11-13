@@ -17,40 +17,45 @@
 
 include("../config.php");
 $table = "mappingtable";
-if (isset($_POST["operation"])) {
-    if ($_POST["operation"] == "Add") {
+if (($_SESSION['role'] !== '')&&($_SESSION['role']!= null)){
+        if (isset($_POST["operation"])) {
+            if ($_POST["operation"] == "Add") {
 
-        // field names
-        $f = "";
-        // field values
-        $v = "";
-        $fields = json_decode(urldecode($_REQUEST["fieldNames"]));
-        for ($i = 0; $i < count($fields); $i++) {
-            if ($fields[$i] != "id") {
-                $f .= "`" . $fields[$i] . "`" . ($i != count($fields) - 2 ? "," : "");
-                $v .= "'" . mysqli_real_escape_string($connessione_al_server, $_REQUEST[$fields[$i]]) . "'" . ($i != count($fields) - 2 ? "," : "");
+                // field names
+                $f = "";
+                // field values
+                $v = "";
+                $fields_test = mysqli_real_escape_string($connessione_al_server,$_REQUEST["fieldNames"]);
+                $fields = json_decode(urldecode($fields_test));
+                for ($i = 0; $i < count($fields); $i++) {
+                    if ($fields[$i] != "id") {
+                        $f .= "`" . $fields[$i] . "`" . ($i != count($fields) - 2 ? "," : "");
+                        $v .= "'" . mysqli_real_escape_string($connessione_al_server, $_REQUEST[$fields[$i]]) . "'" . ($i != count($fields) - 2 ? "," : "");
+                    }
+                }
+                $query = "INSERT INTO " . $dbname . "." . $table . " (" . $f . ") VALUES (" . $v . ")";
+                //file_put_contents("prova.txt", $query);
+                if (mysqli_query($connessione_al_server, $query)) {
+                    echo 'Row Inserted';
+                }
+            } else if ($_POST["operation"] == "Edit") {
+                // field values
+                $v = "";
+                //$fields = json_decode(urldecode($_REQUEST["fieldNames"]));
+                $fields_test = mysqli_real_escape_string($connessione_al_server,$_REQUEST["fieldNames"]);
+                $fields = json_decode(urldecode($fields_test));
+                for ($i = 0; $i < count($fields); $i++) {
+                    if ($fields[$i] != "id") {
+                        $v .= "`" . $fields[$i] . "`='" . mysqli_real_escape_string($connessione_al_server, $_REQUEST[$fields[$i]]) . "'" . ($i != count($fields) - 2 ? "," : "");
+                    }
+                }
+                $query = "UPDATE " . $dbname . "." . $table . " SET " . $v . "  WHERE id = '" . $_REQUEST["id"] . "'";
+                //file_put_contents("prova.txt", $query);
+                if (mysqli_query($connessione_al_server, $query)) {
+                    echo 'Row Updated';
+                }
             }
         }
-        $query = "INSERT INTO " . $dbname . "." . $table . " (" . $f . ") VALUES (" . $v . ")";
-        //file_put_contents("prova.txt", $query);
-        if (mysqli_query($connessione_al_server, $query)) {
-            echo 'Row Inserted';
-        }
-    } else if ($_POST["operation"] == "Edit") {
-        // field values
-        $v = "";
-        $fields = json_decode(urldecode($_REQUEST["fieldNames"]));
-        for ($i = 0; $i < count($fields); $i++) {
-            if ($fields[$i] != "id") {
-                $v .= "`" . $fields[$i] . "`='" . mysqli_real_escape_string($connessione_al_server, $_REQUEST[$fields[$i]]) . "'" . ($i != count($fields) - 2 ? "," : "");
-            }
-        }
-        $query = "UPDATE " . $dbname . "." . $table . " SET " . $v . "  WHERE id = '" . $_REQUEST["id"] . "'";
-        //file_put_contents("prova.txt", $query);
-        if (mysqli_query($connessione_al_server, $query)) {
-            echo 'Row Updated';
-        }
-    }
 }
 $connessione_al_server->close();
 ?>

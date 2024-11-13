@@ -17,14 +17,20 @@
    
 include("../config.php");
 $table = "mappingtable";
-if (isset($_GET["source"])) {
-    $output = array();
-    $query = "SELECT destination FROM " . $dbname. "." . $table . " WHERE source = '" . $_GET["source"] . "'";
-    $result = mysqli_query($connessione_al_server, $query);
-    while ($row = mysqli_fetch_array($result)) {
-            $output['destination'] = $row['destination'];
-    }
-    echo json_encode($output);
+if (($_SESSION['role'] !== '')&&($_SESSION['role']!= null)){
+        if (isset($_GET["source"])) {
+            $output = array();
+            //
+            $source_test = mysqli_real_escape_string($connessione_al_server,$_GET["source"]);
+            $source = filter_var($source_test , FILTER_SANITIZE_STRING);
+            //
+            $query = "SELECT destination FROM " . $dbname. "." . $table . " WHERE source = '" . $source . "'";
+            $result = mysqli_query($connessione_al_server, $query);
+            while ($row = mysqli_fetch_array($result)) {
+                    $output['destination'] = $row['destination'];
+            }
+            echo json_encode($output);
+        }
 }
 $connessione_al_server->close();
 ?>

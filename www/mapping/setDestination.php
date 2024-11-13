@@ -17,22 +17,32 @@
 
 include("../config.php");
 $table = "mappingtable";
-if (isset($_GET["source"]) && isset($_GET["destination"])) {
+if (($_SESSION['role'] !== '')&&($_SESSION['role']!= null)){
+        if (isset($_GET["source"]) && isset($_GET["destination"])) {
 
-        // field names
-        $f = "";
-        // field values
-        $v = "";
-        $source = urldecode($_GET["source"]);
-		$destination = urldecode($_GET["destination"]);
-        $f .= "`source`" . "," . "`destination`";
-        $v .= "'" . $source . "'" . "," . "'" . $destination . "'";
-           
-   
-        $query = "INSERT INTO " . $dbname . "." . $table . " (" . $f . ") VALUES (" . $v . ")";
-        //file_put_contents("prova.txt", $query);
-        if (mysqli_query($connessione_al_server, $query)) {
-            echo 'Row Inserted';
+                // field names
+                $f = "";
+                // field values
+                $v = "";
+                //$source = urldecode($_GET["source"]);
+                $source_test = mysqli_real_escape_string($connessione_al_server,$_GET["source"]);
+                $source_url = filter_var($source_test , FILTER_SANITIZE_STRING);
+                $source = urldecode($source_url);
+
+                //$destination = urldecode($_GET["destination"]);
+                $destination_test = mysqli_real_escape_string($connessione_al_server,$_GET["destination"]);
+                $destination_url = filter_var($destination_test , FILTER_SANITIZE_STRING);
+                $destination = urldecode($destination_url);
+
+                $f .= "`source`" . "," . "`destination`";
+                $v .= "'" . $source . "'" . "," . "'" . $destination . "'";
+                
+        
+                $query = "INSERT INTO " . $dbname . "." . $table . " (" . $f . ") VALUES (" . $v . ")";
+                //file_put_contents("prova.txt", $query);
+                if (mysqli_query($connessione_al_server, $query)) {
+                    echo 'Row Inserted';
+                }
         }
 }
 $connessione_al_server->close();

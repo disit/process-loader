@@ -309,6 +309,13 @@ JOIN (
     $by    = $_REQUEST['order'];
     $order = $_REQUEST['orderBy'];
     //
+    $utente = $_SESSION['username'];
+    //INSERT INTO colormapUsers;
+    $query_user = "INSERT INTO `heatmap`.`colormapUsers` (`colormap`, `username`) VALUES ('" . $name_color_map . "', '" . $utente . "');";
+    echo ($query_user.'<br />');
+    $result_user= mysqli_query($link, $query_user) or die(mysqli_error($link));
+
+    /////////////
     header("location:colorMap.php?showFrame=" . $sf . "&page=" . $page . "&orderBy=" . $order . "&order=" . $by . "&limit=" . $limit);
     ///
 } else if ($action == 'delete_colormap') {
@@ -323,7 +330,7 @@ JOIN (
     
 } elseif ($action == 'modify_colormap') {
     $metric_name = $_REQUEST['metric_name'];
-    echo ($metric_name);
+    //echo ($metric_name);
     $paramId    = $_REQUEST['paramId'];
 	$paramId   = filter_var_array($paramId, FILTER_SANITIZE_STRING);
 	//
@@ -343,22 +350,41 @@ JOIN (
 	$paramOrder = filter_var_array($paramOrder, FILTER_SANITIZE_STRING);
     ////
     $lun        = count($paramId);
+    //
+    //////
+    //
     
     for ($i = 0; $i < $lun; $i++) {
         //
         $val_rgb  = explode('(', $paramRgb[$i]);
         $val_rgb2 = explode(')', $val_rgb[1]);
         $rgb      = '[' . $val_rgb2[0] . ']';
+        $min01 = $paramMin[$i];
+        $max01 = $paramMax[$i];
+        $order01 = $paramOrder[$i];
         //
-        $query1   = "UPDATE heatmap.colors SET colors.min='" . $paramMin[$i] . "', colors.max='" . $paramMax[$i] . "', colors.rgb='" . $rgb . "', colors.color='" . mysqli_real_escape_string($link,$paramColor[$i]) . "', colors.order='" . mysqli_real_escape_string($link,$paramOrder[$i]) . "' WHERE colors.id='" . $paramId[$i] . "'";
+        if($min01  == ''){
+            $min01 = 'NULL';
+        }
+        if($max01 == ''){
+            $max01 = 'NULL';
+        }
+        if($order01 == ''){
+            $order01 = $i +1;
+        }
         //
-		if($paramMax[$i]==''){
-			$query1   = "UPDATE heatmap.colors SET colors.min='" . $paramMin[$i] . "', colors.max=NULL, colors.rgb='" . $rgb . "', colors.color='" . mysqli_real_escape_string($link, $paramColor[$i]) . "', colors.order='" . mysqli_real_escape_string($link,$paramOrder[$i]) . "' WHERE colors.id='" . $paramId[$i] . "'";
+        $query1   = "UPDATE heatmap.colors SET colors.min=$min01, colors.max=$max01, colors.rgb='" . $rgb . "', colors.color='" . mysqli_real_escape_string($link,$paramColor[$i]) . "', colors.order='" . mysqli_real_escape_string($link,$order01) . "' WHERE colors.id='" . $paramId[$i] . "'";
+        //
+		/*if($paramMax[$i]==''){
+            
+			$query1   = "UPDATE heatmap.colors SET colors.min='" . $paramMin[$i] . "', colors.max= NULL, colors.rgb='" . $rgb . "', colors.color='" . mysqli_real_escape_string($link, $paramColor[$i]) . "', colors.order='" . mysqli_real_escape_string($link,$paramOrder[$i]) . "' WHERE colors.id='" . $paramId[$i] . "'";
 		}
 		if($paramMin[$i] == ''){
+            
 			$query1   = "UPDATE heatmap.colors SET colors.min=NULL, colors.max='" . $paramMax[$i] . "', colors.rgb='" . $rgb . "', colors.color='" . mysqli_real_escape_string($link, $paramColor[$i]) . "', colors.order='" . mysqli_real_escape_string($link,$paramOrder[$i]) . "' WHERE colors.id='" . $paramId[$i] . "'";
-		}
+		}*/
 		//
+        echo($query1);
         $result1 = mysqli_query($link, $query1) or die(mysqli_error($link));
     }
     
@@ -376,22 +402,34 @@ JOIN (
         //
         $val_rgb  = explode('(', $paramRgbMod[$j]);
         $val_rgb2 = explode(')', $val_rgb[1]);
+        if($val_rgb2[0] == ''){
+            $val_rgb2[0] = '255,255,255';
+        }
         $rgb      = '[' . $val_rgb2[0] . ']';
+        $order = $paramOrderMod[$j];
+        $color = $paramColorMod[$j];
         //
         $min      = $paramMinMod[$j];
-        echo ($min);
         $max = $paramMaxMod[$j];
-        echo ($max);
+        if($min  == ''){
+            $min = 'NULL';
+        }
+        if($max == ''){
+            $max = 'NULL';
+        }
+        if($order  == ''){
+            $order = $j+1;
+        }
         //
-        $query2 = "INSERT INTO heatmap.colors (`id`,`metric_name`, `min`, `max`, `rgb`, `color`, `order`)VALUES(NULL,'" . $metric_name . "','" . $paramMinMod[$j] . "','" . $paramMaxMod[$j] . "','" . $rgb . "','" . $paramColorMod[$j] . "','" . $paramOrderMod[$j] . "')";
+        $query2 = "INSERT INTO heatmap.colors (`id`,`metric_name`, `min`, `max`, `rgb`, `color`, `order`)VALUES(NULL,'" . $metric_name . "',$min ,$max,'" . $rgb . "','" . $color . "',$order)";
         //
-		if ($min==''){
+		/*if ($min==''){
 			$query2 = "INSERT INTO heatmap.colors (`id`,`metric_name`, `max`, `rgb`, `color`, `order`)VALUES(NULL,'" . $metric_name . "','" . $paramMaxMod[$j] . "','" . $rgb . "','" . $paramColorMod[$j] . "','" . $paramOrderMod[$j] . "')";
 		}
 		//
 		if ($max==''){
 			$query2 = "INSERT INTO heatmap.colors (`id`,`metric_name`, `min`, `rgb`, `color`, `order`)VALUES(NULL,'" . $metric_name . "','" . $paramMinMod[$j] . "','" . $rgb . "','" . $paramColorMod[$j] . "','" . $paramOrderMod[$j] . "')";
-		}
+		}*/
 		//
 		echo ($query2);
         $result2 = mysqli_query($link, $query2) or die(mysqli_error($link));
@@ -412,7 +450,7 @@ JOIN (
     $order = $_REQUEST['orderBy'];
     header("location:colorMap.php?showFrame=".$sf."&page=".$page."&orderBy=".$order."&order=".$by."&limit=".$limit);
     ///////
-}elseif($action == 'getdetails') {
+}else if($action == 'getdetails') {
 	$id = $_REQUEST['id'];
 	//$querybb = "SELECT map_name, MAX(longitude) AS 'max_long', MAX(latitude) AS 'max_lat', MIN(longitude) AS 'min_long', MIN(latitude) AS 'min_lat' FROM heatmap.data WHERE map_name='" . $id . "' GROUP BY map_name LIMIT 1";
 	$query_istances = "SELECT metric_name, min_date, max_date, num AS count_number FROM heatmap.stats WHERE map_name='".$id."'";
@@ -487,9 +525,244 @@ $token = $_SESSION['accessToken'];
 			}
 		}			
 }
-echo json_encode($owner);
+ 
 ///
-} else {
+}else if($action == 'clone_colormap'){
+//
+$metric = mysqli_real_escape_string($link, $_POST['metric']); 
+$name_color_map = mysqli_real_escape_string($link, $_POST['name_color_map']);
+
+$sql_test = "SELECT * FROM `colors` WHERE `metric_name` = '$name_color_map'";
+$result_test = mysqli_query($link, $sql_test) or die(mysqli_error($link));
+if ($result_test && $result_test->num_rows > 0) {
+    $response = [
+        'status' => 'error',
+        'message' => 'Yet existing colormap named '.$name_color_map
+    ];
+}else{
+    $sql = "SELECT * FROM `colors` WHERE `metric_name` = '$metric'";
+    $result = mysqli_query($link, $sql) or die(mysqli_error($link));
+    $index=1;
+    //echo('SQL: '.$sql);
+
+    if ($result->num_rows > 0) {
+        while ($row = $result->fetch_assoc()) {
+            $order_row = $row['order'];
+            if(($row['order'] == '')||($row['order'] == null)){
+                $order_row = $index;
+            }
+            
+            $min_row = $row['min'];
+
+            $max_row = $row['max'];
+            if(($row['min'] == '')||($row['min'] == NULL)){
+                $min_row = 'NULL';
+            }
+            if(($row['max'] == '')||($row['max'] == NULL)){
+                $max_row = 'NULL';
+            }
+
+            $sql_insert = "INSERT INTO `colors` (`min`, `max`, `rgb`,`color`,`order`,`metric_name`) 
+                        VALUES ($min_row, $max_row, '{$row['rgb']}', '{$row['color']}', $order_row , '$name_color_map')";
+                        //echo($sql_insert);
+
+            /*if($row['min'] == ''){
+                $row['min'] = null;
+                $sql_insert = "INSERT INTO `colors` (`min`, `max`, `rgb`,`color`,`order`,`metric_name`) 
+                        VALUES (NULL, '{$row['max']}', '{$row['rgb']}', '{$row['color']}','{$row['order']}', '$name_color_map')";
+            }else if($row['max'] == ''){
+                $row['max'] = null;
+                $sql_insert = "INSERT INTO `colors` (`min`, `max`, `rgb`,`color`,`order`,`metric_name`) 
+                        VALUES ('{$row['min']}', NULL, '{$row['rgb']}', '{$row['color']}','{$row['order']}', '$name_color_map')";
+            }else{
+                $sql_insert = "INSERT INTO `colors` (`min`, `max`, `rgb`,`color`,`order`,`metric_name`) 
+                        VALUES ('{$row['min']}', '{$row['max']}', '{$row['rgb']}', '{$row['color']}','{$row['order']}', '$name_color_map')";          
+            }*/
+            $index++;
+            $result_istances = mysqli_query($link, $sql_insert) or die(mysqli_error($link));
+            //////
+        }
+        $utente = $_SESSION['username'];
+        $query_user = "INSERT INTO `heatmap`.`colormapUsers` (`colormap`, `username`) VALUES ('" . $name_color_map . "', '" . $utente . "');";
+        $result_user= mysqli_query($link, $query_user) or die(mysqli_error($link));
+        /////
+        $response = [
+            'status' => 'success',
+            'message' => 'Colormap successfully saved as'.$name_color_map.'!',
+            'link' => $targetFile
+        ];
+    } else {
+        $response = [
+            'status' => 'error',
+            'message' => 'Error during colormap loading.'
+        ];
+    }
+}
+echo json_encode($response);
+//
+} else if ($action == 'load_colormap') {
+    if (isset($_FILES['file']) && $_FILES['file']['error'] === UPLOAD_ERR_OK) {
+        // Nome del file senza estensione preso da un parametro POST
+        $fileName = $_POST['metric'];
+    
+        // Percorso assoluto della cartella di destinazione nel server
+        //$targetDirectory = '/var/www/html/dashboardSmartCity/img/heatmapsGradientLegends/';
+        $targetDirectory = $colormap_external_path.$colormap_external_directory;
+        $allowedExtensions = ['png'];
+    
+        // Costruisce il percorso completo di destinazione
+        $targetFile = $targetDirectory . $fileName . '.png';
+    
+        // Verifica l'estensione del file
+        $fileExtension = strtolower(pathinfo($_FILES['file']['name'], PATHINFO_EXTENSION));
+        if (!in_array($fileExtension, $allowedExtensions)) {
+            echo "Wrong file type. It must be 'png'";
+            exit;
+        }
+    
+        // Verifica il tipo MIME del file
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        $mimeType = finfo_file($finfo, $_FILES['file']['tmp_name']);
+        finfo_close($finfo);
+    
+        if ($mimeType !== 'image/png') {
+            exit;
+        } else {
+            if (!is_dir($targetDirectory)) {
+                mkdir($targetDirectory, 0777, true);
+            }
+    
+            if (move_uploaded_file($_FILES['file']['tmp_name'], $targetFile)) {
+                //$link_target = str_replace('/var/www/html/', '', $targetFile);
+                ///
+                //CHECK IF EXISTS METRIC
+                
+                //CONNECT RESOURCE MANAGER
+                if(!isset($host_dashboardbuilder)){
+                    $link_rm = mysqli_connect($host_heatmap, $username_heatmap, $password_heatmap) or die("failed to connect to server !!");
+                    mysqli_set_charset($link_rm, 'utf8');
+                    mysqli_select_db($link_rm, 'Dashboard');
+                }else{ 
+                    $link_rm = mysqli_connect($host_dashboardbuilder, $username_dashboardbuilder, $password_dashboardbuilder) or die("failed to connect to server !!");
+                    mysqli_set_charset($link_rm, 'utf8');
+                    mysqli_select_db($link_rm, $db_dashboardbuilder);                         
+                }
+                
+                $query_metric = "SELECT * FROM HeatmapRanges WHERE metricName = '$fileName';";
+                    $result_rm = mysqli_query($link_rm, $query_metric) or die(mysqli_error($link_rm));
+                    $count_rm = mysqli_num_rows($result_rm);
+
+                $pathIcon = '../img/'.$colormap_external_directory.$fileName . '.png';
+                $query_update_metric = '';
+                if($count_rm > 0){
+                        $query_update_metric = "UPDATE HeatmapRanges SET HeatmapRanges.iconPath='$pathIcon' WHERE metricName = '$fileName'";
+                        $result_rm = mysqli_query($link_rm, $query_update_metric) or die(mysqli_error($link_rm));
+                }
+                        ////
+                        $response = [
+                            'status' => 'success',
+                            'message' => 'Colormap successfully loaded!',
+                            'link' => $colormap_external_link.$colormap_external_directory.$fileName . '.png'
+                        ];
+                ///
+            } else {
+                //echo "Errore nel caricamento del file.";
+                $fileError = $_FILES['file']['error'];
+                $errorMessage = '';
+            
+                // Crea un messaggio di errore dettagliato basato sul codice di errore
+                switch ($fileError) {
+                    case UPLOAD_ERR_INI_SIZE:
+                        $errorMessage = "File too large for server settings";
+                        break;
+                    case UPLOAD_ERR_FORM_SIZE:
+                        $errorMessage = "File too large";
+                        break;
+                    case UPLOAD_ERR_PARTIAL:
+                        $errorMessage = "File partially uploaded. Try again";
+                        break;
+                    case UPLOAD_ERR_NO_FILE:
+                        $errorMessage = "None file uploaded";
+                        break;
+                    case UPLOAD_ERR_NO_TMP_DIR:
+                        $errorMessage = "tmp directory not found";
+                        break;
+                    case UPLOAD_ERR_CANT_WRITE:
+                        $errorMessage = "Error in writing permission";
+                        break;
+                    case UPLOAD_ERR_EXTENSION:
+                        $errorMessage = "Upload blocked by a server extension";
+                        break;
+                    default:
+                        $errorMessage = "Not recognized error during fiule uplaod";
+                        break;
+                }
+                $response = [
+                    'status' => 'error',
+                    'message' => $errorMessage  
+                ];
+            }
+        }
+    }
+    echo json_encode($response);
+}else if ($action == 'view_legend') {
+    $metric = $_POST['metric'];
+    $url_legend = $colormap_external_link.$colormap_external_directory.$metric. '.png';
+////////////
+        if(!isset($host_dashboardbuilder)){
+            $link_rm = mysqli_connect($host_heatmap, $username_heatmap, $password_heatmap) or die("failed to connect to server !!");
+            mysqli_set_charset($link_rm, 'utf8');
+            mysqli_select_db($link_rm, 'Dashboard');
+        }else{ 
+            $link_rm = mysqli_connect($host_dashboardbuilder, $username_dashboardbuilder, $password_dashboardbuilder) or die("failed to connect to server !!");
+            mysqli_set_charset($link_rm, 'utf8');
+            mysqli_select_db($link_rm, $db_dashboardbuilder);                         
+        }
+        $query_metric = "SELECT iconpath FROM HeatmapRanges WHERE metricName = '$metric';";
+        $result_rm = mysqli_query($link_rm, $query_metric) or die(mysqli_error($link_rm));
+        $count_rm = mysqli_num_rows($result_rm);
+        //
+        //
+        if($count_rm > 0){
+            //CHECK A 
+            $img_rm = '';
+            while ($row1 = mysqli_fetch_assoc($result_rm)) {
+                //echo("$row0['min_date']: ".$row0['min_date']);
+                     $img_rm = $row1['iconpath'];	
+                     $parts = explode('/',  $img_rm);
+                     $lastElement = end($parts);
+                     //
+                     $url_legend = $colormap_external_link.$colormap_external_directory.$lastElement;
+                }
+
+            //
+            $response = [
+                'status' => 'success',
+                'message' => 'Colormap successfully loaded!',
+                'link' => $url_legend
+            ];
+        }else{
+            $check_url= get_headers($url_legend);
+            if($check_url !== false){
+                $value_status = substr($check_url[0], 9, 3);
+                    if ($value_status == '200'){
+                        $response = [
+                            'status' => 'success',
+                            'message' => 'Colormap successfully loaded!',
+                            'link' => $url_legend
+                        ];
+                
+            }else{
+                $response = [
+                    'status' => 'error',
+                    'message' => 'Not found!'
+                ];      
+            }
+        }
+    }
+    echo json_encode($response);
+//
+}else {
     echo ('ERROR');
 }
 ?>

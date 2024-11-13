@@ -17,10 +17,16 @@
    
 include("../config.php");
 $table = "mappingtable";
-if (isset($_REQUEST["id"])) {
-    $query = "DELETE FROM " . $dbname . "." . $table . " WHERE id = '" . $_POST["id"] . "'";
-    if (mysqli_query($connessione_al_server, $query)) {
-        echo 'Data Deleted';
+if (($_SESSION['role'] !== '')&&($_SESSION['role']!= null)){
+    if (isset($_REQUEST["id"])) {
+        //
+        $id_test = mysqli_real_escape_string($connessione_al_server,$_REQUEST["id"]);
+        $id = filter_var($id_test , FILTER_SANITIZE_STRING);
+        //
+        $query = "DELETE FROM " . $dbname . "." . $table . " WHERE id = '" . $id . "'";
+        if (mysqli_query($connessione_al_server, $query)) {
+            echo 'Data Deleted';
+        }
     }
 }
 $connessione_al_server->close();

@@ -106,8 +106,9 @@ if(isset($_REQUEST['accessToken'])) {
 				//echo($encoded_data);
 				$response['result'] = 'ok';
 				$response['code'] = 500;
-				$response['message'] = "Not correct data";
+				$response['message'] = "Not correct data, missing grandidati";
 				mysqli_close($link);
+				echo json_encode($response); 
 				exit();	 
 				///////////
 			}

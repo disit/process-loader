@@ -16,6 +16,7 @@
    along with this program.  If not, see <http://www.gnu.org/licenses/>. */
    
 include("../config.php");
+if (($_SESSION['role'] !== '')&&($_SESSION['role']!= null)){
 $table = "mappingtable";
 $query = '';
 $data = array();
@@ -37,17 +38,24 @@ $query .= "SELECT * FROM " . $dbname . "." . $table . " ";
 if (!empty($_REQUEST["searchPhrase"])) {
     $fields = json_decode(urldecode($_REQUEST["fields"]));
     for ($i = 0; $i < count($fields); $i++) {
+        //
+        $i_field = filter_var($fields[$i] , FILTER_SANITIZE_STRING);
+
         if ($i == 0) {
-            $query .= 'WHERE (`' . $fields[$i] . '` LIKE "%' . $_REQUEST["searchPhrase"] . '%" ';
+            $query .= 'WHERE (`' . $i_field . '` LIKE "%' . $_REQUEST["searchPhrase"] . '%" ';
         } else {
-            $query .= 'OR `' . $fields[$i] . '` LIKE "%' . $_REQUEST["searchPhrase"] . '%" ';
+            $query .= 'OR `' . $i_field . '` LIKE "%' . $_REQUEST["searchPhrase"] . '%" ';
         }
     }
     $query .= ') ';
 }
 $order_by = '';
 if (isset($_POST["sort"]) && is_array($_POST["sort"])) {
-    foreach ($_POST["sort"] as $key => $value) {
+    //
+    $sort_test = mysqli_real_escape_string($connessione_al_server,$_POST["sort"]);
+    $sort = filter_var($sort_test , FILTER_SANITIZE_STRING);
+    //
+    foreach ($sort as $key => $value) {
         $order_by .= " $key $value, ";
     }
 } else {
@@ -82,4 +90,5 @@ $output = array(
 //file_put_contents($filename2, $query, FILE_APPEND);
 $connessione_al_server->close();
 echo json_encode($output);
+}
 ?>

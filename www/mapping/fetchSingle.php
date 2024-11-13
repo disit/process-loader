@@ -17,20 +17,27 @@
    
 include("../config.php");
 $table = "mappingtable";
-if (isset($_POST["id"])) {
-    $output = array();
-    $query = "SELECT * FROM " . $dbname . "." . $table . " WHERE id = '" . $_POST["id"] . "'";
-    $result = mysqli_query($connessione_al_server, $query);
-    while ($row = mysqli_fetch_array($result)) {
-        
-        $fields = json_decode(urldecode($_REQUEST["fields"]));
-        //error_log(json_last_error());
-        //file_put_contents("prova.txt", urldecode($_REQUEST["fields"]));
-        foreach ($fields as $field) {
-            $output[$field] = $row[$field];
+if (($_SESSION['role'] !== '')&&($_SESSION['role']!= null)){
+        if (isset($_POST["id"])) {
+            $output = array();
+            //
+            $id_test = mysqli_real_escape_string($connessione_al_server,$_POST["id"]);
+            $id = json_decode(urldecode($id_test));
+            //
+            $query = "SELECT * FROM " . $dbname . "." . $table . " WHERE id = '" . $id. "'";
+            $result = mysqli_query($connessione_al_server, $query);
+            while ($row = mysqli_fetch_array($result)) {
+                
+                $fields = json_decode(urldecode($_REQUEST["fields"]));
+                //error_log(json_last_error());
+                //file_put_contents("prova.txt", urldecode($_REQUEST["fields"]));
+                foreach ($fields as $field) {
+                    $i_field = filter_var($row[$field] , FILTER_SANITIZE_STRING);
+                    $output[$field] = $i_field;
+                }
+            }
+            echo json_encode($output);
         }
-    }
-    echo json_encode($output);
 }
 $connessione_al_server->close();
 ?>
