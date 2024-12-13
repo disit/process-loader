@@ -588,7 +588,7 @@ if ($result_test && $result_test->num_rows > 0) {
         /////
         $response = [
             'status' => 'success',
-            'message' => 'Colormap successfully saved as'.$name_color_map.'!',
+            'message' => 'Colormap successfully saved as '.$name_color_map.'!',
             'link' => $targetFile
         ];
     } else {
@@ -633,6 +633,12 @@ echo json_encode($response);
             }
     
             if (move_uploaded_file($_FILES['file']['tmp_name'], $targetFile)) {
+                //
+                $response = [
+                    'status' => 'success',
+                    'message' => 'Colormap successfully loaded!',
+                    'link' => $colormap_external_link.$colormap_external_directory.$fileName . '.png'
+                ];
                 //$link_target = str_replace('/var/www/html/', '', $targetFile);
                 ///
                 //CHECK IF EXISTS METRIC
@@ -657,13 +663,12 @@ echo json_encode($response);
                 if($count_rm > 0){
                         $query_update_metric = "UPDATE HeatmapRanges SET HeatmapRanges.iconPath='$pathIcon' WHERE metricName = '$fileName'";
                         $result_rm = mysqli_query($link_rm, $query_update_metric) or die(mysqli_error($link_rm));
+                }else{
+                    $query_update_metric = "INSERT INTO HeatmapRanges (metricName, iconPath) VALUES ('$fileName', '$pathIcon')";
+                    $result_rm = mysqli_query($link_rm, $query_update_metric) or die(mysqli_error($link_rm));
                 }
                         ////
-                        $response = [
-                            'status' => 'success',
-                            'message' => 'Colormap successfully loaded!',
-                            'link' => $colormap_external_link.$colormap_external_directory.$fileName . '.png'
-                        ];
+                        
                 ///
             } else {
                 //echo "Errore nel caricamento del file.";

@@ -429,7 +429,7 @@ $json_Auth_users = json_encode($data_Auth_users);
 											<th class="min"><div>Minimum</div></th>
 											<th class="max"><div>Maximum</div></th>
 											<th class="rgb"><div>Rgb</div></th>	
-											<th class="color"><div>Color</div></th>	
+											<th class="color"><div>Color descr.</div></th>	
 											<th class="order"><div>Order</div></th>											
 										</thead>
 										<tbody>
@@ -478,7 +478,7 @@ $json_Auth_users = json_encode($data_Auth_users);
 											<th class="min"><div>Minimum Limit</div></th>
 											<th class="max"><div>Maximum Limit</div></th>
 											<th class="rgb"><div>Rgb</div></th>	
-											<th class="color"><div>Color</div></th>	
+											<th class="color"><div>Color descr.</div></th>	
 											<th class="order"><div>Order</div></th>	
 											<th class="delete"><div>Delete</div></th>												
 										</thead>
@@ -525,7 +525,7 @@ $json_Auth_users = json_encode($data_Auth_users);
 											<th class="min"><div>Minimum Limit</div></th>
 											<th class="max"><div>Maximum Limit</div></th>
 											<th class="rgb"><div>Rgb</div></th>	
-											<th class="color"><div>Color</div></th>	
+											<th class="color"><div>Color descr.</div></th>	
 											<th class="order"><div>Order</div></th>	
 											<th class="delete"><div>Delete</div></th>												
 										</thead>
@@ -838,7 +838,7 @@ $(document).on('click','#delete_colormap', function(){
 			async: true,
 			success: function (data) {
 				$('#delete_Heatmap').modal('hide');
-				alert('Heatmap successfully deleted');
+				alert('Colormap successfully deleted');
 				location.reload();
 			}
 		});
@@ -914,18 +914,20 @@ $(document).on('click','#add_color',function(){
 	var count = $('#colormap_table tbody tr').length;
 	var count_rows = $('#count_rows').val();
 	//
+	var value0 = ""; 
 	var min = count-1;
 	console.log('min:',min);
 	if((min >= 0) && !isNaN(min)){
-		var value0 = $('input[name="paramMax['+min+']"]').val();
+			 value0 = $('input[name="paramMax['+min+']"]').val();
+			 console.log('value0:',value0);
 		if((value0 == null)&&(typeof value0 !== 'undefined')){
-				value0 = $('input[name="paramMaxMod['+min+']"]').val();
+				value0 = $('input[name="paramMax['+min+']"]').val();
 				//paramMaxMod
+			}else if(typeof value0 == 'undefined'){
+				value0 = ""; 
 			}else{
-				value0 = "";
+
 			}
-	}else{
-		value0 = "";
 	}
 	
 	//$('#colormap_table tbody').append('<tr><td class="hidden"></td><td><input name="paramMinMod['+count+']" type="text" class="form-control val_min mod_min"  value="'+value0+'" readonly></input></td><td><input type="text" class="form-control val_max mod_max" name="paramMaxMod['+count+']" value=""></input></td><td class="hidden"></td><td><div id="color-picker-rgb" class="input-group rgb_color" ><input type="text" value="rgb(255,255,255)" class="form-control" name="paramRgbMod['+count+']"/><span class="input-group-addon"><i></i></span></div></td><td><input name="paramColorMod['+count+']" type="text" class="form-control" class="val_rgb"></input></td><td><input name="paramOrderMod['+count+']" type="text" class="form-control" class="val_order"></input></td><td><button type="button" class="delDashBtn del_color1" value="'+count+'" data-target="" data-toggle="modal">DEL</button></td></tr>');
