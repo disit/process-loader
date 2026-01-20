@@ -21,7 +21,7 @@ $link = mysqli_connect($host, $username, $password) or die("failed to connect to
 mysqli_set_charset($link, 'utf8');
 mysqli_select_db($link, $dbname);
 $utente_us = mysqli_real_escape_string($link,$_SESSION['username']);
-$process_id = mysqli_real_escape_string($link,$_REQUEST['process_id']);
+$process_id = isset($_REQUEST['process_id']) ? (int)$_REQUEST['process_id'] : 0;
 $process_name = mysqli_real_escape_string($link,$_REQUEST['process_name']);
 $current_scheduler = mysqli_real_escape_string($link,$_REQUEST['current_scheduler']);
 //$prod_sched = $_REQUEST['prod_sched'];
@@ -33,8 +33,11 @@ $prod_integration="";
 $prod_repository="";
 
 //QUERY TROVA IP PRDOUZIONE 
-$queryIp = "SELECT * FROM `schedulers` WHERE `name` = '".$name_prod."'";
-$resultIp = mysqli_query($link, $queryIp) or die(mysqli_error($link));
+$queryIp = "SELECT * FROM `schedulers` WHERE `name` = ?";
+$stmt_ip = mysqli_prepare($link, $queryIp) or die(mysqli_error($link));
+mysqli_stmt_bind_param($stmt_ip, "s", $name_prod);
+mysqli_stmt_execute($stmt_ip);
+$resultIp = mysqli_stmt_get_result($stmt_ip);
 $address_list = array();
 if ($resultIp->num_rows > 0) {
 	while ($rowIp = mysqli_fetch_array($resultIp)) {
@@ -47,6 +50,7 @@ if ($resultIp->num_rows > 0) {
 		);
 		array_push($address_list, $address);
 	}
+	mysqli_stmt_close($stmt_ip);
 	json_encode($address_list);
 	$prod_sched = $address_list[0]["prod_sched"];
 	$prod_path = $address_list[0]["process_path"];
@@ -55,9 +59,11 @@ if ($resultIp->num_rows > 0) {
 	$prod_repository = $address_list[0]["repository"];
 }
 //
-$query = "SELECT processes.* FROM processes WHERE processes.Id='".$process_id."' AND processes.id_disces='".$current_scheduler."'";
-
-$result = mysqli_query($link, $query) or die(mysqli_error($link));
+$query = "SELECT processes.* FROM processes WHERE processes.Id=? AND processes.id_disces=?";
+$stmt_proc = mysqli_prepare($link, $query) or die(mysqli_error($link));
+mysqli_stmt_bind_param($stmt_proc, "is", $process_id, $current_scheduler);
+mysqli_stmt_execute($stmt_proc);
+$result = mysqli_stmt_get_result($stmt_proc);
         $process_list = array();
         if ($result->num_rows > 0) {
             while ($row = mysqli_fetch_array($result)) {
@@ -103,6 +109,7 @@ $result = mysqli_query($link, $query) or die(mysqli_error($link));
 			}else{
 				$file_position = "";
 			}
+			mysqli_stmt_close($stmt_proc);
 			//
 			
 			if ($process_list[0]['start']==""){
@@ -351,9 +358,9 @@ $result = mysqli_query($link, $query) or die(mysqli_error($link));
 				if (strpos($testo_parameters,'Main.R')!== false){
 					$posizione_file = $prod_repository.$file_position.'/Main.R';
 					//$posizione_file = $repository_destination.$file_position.'/Main.R';
-					$parameters='{"R":"/usr/bin/Rscript","RNEW":"'.$posizione_file.'"}';
-					$parameters=str_replace ('"','\"',$parameters);
-					$parameters=str_replace ('/','\\\/',$parameters);
+										$parameters='{"R":"/usr/bin/Rscript","RNEW":"'.$posizione_file.'"}';
+										$parameters=str_replace ('"','\"',$parameters);
+										$parameters=str_replace ('/','\\\/',$parameters);
 				}
 				//CASO ETL
 				if (strpos($testo_parameters,'Main.kjb')!== false){
@@ -416,12 +423,94 @@ $result = mysqli_query($link, $query) or die(mysqli_error($link));
 						$result = file_get_contents($apiUrl, false, $context);
 								if(strpos($http_response_header[0], '200') !== false){
 									
-									   $query2="INSERT INTO `process_archive`(`Id`,`Activity_date`,`Process_id`,`Process_name`,`Process_group`,`Description_activity`)VALUES(NULL,'".$creation_date_p."','".$process_id."','".$process_name."','".$process_list[0]['process_group']."','LOADED IN PRODUCTION')";
-									   $query_process2 = mysqli_query($connessione_al_server,$query2) or die ("query di creazione del job type non riuscita    ".mysqli_error($connessione_al_server));
+										   $query2="INSERT INTO `process_archive`(`Id`,`Activity_date`,`Process_id`,`Process_name`,`Process_group`,`Description_activity`)VALUES(NULL,?,?,?,?,?)";
+										   $stmt_arch = mysqli_prepare($connessione_al_server, $query2) or die ("query di creazione del job type non riuscita    ".mysqli_error($connessione_al_server));
+										   $desc = 'LOADED IN PRODUCTION';
+										   mysqli_stmt_bind_param($stmt_arch, "sisss", $creation_date_p, $process_id, $process_name, $process_list[0]['process_group'], $desc);
+										   $query_process2 = mysqli_stmt_execute($stmt_arch);
+										   mysqli_stmt_close($stmt_arch);
+										   if (!$query_process2) {
+										   	die ("query di creazione del job type non riuscita    ".mysqli_error($connessione_al_server));
+										   }
 									   //////MOSTRA NEI PROCESSI IN ESECUZIONE
 									   
-									   $query3="INSERT INTO `processes` (`Id`, `Process_name`, `Process_group`, `job_type`, `Start_time`, `End_time`, `Time_interval`, `Status`, `Process_Type`, `Creation_date`, `non_concurrent`, `StoreDurably`, `RequestRecovery`, `Process_description`, `url`, `process_path`, `MisfireInstruction`, `Email`, `id_disces`, `trigger_name`, `trigger_group`, `trigger_description`, `priority`, `repeat_count`, `time_out`, `dataMap`, `nextJob`, `JobConstraint`, `ProcessParameter`, `file_position`) VALUES (NULL, '".$name_process."', '".$process_group."', '".$process_list[0]['job_type']."', '".$process_list[0]['start']."', '".$process_list[0]['End']."', '".$time_interval."', 'LOADED IN PRODUCTION', '".$process_type."', '".$creation_date_p."', '".$process_list[0]['non_concurrent']."', '".$process_list[0]['StoreDurably']."', '".$process_list[0]['RequestRecovery']."', '', '".$url."', '".$process_list[0]['process_path']."', '".$misfire_p."', '".$email."', '".$prod_sched."', '".$trigger_name."', '".$trigger_group."', '".$trigger_description."', '".$priority."', '".$process_list[0]['repeat_count']."', '".$process_list[0]['time_out']."', '".$process_list[0]['dataMap']."', '".$nextJob."', '".$jobConstraint."', '".$parameters."','".$file_position."')"; 
-									   $query_process3 = mysqli_query($connessione_al_server,$query3) or die ("query di creazione del job type non riuscita    ".mysqli_error($connessione_al_server));
+										   $query3="INSERT INTO `processes` (`Id`, `Process_name`, `Process_group`, `job_type`, `Start_time`, `End_time`, `Time_interval`, `Status`, `Process_Type`, `Creation_date`, `non_concurrent`, `StoreDurably`, `RequestRecovery`, `Process_description`, `url`, `process_path`, `MisfireInstruction`, `Email`, `id_disces`, `trigger_name`, `trigger_group`, `trigger_description`, `priority`, `repeat_count`, `time_out`, `dataMap`, `nextJob`, `JobConstraint`, `ProcessParameter`, `file_position`) VALUES (NULL,?,?,?,?,?,?,'LOADED IN PRODUCTION',?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"; 
+										   $stmt_proc = mysqli_prepare($connessione_al_server, $query3) or die ("query di creazione del job type non riuscita    ".mysqli_error($connessione_al_server));
+										   $job_type = (int)$process_list[0]['job_type'];
+										   $non_concurrent = $process_list[0]['non_concurrent'];
+										   $store_durably = $process_list[0]['StoreDurably'];
+										   $request_recovery = $process_list[0]['RequestRecovery'];
+										   $repeat_count = $process_list[0]['repeat_count'];
+										   $time_out = $process_list[0]['time_out'];
+										   $data_map = $process_list[0]['dataMap'];
+										   $stmt_params = array(
+										   	$name_process,
+										   	$process_group,
+										   	$job_type,
+										   	$process_list[0]['start'],
+										   	$process_list[0]['End'],
+										   	$time_interval,
+										   	$process_type,
+										   	$creation_date_p,
+										   	$non_concurrent,
+										   	$store_durably,
+										   	$request_recovery,
+										   	$process_description,
+										   	$url,
+										   	$process_list[0]['process_path'],
+										   	$misfire_p,
+										   	$email,
+										   	$prod_sched,
+										   	$trigger_name,
+										   	$trigger_group,
+										   	$trigger_description,
+										   	$priority,
+										   	$repeat_count,
+										   	$time_out,
+										   	$data_map,
+										   	$nextJob,
+										   	$jobConstraint,
+										   	$parameters,
+										   	$file_position
+										   );
+										   $stmt_types = "ssissssssssssssssssissssss";
+										   mysqli_stmt_bind_param(
+										   	$stmt_proc,
+										   	$stmt_types,
+										   	$stmt_params[0],
+										   	$stmt_params[1],
+										   	$stmt_params[2],
+										   	$stmt_params[3],
+										   	$stmt_params[4],
+										   	$stmt_params[5],
+										   	$stmt_params[6],
+										   	$stmt_params[7],
+										   	$stmt_params[8],
+										   	$stmt_params[9],
+										   	$stmt_params[10],
+										   	$stmt_params[11],
+										   	$stmt_params[12],
+										   	$stmt_params[13],
+										   	$stmt_params[14],
+										   	$stmt_params[15],
+										   	$stmt_params[16],
+										   	$stmt_params[17],
+										   	$stmt_params[18],
+										   	$stmt_params[19],
+										   	$stmt_params[20],
+										   	$stmt_params[21],
+										   	$stmt_params[22],
+										   	$stmt_params[23],
+										   	$stmt_params[24],
+										   	$stmt_params[25],
+										   	$stmt_params[26],
+										   	$stmt_params[27]
+										   );
+										   $query_process3 = mysqli_stmt_execute($stmt_proc);
+										   mysqli_stmt_close($stmt_proc);
+										   if (!$query_process3) {
+										   	die ("query di creazione del job type non riuscita    ".mysqli_error($connessione_al_server));
+										   }
 									   
 									   //////
 									  //// header("location:upload_process_production.php?message=ok");

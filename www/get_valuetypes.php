@@ -27,7 +27,9 @@ $query = "SELECT dt.value as 'value_type',
 ( SELECT value from processloader_db.dictionary_table dt2 join dictionary_relations dr on dr.child=dt2.id where dr.parent=dt.id order by dt2.id LIMIT 1) as value_unit
 FROM processloader_db.dictionary_table dt where dt.type='value type' and status=1 order by value_type";
 		
-$result = mysqli_query($link, $query) or die(mysqli_error($link));
+$stmt = mysqli_prepare($link, $query) or die(mysqli_error($link));
+mysqli_stmt_execute($stmt);
+$result = mysqli_stmt_get_result($stmt);
 echo "SPARQL
 CLEAR GRAPH <urn:test:value_types>;
 SPARQL
@@ -44,5 +46,6 @@ while ($row = mysqli_fetch_assoc($result)) {
 $vt=str_replace(' ','_',$row['value_type']);
 echo("(<http://www.disit.org/km4city/resource/value_type/". $vt."> \"".$row['value_unit']."\")\n");
 }
+mysqli_stmt_close($stmt);
 echo "  }
 };";

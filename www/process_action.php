@@ -21,12 +21,12 @@ $link = mysqli_connect($host, $username, $password) or die("failed to connect to
 mysqli_set_charset($link, 'utf8');
 mysqli_select_db($link, $dbname);
 //error_reporting(E_ERROR | E_NOTICE);
-$ip_run=$_REQUEST['ip_run'];	
-//
-$operation_run=mysqli_real_escape_string($link,$_REQUEST['operation_run']);
-$id_run=mysqli_real_escape_string($link,$_REQUEST['id_run']);
-$n_run=mysqli_real_escape_string($link,$_REQUEST['n_run']);
-$g_run=mysqli_real_escape_string($link,$_REQUEST['g_run']);
+	$ip_run=$_REQUEST['ip_run'];	
+	//
+	$operation_run=mysqli_real_escape_string($link,$_REQUEST['operation_run']);
+	$id_run = isset($_REQUEST['id_run']) ? (int)$_REQUEST['id_run'] : 0;
+	$n_run=mysqli_real_escape_string($link,$_REQUEST['n_run']);
+	$g_run=mysqli_real_escape_string($link,$_REQUEST['g_run']);
 //echo ("ip_run: ".$ip_run."<br>");
 //echo ("operation_run: ".$operation_run."<br>");
 //echo ("id_run: ".$id_run."<br>");
@@ -35,8 +35,14 @@ $g_run=mysqli_real_escape_string($link,$_REQUEST['g_run']);
 
 
 //SELEZIONARE IL VALORE DEL TRIGGER
-$query1 = "SELECT * FROM `processes` WHERE `Id`='".$id_run."'";
-$result1 = mysqli_query($link, $query1) or die(mysqli_error($link));
+	$query1 = "SELECT * FROM `processes` WHERE `Id`=?";
+	$stmt1 = mysqli_prepare($link, $query1);
+	if (!$stmt1) {
+		die(mysqli_error($link));
+	}
+	mysqli_stmt_bind_param($stmt1, "i", $id_run);
+	mysqli_stmt_execute($stmt1);
+	$result1 = mysqli_stmt_get_result($stmt1);
 //print_r ($result1);
 //
 $list = array();
@@ -57,13 +63,13 @@ if ($result1->num_rows > 0) {
 	}
 }
 
-//for ($i = $num-1; $i <= $num-1; $i++) {
-	echo $val = $list[0]['id'];
-	echo $val_name =  $list[0]['name'];
-	echo $val_group =  $list[0]['group'];
-	echo $val_trg_name = $list[0]['trigger_name'];
-	echo $val_trg_group = $list[0]['trigger_group'];
-	echo $val_trg_start = $list[0]['Start_time'];
+	//for ($i = $num-1; $i <= $num-1; $i++) {
+		echo $val = $list[0]['id'];
+		echo $val_name =  $list[0]['name'];
+		echo $val_group =  $list[0]['group'];
+		echo $val_trg_name = $list[0]['trigger_name'];
+		echo $val_trg_group = $list[0]['trigger_group'];
+		echo $val_trg_start = $list[0]['Start_time'];
 	$opening_date = $val_trg_start;
 	$current_date = date("Y-m-d H:i:s");
 		if ($opening_date > $current_date){
@@ -76,7 +82,11 @@ if ($result1->num_rows > 0) {
 	}else{
 		$val_ip = $list[0]['ip'];
 	}
-//}
+	//}
+	if (isset($stmt1)) {
+		mysqli_stmt_close($stmt1);
+		unset($stmt1);
+	}
 //$url = 'http://'.$ip_run.':8080/SmartCloudEngine/index.jsp';
 $data = 'http://'.$ip_run.':8080/SmartCloudEngine/index.jsp?json='. urlencode('{"id":"'.$operation_run.'","jobName":"'.$n_run.'","jobGroup":"'.$g_run.'"}');
 $options = array(
@@ -135,14 +145,27 @@ $options = array(
 									if ($operation_run == 'resumeJob'|| $operation_run == "triggerJob"){
 								//$sql = "UPDATE  `processes` SET `processes`.`Status`='RUNNING' WHERE `id`='".$id_run."'";
 								//
-								$sql = "UPDATE  `processes` SET `processes`.`Status`='".$stato_att."' WHERE `id`='".$id_run."'";
-								$result = mysqli_query($link, $sql) or die(mysqli_error($link));
-									//archivio 
-									if ($stato_att != "ERROR SERVER COMMUNICATION"){
-										$query="INSERT INTO `process_archive`(`Id`,`Activity_date`,`Process_id`,`Process_name`,`Process_group`,`Description_activity`)VALUES(NULL,'".$date_run."','".$id_run."','".$n_run."','".$g_run."','RUN')";
-										$archive = mysqli_query($link, $query) or die(mysqli_error($link));
-										mysqli_close($link);
+									$sql = "UPDATE `processes` SET `processes`.`Status`=? WHERE `id`=?";
+									$stmt_up = mysqli_prepare($link, $sql);
+									if (!$stmt_up) {
+										die(mysqli_error($link));
 									}
+									mysqli_stmt_bind_param($stmt_up, "si", $stato_att, $id_run);
+									$result = mysqli_stmt_execute($stmt_up);
+									mysqli_stmt_close($stmt_up);
+										//archivio 
+										if ($stato_att != "ERROR SERVER COMMUNICATION"){
+											$query="INSERT INTO `process_archive`(`Id`,`Activity_date`,`Process_id`,`Process_name`,`Process_group`,`Description_activity`)VALUES(NULL,?,?,?,?,?)";
+											$stmt_arch = mysqli_prepare($link, $query);
+											if (!$stmt_arch) {
+												die(mysqli_error($link));
+											}
+											$desc = 'RUN';
+											mysqli_stmt_bind_param($stmt_arch, "sisss", $date_run, $id_run, $n_run, $g_run, $desc);
+											$archive = mysqli_stmt_execute($stmt_arch);
+											mysqli_stmt_close($stmt_arch);
+											mysqli_close($link);
+										}
 										//header("location:Process_loader.php?process_run=ok");
 										if (isset($_REQUEST['showFrame'])){
 													if ($_REQUEST['showFrame'] == 'false'){
@@ -156,14 +179,27 @@ $options = array(
 										//
 						} elseif($operation_run == 'pauseJob'){
 								//$sql4 = "UPDATE  `processes` SET `status`='PAUSE' WHERE `id`='".$id_run."'";
-								$sql4 = "UPDATE  `processes` SET `processes`.`Status`='".$stato_att."' WHERE `id`='".$id_run."'";
-								$result4 = mysqli_query($link, $sql4) or die(mysqli_error($link));
-							//archivio 
-							if ($stato_att != "ERROR SERVER COMMUNICATION"){
-							$query4="INSERT INTO `process_archive`(`Id`,`Activity_date`,`Process_id`,`Process_name`,`Process_group`,`Description_activity`)VALUES(NULL,'".$date_run."','".$id_run."','".$n_run."','".$g_run."','PAUSE')";
-							$archive4 = mysqli_query($link, $query4) or die(mysqli_error($link));
-							mysqli_close($link);
-							}
+									$sql4 = "UPDATE `processes` SET `processes`.`Status`=? WHERE `id`=?";
+									$stmt_up = mysqli_prepare($link, $sql4);
+									if (!$stmt_up) {
+										die(mysqli_error($link));
+									}
+									mysqli_stmt_bind_param($stmt_up, "si", $stato_att, $id_run);
+									$result4 = mysqli_stmt_execute($stmt_up);
+									mysqli_stmt_close($stmt_up);
+								//archivio 
+								if ($stato_att != "ERROR SERVER COMMUNICATION"){
+								$query4="INSERT INTO `process_archive`(`Id`,`Activity_date`,`Process_id`,`Process_name`,`Process_group`,`Description_activity`)VALUES(NULL,?,?,?,?,?)";
+								$stmt_arch = mysqli_prepare($link, $query4);
+								if (!$stmt_arch) {
+									die(mysqli_error($link));
+								}
+								$desc = 'PAUSE';
+								mysqli_stmt_bind_param($stmt_arch, "sisss", $date_run, $id_run, $n_run, $g_run, $desc);
+								$archive4 = mysqli_stmt_execute($stmt_arch);
+								mysqli_stmt_close($stmt_arch);
+								mysqli_close($link);
+								}
 							//header("location:Process_loader.php?process_run=ok");
 							if (isset($_REQUEST['showFrame'])){
 													if ($_REQUEST['showFrame'] == 'false'){
@@ -177,12 +213,25 @@ $options = array(
 							//
 						}
 							elseif ($operation_run=='deleteJob'){
-								$sql3 = "DELETE FROM `processes` WHERE `processes`.`id`='".$id_run."'";
-								$result3 = mysqli_query($link, $sql3) or die(mysqli_error($link));
-					//archivio 
-								$query3="INSERT INTO `process_archive`(`Id`,`Activity_date`,`Process_id`,`Process_name`,`Process_group`,`Description_activity`)VALUES(NULL,'".$date_run."','".$id_run."','".$n_run."','".$g_run."','DELETE')";
-								$archive3 = mysqli_query($link, $query3) or die(mysqli_error($link));
-								mysqli_close($link);
+									$sql3 = "DELETE FROM `processes` WHERE `processes`.`id`=?";
+									$stmt_del = mysqli_prepare($link, $sql3);
+									if (!$stmt_del) {
+										die(mysqli_error($link));
+									}
+									mysqli_stmt_bind_param($stmt_del, "i", $id_run);
+									$result3 = mysqli_stmt_execute($stmt_del);
+									mysqli_stmt_close($stmt_del);
+						//archivio 
+									$query3="INSERT INTO `process_archive`(`Id`,`Activity_date`,`Process_id`,`Process_name`,`Process_group`,`Description_activity`)VALUES(NULL,?,?,?,?,?)";
+									$stmt_arch = mysqli_prepare($link, $query3);
+									if (!$stmt_arch) {
+										die(mysqli_error($link));
+									}
+									$desc = 'DELETE';
+									mysqli_stmt_bind_param($stmt_arch, "sisss", $date_run, $id_run, $n_run, $g_run, $desc);
+									$archive3 = mysqli_stmt_execute($stmt_arch);
+									mysqli_stmt_close($stmt_arch);
+									mysqli_close($link);
 								//header("location:Process_loader.php?process_run=ok");
 								/////////
 											if (isset($_REQUEST['showFrame'])){

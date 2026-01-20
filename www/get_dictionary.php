@@ -104,12 +104,14 @@ if (isset($_SESSION['username']) && isset($_SESSION['role'])) {
 		$check = strtolower($_REQUEST['check']);
 		$check_type = $_REQUEST['check_type'];
 		$process_list = array();
-		$query_check = "SELECT * FROM processloader_db.dictionary_table WHERE value LIKE '%".$check."%' AND type='".$check_type."' AND status = 1";
-		//$query_check = "SELECT tab1.*, tab2.parent FROM processloader_db.dictionary_table as tab1, dictionary_relations as tab2 WHERE tab1.value ='".$check."' AND tab1.type='".$check_type."' AND tab1.status = 1 and tab2.child = tab1.id";
-		///////
-		
-		
-		$result_check = mysqli_query($link, $query_check) or die(mysqli_error($link));
+		$stmt_check = mysqli_prepare($link, "SELECT * FROM processloader_db.dictionary_table WHERE value LIKE ? AND type=? AND status = 1");
+		if (!$stmt_check) {
+			die(mysqli_error($link));
+		}
+		$check_like = '%' . $check . '%';
+		mysqli_stmt_bind_param($stmt_check, "ss", $check_like, $check_type);
+		mysqli_stmt_execute($stmt_check);
+		$result_check = mysqli_stmt_get_result($stmt_check);
 		while ($row = mysqli_fetch_assoc($result_check)) {
 		/***/
 		$id_row = $row['id'];
@@ -127,10 +129,15 @@ if (isset($_SESSION['username']) && isset($_SESSION['role'])) {
 									    dictionary_table.value
 								 FROM   dictionary_relations,
 										dictionary_table
-								 WHERE  dictionary_relations.child='".$id_row."'
+								 WHERE  dictionary_relations.child=?
 								 AND    dictionary_table.id = dictionary_relations.parent";
-				
-				$result_value = mysqli_query($link, $query_value) or die(mysqli_error($link));
+				$stmt_value = mysqli_prepare($link, $query_value);
+				if (!$stmt_value) {
+					die(mysqli_error($link));
+				}
+				mysqli_stmt_bind_param($stmt_value, "i", $id_row);
+				mysqli_stmt_execute($stmt_value);
+				$result_value = mysqli_stmt_get_result($stmt_value);
 						while ($row1 = mysqli_fetch_assoc($result_value)) {
 							$parent_id1  = $row1['parent'];
 							$parent_vl1 =  $row1['value'];
@@ -139,9 +146,10 @@ if (isset($_SESSION['username']) && isset($_SESSION['role'])) {
 							array_push($process_parent_vl, $parent_vl1);
 							//
 						}
-				$parent_id = $process_parent_id;
-				$parent_value = $process_parent_vl;
-		//}
+				mysqli_stmt_close($stmt_value);
+		$parent_id = $process_parent_id;
+		$parent_value = $process_parent_vl;
+//}
 		/***/
 		$process = array(
                 "id" => $row['id'],
@@ -153,6 +161,7 @@ if (isset($_SESSION['username']) && isset($_SESSION['role'])) {
             );
             array_push($process_list, $process);
         }
+		mysqli_stmt_close($stmt_check);
         echo json_encode($process_list);
 		//
 	}elseif ($action == 'get_values') {
@@ -466,9 +475,16 @@ if (isset($_SESSION['username']) && isset($_SESSION['role'])) {
 		$select_nature = null;
 		//
 		//
-		$query_check="Select * FROM dictionary_table WHERE value LIKE'".$vn_create."' AND status = 1";
-		$result_check = mysqli_query($link, $query_check) or die('ERROR NELLA QUERY');
+		$stmt_check = mysqli_prepare($link, "SELECT * FROM dictionary_table WHERE value LIKE ? AND status = 1");
+		if (!$stmt_check) {
+			die('ERROR NELLA QUERY');
+		}
+		$vn_check = $vn_create;
+		mysqli_stmt_bind_param($stmt_check, "s", $vn_check);
+		mysqli_stmt_execute($stmt_check);
+		$result_check = mysqli_stmt_get_result($stmt_check);
 		$n_row = mysqli_num_rows($result_check);
+		mysqli_stmt_close($stmt_check);
 		
 		if($n_row >0){
 			//echo($n_row);
@@ -506,16 +522,30 @@ if (isset($_SESSION['username']) && isset($_SESSION['role'])) {
 		$select_type_creation = filter_var($select_type_creation , FILTER_SANITIZE_STRING);
 		$insert_date = date("Y-m-d h:i:s");
 		//
+		$status = 1;
 		if($select_type_creation == 'subnature'){
-			$query = 'INSERT INTO dictionary_table (value, label, type, status, parent_id, insert_time) VALUE ("' . $vn_create . '","' . $lb_create . '","' . $select_type_creation . '", 1, '.$select_nature.', "'.$insert_date.'")';
-        }else if($select_type_creation == 'value unit'){
-			$query = 'INSERT INTO dictionary_table (value, label, type, status, parent_id, insert_time)
-					  VALUE 
-					 ("' . $vn_create . '","' . $lb_create . '","' . $select_type_creation . '",1,0, "'.$insert_date.'")';
-        }else{
-			$query = 'INSERT INTO dictionary_table (value, label, type, status, insert_time) VALUE ("' . $vn_create . '","' . $lb_create . '","' . $select_type_creation . '", 1, "'.$insert_date.'")';	
+			$stmt = mysqli_prepare($link, "INSERT INTO dictionary_table (value, label, type, status, parent_id, insert_time) VALUES (?,?,?,?,?,?)");
+			if (!$stmt) {
+				die(mysqli_error($link));
+			}
+			$parent_id = (int) $select_nature;
+			mysqli_stmt_bind_param($stmt, "sssiss", $vn_create, $lb_create, $select_type_creation, $status, $parent_id, $insert_date);
+		}else if($select_type_creation == 'value unit'){
+			$stmt = mysqli_prepare($link, "INSERT INTO dictionary_table (value, label, type, status, parent_id, insert_time) VALUES (?,?,?,?,?,?)");
+			if (!$stmt) {
+				die(mysqli_error($link));
+			}
+			$parent_id = 0;
+			mysqli_stmt_bind_param($stmt, "sssiss", $vn_create, $lb_create, $select_type_creation, $status, $parent_id, $insert_date);
+		}else{
+			$stmt = mysqli_prepare($link, "INSERT INTO dictionary_table (value, label, type, status, insert_time) VALUES (?,?,?,?,?)");
+			if (!$stmt) {
+				die(mysqli_error($link));
+			}
+			mysqli_stmt_bind_param($stmt, "sssis", $vn_create, $lb_create, $select_type_creation, $status, $insert_date);
 		}
-        $result = mysqli_query($link, $query) or die(mysqli_error($link));
+        $result = mysqli_stmt_execute($stmt);
+		mysqli_stmt_close($stmt);
 		//
 		//
 		
@@ -535,12 +565,17 @@ if (isset($_SESSION['username']) && isset($_SESSION['role'])) {
 			$lun = count($select_vtype);
 			
 			//
-			for ($r = 0; $r < $lun; $r++){
-				$vt = $select_vtype[$r];
-				$query_relations='INSERT INTO dictionary_relations (child, parent) VALUE ("'.$id_r.'","'.$vt.'")';
-				$result_relations = mysqli_query($link, $query_relations) or die(mysqli_error($link));
-				
+			$stmt_rel = mysqli_prepare($link, "INSERT INTO dictionary_relations (child, parent) VALUES (?,?)");
+			if (!$stmt_rel) {
+				die(mysqli_error($link));
 			}
+			for ($r = 0; $r < $lun; $r++){
+				$vt = (int) $select_vtype[$r];
+				$child_id = (int) $id_r;
+				mysqli_stmt_bind_param($stmt_rel, "ii", $child_id, $vt);
+				mysqli_stmt_execute($stmt_rel);
+			}
+			mysqli_stmt_close($stmt_rel);
 			
 		}
 
@@ -562,13 +597,19 @@ if (isset($_SESSION['username']) && isset($_SESSION['role'])) {
 			//
 			$lun = count($select_vtype);
 			//
+			$stmt_rel = mysqli_prepare($link, "INSERT INTO dictionary_relations (child, parent) VALUES (?,?)");
+			if (!$stmt_rel) {
+				die(mysqli_error($link));
+			}
 			for ($r = 0; $r < $lun; $r++){
-				$vt = $select_vtype[$r];
-				$query_relations='INSERT INTO dictionary_relations (child, parent) VALUE ("'.$id_r.'","'.$vt.'")';
-				$result_relations = mysqli_query($link, $query_relations) or die(mysqli_error($link));
+				$vt = (int) $select_vtype[$r];
+				$child_id = (int) $id_r;
+				mysqli_stmt_bind_param($stmt_rel, "ii", $child_id, $vt);
+				mysqli_stmt_execute($stmt_rel);
 				//echo($query_relations);
 				
 			}
+			mysqli_stmt_close($stmt_rel);
 			
 		}
 		
@@ -591,10 +632,15 @@ if (isset($_SESSION['username']) && isset($_SESSION['role'])) {
 			//$lun = count($select_vtype);
 			//
 			//for ($r = 0; $r < $lun; $r++){
-				$vt = $select_nature;
-				$query_relations='INSERT INTO dictionary_relations (child, parent) VALUE ("'.$id_r.'","'.$vt.'")';
-				$result_relations = mysqli_query($link, $query_relations) or die(mysqli_error($link));
-				echo($query_relations);
+				$vt = (int) $select_nature;
+				$stmt_rel = mysqli_prepare($link, "INSERT INTO dictionary_relations (child, parent) VALUES (?,?)");
+				if (!$stmt_rel) {
+					die(mysqli_error($link));
+				}
+				$child_id = (int) $id_r;
+				mysqli_stmt_bind_param($stmt_rel, "ii", $child_id, $vt);
+				$result_relations = mysqli_stmt_execute($stmt_rel);
+				mysqli_stmt_close($stmt_rel);
 				
 			//}
 			
@@ -609,8 +655,14 @@ if (isset($_SESSION['username']) && isset($_SESSION['role'])) {
         //
         $id    = mysqli_real_escape_string($connessione_al_server, $_REQUEST['id']);
 		$delete_date = date("Y-m-d h:i:s");
-		$query                = "UPDATE dictionary_table SET delete_time='".$delete_date."', status=0 WHERE id=" . $id;
-        $result = mysqli_query($link, $query) or die(mysqli_error($link));
+        $stmt = mysqli_prepare($link, "UPDATE dictionary_table SET delete_time=?, status=0 WHERE id=?");
+        if (!$stmt) {
+            die(mysqli_error($link));
+        }
+        $id_int = (int) $id;
+        mysqli_stmt_bind_param($stmt, "si", $delete_date, $id_int);
+        $result = mysqli_stmt_execute($stmt);
+        mysqli_stmt_close($stmt);
         header("location:dictionary_editor.php".$showFrame);
         //
     } else if ($action == 'edit_voice') {
@@ -638,7 +690,15 @@ if (isset($_SESSION['username']) && isset($_SESSION['role'])) {
 		if($select_type_creation == 'subnature'){
 		$select_nature = mysqli_real_escape_string($connessione_al_server, $_REQUEST['select_nature_e']);
 		//
-		 $query  = "UPDATE dictionary_table SET label='" . $lb_create . "', parent_id='".$select_nature."'  WHERE id=" . $id;
+		$stmt = mysqli_prepare($link, "UPDATE dictionary_table SET label=?, parent_id=? WHERE id=?");
+		if (!$stmt) {
+			die(mysqli_error($link));
+		}
+		$id_int = (int) $id;
+		$parent_id = (int) $select_nature;
+		mysqli_stmt_bind_param($stmt, "sii", $lb_create, $parent_id, $id_int);
+		$result = mysqli_stmt_execute($stmt);
+		mysqli_stmt_close($stmt);
 		//
 		}
 
@@ -646,18 +706,29 @@ if (isset($_SESSION['username']) && isset($_SESSION['role'])) {
 		//
 		if($select_type_creation == 'value unit'){
 		//
-		$query  = "UPDATE dictionary_table SET label='" . $lb_create . "' WHERE id=" . $id;
+		$stmt = mysqli_prepare($link, "UPDATE dictionary_table SET label=? WHERE id=?");
+		if (!$stmt) {
+			die(mysqli_error($link));
+		}
+		$id_int = (int) $id;
+		mysqli_stmt_bind_param($stmt, "si", $lb_create, $id_int);
+		$result = mysqli_stmt_execute($stmt);
+		mysqli_stmt_close($stmt);
 		//
 		}
 
 		
 		if(($select_type_creation == 'nature')||($select_type_creation == 'value type')||($select_type_creation == 'data type')){
-			 $query  = "UPDATE dictionary_table SET label='" . $lb_create . "'  WHERE id=" . $id;
+			 $stmt = mysqli_prepare($link, "UPDATE dictionary_table SET label=? WHERE id=?");
+			 if (!$stmt) {
+			 	die(mysqli_error($link));
+			 }
+			 $id_int = (int) $id;
+			 mysqli_stmt_bind_param($stmt, "si", $lb_create, $id_int);
+			 $result = mysqli_stmt_execute($stmt);
+			 mysqli_stmt_close($stmt);
 			 //
 		}
-		//
-		///
-		 $result = mysqli_query($link, $query) or die(mysqli_error($link));
 		///
 		//
 		//if($select_type_creation == 'value unit'){
@@ -670,15 +741,26 @@ if (isset($_SESSION['username']) && isset($_SESSION['role'])) {
 			//print_r($select_vt_e);
 			//echo($c_rel);
 			//
-			$query_rel = "DELETE FROM dictionary_relations WHERE child=".$id;
-			//echo($query_rel);
-			$result_rel = mysqli_query($link, $query_rel) or die(mysqli_error($link));
+			$stmt_rel_del = mysqli_prepare($link, "DELETE FROM dictionary_relations WHERE child=?");
+			if (!$stmt_rel_del) {
+				die(mysqli_error($link));
+			}
+			$id_int = (int) $id;
+			mysqli_stmt_bind_param($stmt_rel_del, "i", $id_int);
+			$result_rel = mysqli_stmt_execute($stmt_rel_del);
+			mysqli_stmt_close($stmt_rel_del);
 			/*CREARLI EX_NOVO*/
+			$stmt_rel_ins = mysqli_prepare($link, "INSERT INTO dictionary_relations (child, parent) VALUES (?,?)");
+			if (!$stmt_rel_ins) {
+				die(mysqli_error($link));
+			}
 			for ($r = 0; $r < $c_rel; $r++){
-				$vt = $select_vt_e[$r];
-				$query_relations='INSERT INTO dictionary_relations (child, parent) VALUE ("'.$id.'","'.$vt.'")';
-				$result_relations = mysqli_query($link, $query_relations) or die(mysqli_error($link));
+				$vt = (int) $select_vt_e[$r];
+				$child_id = (int) $id;
+				mysqli_stmt_bind_param($stmt_rel_ins, "ii", $child_id, $vt);
+				mysqli_stmt_execute($stmt_rel_ins);
 				}
+			mysqli_stmt_close($stmt_rel_ins);
 		}
 		if($select_type_creation == 'value type'){
 			/*ELIMINA TUTTI I LINK CHE CI SONO?*/
@@ -686,22 +768,44 @@ if (isset($_SESSION['username']) && isset($_SESSION['role'])) {
 			$select_dt_e = filter_var_array($_REQUEST['select_dt_e']);
 			$c_rel = count($select_dt_e);
 			//
-			$query_rel = "DELETE FROM dictionary_relations WHERE parent='".$id."' AND child IN (SELECT id FROM dictionary_table WHERE type = 'data type')";
-							$result_rel = mysqli_query($link, $query_rel) or die(mysqli_error($link));
+			$stmt_rel_del = mysqli_prepare($link, "DELETE FROM dictionary_relations WHERE parent=? AND child IN (SELECT id FROM dictionary_table WHERE type = 'data type')");
+			if (!$stmt_rel_del) {
+				die(mysqli_error($link));
+			}
+			$id_int = (int) $id;
+			mysqli_stmt_bind_param($stmt_rel_del, "i", $id_int);
+			$result_rel = mysqli_stmt_execute($stmt_rel_del);
+			mysqli_stmt_close($stmt_rel_del);
 			//
 			for ($r = 0; $r < $c_rel; $r++){
-				$vt = $select_dt_e[$r];
+				$vt = (int) $select_dt_e[$r];
 				//
-				$query_selection='SELECT * FROM dictionary_relations WHERE parent="'.$id.'" AND child="'.$vt.'"';
-				$result_selection = mysqli_query($link, $query_selection) or die(mysqli_error($link));
+				$stmt_sel = mysqli_prepare($link, "SELECT * FROM dictionary_relations WHERE parent=? AND child=?");
+				if (!$stmt_sel) {
+					die(mysqli_error($link));
+				}
+				mysqli_stmt_bind_param($stmt_sel, "ii", $id_int, $vt);
+				mysqli_stmt_execute($stmt_sel);
+				$result_selection = mysqli_stmt_get_result($stmt_sel);
+				mysqli_stmt_close($stmt_sel);
 				//
-				$query_rel = "DELETE FROM dictionary_relations WHERE parent='".$id."' AND child='".$vt."'";
-				$result_rel = mysqli_query($link, $query_rel) or die(mysqli_error($link));
+				$stmt_rel_del_one = mysqli_prepare($link, "DELETE FROM dictionary_relations WHERE parent=? AND child=?");
+				if (!$stmt_rel_del_one) {
+					die(mysqli_error($link));
+				}
+				mysqli_stmt_bind_param($stmt_rel_del_one, "ii", $id_int, $vt);
+				$result_rel = mysqli_stmt_execute($stmt_rel_del_one);
+				mysqli_stmt_close($stmt_rel_del_one);
 				//
 				//
 						if($result_selection->num_rows === 0){
-							$query_relations='INSERT INTO dictionary_relations (parent, child) VALUE ("'.$id.'","'.$vt.'")';
-							$result_relations = mysqli_query($link, $query_relations) or die(mysqli_error($link));
+							$stmt_rel_ins = mysqli_prepare($link, "INSERT INTO dictionary_relations (parent, child) VALUES (?,?)");
+							if (!$stmt_rel_ins) {
+								die(mysqli_error($link));
+							}
+							mysqli_stmt_bind_param($stmt_rel_ins, "ii", $id_int, $vt);
+							$result_relations = mysqli_stmt_execute($stmt_rel_ins);
+							mysqli_stmt_close($stmt_rel_ins);
 						}
 				}
 		}
@@ -712,16 +816,25 @@ if (isset($_SESSION['username']) && isset($_SESSION['role'])) {
 			//
 			$nat = $_REQUEST['select_nature_e'];
 			$c_rel = count($select_vt_e);
-			echo('nat: '.$nat);
 			//echo($c_rel);
 			//
-			$query_rel = "DELETE FROM dictionary_relations WHERE child=".$id;
-			//echo($query_rel);
-			$result_rel = mysqli_query($link, $query_rel) or die(mysqli_error($link));
+			$stmt_rel_del = mysqli_prepare($link, "DELETE FROM dictionary_relations WHERE child=?");
+			if (!$stmt_rel_del) {
+				die(mysqli_error($link));
+			}
+			$id_int = (int) $id;
+			mysqli_stmt_bind_param($stmt_rel_del, "i", $id_int);
+			$result_rel = mysqli_stmt_execute($stmt_rel_del);
+			mysqli_stmt_close($stmt_rel_del);
 			/*CREARLI EX_NOVO*/
-				$query_relations='INSERT INTO dictionary_relations (child, parent) VALUE ("'.$id.'",'.$nat.')';
-				echo($query_relations);
-				$result_relations = mysqli_query($link, $query_relations) or die(mysqli_error($link));
+				$stmt_rel_ins = mysqli_prepare($link, "INSERT INTO dictionary_relations (child, parent) VALUES (?,?)");
+				if (!$stmt_rel_ins) {
+					die(mysqli_error($link));
+				}
+				$nat_int = (int) $nat;
+				mysqli_stmt_bind_param($stmt_rel_ins, "ii", $id_int, $nat_int);
+				$result_relations = mysqli_stmt_execute($stmt_rel_ins);
+				mysqli_stmt_close($stmt_rel_ins);
 		}
 		/////////////
        

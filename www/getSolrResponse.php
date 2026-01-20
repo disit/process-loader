@@ -29,7 +29,8 @@
 
     }
 	//$utente_att = $_REQUEST['utente_att'];
-	$role_att1 = $_REQUEST['role_att'];
+		$role_att1 = $_REQUEST['role_att'];
+		$allowed_privileges = ['ToolAdmin', 'AreaManager', 'Manager', 'Public', 'link'];
 
 	//View all resources///
 	include 'config.php';
@@ -50,6 +51,9 @@
 				}else{
 				$privilege='link';
 				}
+		if (!in_array($privilege, $allowed_privileges, true)) {
+			$privilege = 'link';
+		}
 	
 	///
 	$queryRole = "SELECT functionalities.* FROM processloader_db.functionalities WHERE functionalities.".$privilege." = '1' AND functionalities.functionality = 'view all resources from solr';";

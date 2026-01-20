@@ -18,6 +18,36 @@
 include("config.php");
 include("curl.php");
 
+function update_uploaded_files($conn, $data, $id) {
+	if (empty($data)) {
+		return false;
+	}
+	$fields = [];
+	$params = [];
+	$types = "";
+	foreach ($data as $col => $val) {
+		$fields[] = "`" . $col . "` = ?";
+		$params[] = $val;
+		$types .= "s";
+	}
+	$sql = "UPDATE uploaded_files SET " . implode(", ", $fields) . " WHERE Id = ?";
+	$params[] = (int) $id;
+	$types .= "i";
+	$stmt = mysqli_prepare($conn, $sql);
+	if (!$stmt) {
+		return false;
+	}
+	$bind_names = [];
+	$bind_names[] = $types;
+	for ($i = 0; $i < count($params); $i++) {
+		$bind_names[] = &$params[$i];
+	}
+	call_user_func_array('mysqli_stmt_bind_param', $bind_names);
+	$ok = mysqli_stmt_execute($stmt);
+	mysqli_stmt_close($stmt);
+	return $ok;
+}
+
 ////PARAMETRI ////
 if (isset ($_SESSION['username'])&& isset($_SESSION['role'])){ 
 //ID del Job Type
@@ -308,8 +338,28 @@ if (($tipo == 'MicroService')&&(isset($_REQUEST['editor']))){
 	////////////////////////////////// FINE CREAZIONE O MODIFICA FILES //////////////////////////////////////////
 	/////NUOVA query /////
 		if (!isset($_FILES['img3']) || !is_uploaded_file($_FILES['img3']['tmp_name'])) {
-			$query="UPDATE `uploaded_files` SET `File_name` = '".$nuovo_title.".zip', `Description` = '".$desc."',`Category`='".$cat."', `Resource_input` = '".$res."',`Protocol`='".$prot."',`License`='".$lic."', `Format` = '".$for."', `Periodic` = '".$per."', `Realtime` = '".$rt."',`Url` = '".$url_nuovo."',`Method` = '".$method."',`OpenSource` = '".$opensource."',`OS` = '".$os."',`Help` = '".$help."',`Html` = '".$contentHtml."',`Js` = '".$contentjs."' WHERE Id = '".$job_type_id."'";
-			$query_job_type = mysqli_query($connessione_al_server,$query) or die ("query di creazione del job type non riuscita    ".mysqli_error($connessione_al_server));
+			$data = [
+				"File_name" => $nuovo_title . ".zip",
+				"Description" => $desc,
+				"Category" => $cat,
+				"Resource_input" => $res,
+				"Protocol" => $prot,
+				"License" => $lic,
+				"Format" => $for,
+				"Periodic" => $per,
+				"Realtime" => $rt,
+				"Url" => $url_nuovo,
+				"Method" => $method,
+				"OpenSource" => $opensource,
+				"OS" => $os,
+				"Help" => $help,
+				"Html" => $contentHtml,
+				"Js" => $contentjs
+			];
+			$query_job_type = update_uploaded_files($connessione_al_server, $data, $job_type_id);
+			if (!$query_job_type) {
+				die("query di creazione del job type non riuscita    " . mysqli_error($connessione_al_server));
+			}
 			$url = "http://localhost:8983/solr/collection1/dataimport?command=full-import";
 			url_get($url);
 		}else{
@@ -321,8 +371,29 @@ if (($tipo == 'MicroService')&&(isset($_REQUEST['editor']))){
 				$pos_img=$userfile_name;
 				$new_img0=$new_img;
 				$new_img = resize_image($new_img0, 'auto', 200);
-				$query="UPDATE uploaded_files SET File_name = '".$nuovo_title.".zip', Description = '".$desc."',Category='".$cat."', Resource_input = '".$res."', Img='".$new_img."',Protocol='".$prot."',License='".$lic."', Format = '".$for."', Periodic = '".$per."', Realtime = '".$rt."',`Url` = '".$url_nuovo."',`Method` = '".$method."',`OpenSource` = '".$opensource."',`OS` = '".$os."',`Help` = '".$help."', Html = '".$contentHtml."', Js = '".$contentjs."' WHERE Id = '".$job_type_id."' ";
-				$query_job_type = mysqli_query($connessione_al_server,$query) or die ("query di creazione del job type non riuscita    ".mysqli_error($connessione_al_server));
+				$data = [
+					"File_name" => $nuovo_title . ".zip",
+					"Description" => $desc,
+					"Category" => $cat,
+					"Resource_input" => $res,
+					"Img" => $new_img,
+					"Protocol" => $prot,
+					"License" => $lic,
+					"Format" => $for,
+					"Periodic" => $per,
+					"Realtime" => $rt,
+					"Url" => $url_nuovo,
+					"Method" => $method,
+					"OpenSource" => $opensource,
+					"OS" => $os,
+					"Help" => $help,
+					"Html" => $contentHtml,
+					"Js" => $contentjs
+				];
+				$query_job_type = update_uploaded_files($connessione_al_server, $data, $job_type_id);
+				if (!$query_job_type) {
+					die("query di creazione del job type non riuscita    " . mysqli_error($connessione_al_server));
+				}
 				$url = "http://localhost:8983/solr/collection1/dataimport?command=full-import";
 				url_get($url);
 		}
@@ -330,8 +401,25 @@ if (($tipo == 'MicroService')&&(isset($_REQUEST['editor']))){
 }else{
 /////////////////////////////////////////////
 	if (!isset($_FILES['img3']) || !is_uploaded_file($_FILES['img3']['tmp_name'])) {
-				$query="UPDATE `uploaded_files` SET `Description` = '".$desc."',`Category`='".$cat."', `Resource_input` = '".$res."',`Protocol`='".$prot."',`License`='".$lic."', `Format` = '".$for."', `Periodic` = '".$per."', `Realtime` = '".$rt."',`Url` = '".$url_nuovo."',`Method` = '".$method."',`OpenSource` = '".$opensource."',`OS` = '".$os."',`Help` = '".$help."' WHERE Id = '".$job_type_id."'";
-				$query_job_type = mysqli_query($connessione_al_server,$query) or die ("query di creazione del job type non riuscita    ".mysqli_error($connessione_al_server));
+				$data = [
+					"Description" => $desc,
+					"Category" => $cat,
+					"Resource_input" => $res,
+					"Protocol" => $prot,
+					"License" => $lic,
+					"Format" => $for,
+					"Periodic" => $per,
+					"Realtime" => $rt,
+					"Url" => $url_nuovo,
+					"Method" => $method,
+					"OpenSource" => $opensource,
+					"OS" => $os,
+					"Help" => $help
+				];
+				$query_job_type = update_uploaded_files($connessione_al_server, $data, $job_type_id);
+				if (!$query_job_type) {
+					die("query di creazione del job type non riuscita    " . mysqli_error($connessione_al_server));
+				}
 				$url = "http://localhost:8983/solr/collection1/dataimport?command=full-import";
 				url_get($url);
 	}else{
@@ -343,8 +431,26 @@ if (($tipo == 'MicroService')&&(isset($_REQUEST['editor']))){
 					$pos_img=$userfile_name;
 					$new_img0=$new_img;
 					$new_img = resize_image($new_img0, 'auto', 200);
-					$query="UPDATE uploaded_files SET Description = '".$desc."',Category='".$cat."', Resource_input = '".$res."', Img='".$new_img."',Protocol='".$prot."',License='".$lic."', Format = '".$for."', Periodic = '".$per."', Realtime = '".$rt."',`Url` = '".$url_nuovo."',`Method` = '".$method."',`OpenSource` = '".$opensource."',`OS` = '".$os."',`Help` = '".$help."' WHERE Id = '".$job_type_id."' ";
-					$query_job_type = mysqli_query($connessione_al_server,$query) or die ("query di creazione del job type non riuscita    ".mysqli_error($connessione_al_server));
+					$data = [
+						"Description" => $desc,
+						"Category" => $cat,
+						"Resource_input" => $res,
+						"Img" => $new_img,
+						"Protocol" => $prot,
+						"License" => $lic,
+						"Format" => $for,
+						"Periodic" => $per,
+						"Realtime" => $rt,
+						"Url" => $url_nuovo,
+						"Method" => $method,
+						"OpenSource" => $opensource,
+						"OS" => $os,
+						"Help" => $help
+					];
+					$query_job_type = update_uploaded_files($connessione_al_server, $data, $job_type_id);
+					if (!$query_job_type) {
+						die("query di creazione del job type non riuscita    " . mysqli_error($connessione_al_server));
+					}
 					$url = "http://localhost:8983/solr/collection1/dataimport?command=full-import";
 					url_get($url);
 	}
@@ -375,4 +481,3 @@ if (isset($_REQUEST['editor'])){
 }else{
 	header ("location:page.php");
 }
-

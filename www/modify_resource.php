@@ -91,8 +91,8 @@ $par_desc= 'Description = "'.$desc.'"	';
 
 if (isset($_POST['OS'])){
 $OS0 = mysqli_real_escape_string($connessione_al_server,$_POST['OS']);
-$OS = filter_var($OS0, FILTER_SANITIZE_STRING);
-$OS= 'OS = "'.$OS.'",	';
+$os_value = filter_var($OS0, FILTER_SANITIZE_STRING);
+$par_OS = 'OS = "'.$os_value.'",	';
 }else{
 	$par_OS='';
 }
@@ -146,8 +146,82 @@ if (isset($_POST['Format'])){
 }
 
 
-$query = 'UPDATE uploaded_files SET	'.$par_lic.''.$par_prot.''.$par_periodic.''.$par_realtime.''.$par_nat.''.$par_opensource.''.$par_format.''.$par_sub_n.''.$par_OS.''.$par_image.''.$par_desc.'  WHERE Id ="'.$id.'"';
-		$query_job_type = mysqli_query($connessione_al_server,$query) or die ("query di creazione del job type non riuscita    ".mysqli_error($connessione_al_server));
+$fields = [];
+$params = [];
+$types = "";
+if (isset($lic)) {
+	$fields[] = "License = ?";
+	$params[] = $lic;
+	$types .= "s";
+}
+if (isset($prot)) {
+	$fields[] = "Protocol = ?";
+	$params[] = $prot;
+	$types .= "s";
+}
+if (isset($periodic)) {
+	$fields[] = "Periodic = ?";
+	$params[] = $periodic;
+	$types .= "s";
+}
+if (isset($realtime)) {
+	$fields[] = "Realtime = ?";
+	$params[] = $realtime;
+	$types .= "s";
+}
+if (isset($nature)) {
+	$fields[] = "Category = ?";
+	$params[] = $nature;
+	$types .= "s";
+}
+if (isset($opensource)) {
+	$fields[] = "OpenSource = ?";
+	$params[] = $opensource;
+	$types .= "s";
+}
+if (isset($format)) {
+	$fields[] = "Format = ?";
+	$params[] = $format;
+	$types .= "s";
+}
+if (isset($sub_nature)) {
+	$fields[] = "Resource_input = ?";
+	$params[] = $sub_nature;
+	$types .= "s";
+}
+if (isset($os_value)) {
+	$fields[] = "OS = ?";
+	$params[] = $os_value;
+	$types .= "s";
+}
+if (isset($new_img)) {
+	$fields[] = "Img = ?";
+	$params[] = $new_img;
+	$types .= "s";
+}
+if (isset($desc)) {
+	$fields[] = "Description = ?";
+	$params[] = $desc;
+	$types .= "s";
+}
+
+if (!empty($fields)) {
+	$query = 'UPDATE uploaded_files SET ' . implode(", ", $fields) . ' WHERE Id = ?';
+	$params[] = (int) $id;
+	$types .= "i";
+	$stmt = mysqli_prepare($connessione_al_server, $query);
+	if (!$stmt) {
+		die("query di creazione del job type non riuscita    " . mysqli_error($connessione_al_server));
+	}
+	$bind_names = [];
+	$bind_names[] = $types;
+	for ($i = 0; $i < count($params); $i++) {
+		$bind_names[] = &$params[$i];
+	}
+	call_user_func_array('mysqli_stmt_bind_param', $bind_names);
+	$query_job_type = mysqli_stmt_execute($stmt);
+	mysqli_stmt_close($stmt);
+}
 		$url = "http://localhost:8983/solr/collection1/dataimport?command=full-import";
 		//$url = "http://localhost:8983/solr/collection1/dataimport?command=delta-import";
 		url_get($url);

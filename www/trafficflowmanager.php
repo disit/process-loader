@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <?php
 /* Resource Manager - Process Loader
    Copyright (C) 2018 DISIT Lab http://www.disit.org - University of Florence
@@ -24,11 +25,9 @@ include('external_service.php');
 
 if (isset($_SESSION['accessToken'])) {
     // METADATA API
-    //
     $url_api = $host_trafficflowmanager . 'trafficflowmanager/api/metadata';
     $json_api = file_get_contents($url_api);
     $list_api = json_decode($json_api);
-
     // QUERY COLOR MAPS
     $link = mysqli_connect($host_heatmap, $username_heatmap, $password_heatmap) or die("failed to connect to server !!");
     mysqli_set_charset($link, 'utf8');
@@ -62,33 +61,24 @@ if (isset ($_SESSION['username'])){
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-
     <title>TrafficFlow Manager</title>
-
     <!-- jQuery -->
     <script src="jquery/jquery-1.10.1.min.js"></script>
-
     <!-- Bootstrap Core JavaScript -->
     <script src="bootstrap/bootstrap.min.js"></script>
-
     <!-- Bootstrap Core CSS -->
     <link href="bootstrap/bootstrap.css" rel="stylesheet">
-
     <!-- Bootstrap toggle button -->
     <link href="bootstrapToggleButton/css/bootstrap-toggle.min.css" rel="stylesheet">
     <script src="bootstrapToggleButton/js/bootstrap-toggle.min.js"></script>
-
     <!-- Dynatable -->
     <link rel="stylesheet" href="dynatable/jquery.dynatable.css">
     <script src="dynatable/jquery.dynatable.js"></script>
-
     <!-- Font awesome icons -->
-    <link rel="stylesheet" href="fontAwesome/css/font-awesome.min.css">
-
+  <link rel="stylesheet" href="fontAwesome/css/font-awesome.min.css">
     <!-- Custom CSS -->
     <link href="css/dashboard.css" rel="stylesheet">
     <link href="css/dashboardList.css" rel="stylesheet">
-
     <!-- Color Picker -->
     <script src="bootstrap-colorpicker/dist/js/bootstrap-colorpicker.js"></script>
     <script src="bootstrap-colorpicker/dist/js/bootstrap-colorpicker.min.js"></script>
@@ -96,39 +86,30 @@ if (isset ($_SESSION['username'])){
     <link href="bootstrap-colorpicker/dist/css/bootstrap-colorpicker.css" rel="stylesheet" />
     <link href="bootstrap-colorpicker/dist/css/bootstrap-colorpicker.min.css" rel="stylesheet" />
     <!-- -->
-
     <!-- Tabella -->
     <script type="text/javascript" charset="utf8" src="lib/datatables.js"></script>
     <script type="text/javascript" src="lib/dataTables.responsive.min.js"></script>
     <script type="text/javascript" src="lib/dataTables.bootstrap4.min.js"></script>
     <script type="text/javascript" src="lib/jquery.dataTables.min.js"></script>
     <link href="lib/responsive.dataTables.css" rel="stylesheet" />
-
 </head>
-
 <!-- STYLE -->
 <style>
-
     .hidden {
         display: none;
     }
-
     #view-modal {
         width: auto;
     }
-
     #value_table {
         width: 100%;
     }
-
     td {
         vertical-align: middle;
     }
-
     #trafficflow_table {
         margin-bottom: 0px;
     }
-
     .loader {
         border: 16px solid #f3f3f3; /* Light grey */
         border-top: 16px solid #3498db; /* Blue */
@@ -140,21 +121,22 @@ if (isset ($_SESSION['username'])){
         left: 50%;
         right: 50%;
     }
-
     @keyframes spin {
         0% { transform: rotate(0deg); }
         100% { transform: rotate(360deg); }
     }
-
     .active {
         background-color: rgba(138, 159, 168, 1);
     }
 
-</style>
+    th{
+        color: white;
+    }
 
+
+</style>
 <!-- BODY -->
 <body class="guiPageBody">
-
     <!-- Main content -->
     <div class="container-fluid">
         <div class="row mainRow" style='background-color: rgba(138, 159, 168, 1)'>
@@ -163,7 +145,6 @@ if (isset ($_SESSION['username'])){
                 <div class="row">
                     <div class="col-xs-12" id="mainContentCnt" style='background-color: rgba(138, 159, 168, 1); padding-top:20px;'>
                         <table id="trafficflow_table" class="table table-striped table-bordered display responsive no-wrap" style="width: 100%;">
-
                             <!-- Header -->
                             <thead class="dashboardsTableHeader">
                                 <tr>
@@ -176,40 +157,16 @@ if (isset ($_SESSION['username'])){
                                     <th><div><a>Metric</a></div></th>
                                     <th><div><a>ColorMap</a></div></th>
                                     <th><div><a>Delete</a></div></th>
-                                    <th><div><a>Preview</a></div></th>
+									<th><div><a>Preview</a></div></th>
                                     <th><div><a>Unit of Measure</a></div></th>
                                     <th><div><a>Static Graph Name</a></div></th>
                                 </tr>
                             </thead>
-
                             <!-- Rows -->
                             <tbody>
-                            <?php
-                            for ($i = 0; $i < count($list_api); $i++) {
-                                echo("<tr>");
-                                echo("<td>" . $list_api[$i]->fluxName . "</td>");
-                                echo("<td>" . $list_api[$i]->locality . "</td>");
-                                echo("<td>" . $list_api[$i]->organization . "</td>");
-                                echo("<td>" . $list_api[$i]->scenarioID . "</td>");
-                                echo("<td>" . $list_api[$i]->instances . "</td>");
-                                echo("<td><button type='button' class='viewDashBtn viewList' data-target='#view-modal' data-toggle='modal' value='".$list_api[$i]->fluxName."'>VIEW</button></td>");
-                                echo("<td>" . $list_api[$i]->metricName . "</td>");
-                                echo("<td>
-                                        <button type='button' class='viewDashBtn viewType' data-target='#typology-modal' data-toggle='modal' value='". $list_api[$i]->colorMap ."'>VIEW</button>  
-									    <button type='button' class='editDashBtn editColor' data-target='#edit-colormap' data-toggle='modal' map_name='". $list_api[$i]->fluxName ."' value='". $list_api[$i]->colorMap ."'>EDIT</button>
-										<p style='display: inline; margin-left: 2%;'>". $list_api[$i]->colorMap ."</p>
-									  </td>");
-                                echo("<td><button type='button' class='delDashBtn del_metdata' data-target='#delete-modal' data-toggle='modal' value='". $list_api[$i]->fluxName ."'>DEL</button></td>");
-                                echo("<td><button type='button' class='editDashBtn previewList' data-target='#preview-modal' data-toggle='modal' value='".$list_api[$i]->fluxName."'>PREVIEW</button></td>");
-                                echo("<td>" . $list_api[$i]->unitOfMeasure . "</td>");
-                                echo("<td>" . $list_api[$i]->staticGraphName . "</td>");
-                                echo("</tr>");
-                            }
-                            ?>
                             </tbody>
                         </table>
                     </div>
-
                     <!-- View Data Modal -->
                     <div class="modal fade bd-example-modal-lg" id="view-modal" role="dialog" aria-labelledby="exampleModalLongTitle" aria-hidden="true">
                         <div class="modal-dialog modal-lg">
@@ -245,7 +202,6 @@ if (isset ($_SESSION['username'])){
                             </form>
                         </div>
                     </div>
-
                     <!-- View Color Map Modal -->
                     <div class="modal fade bd-example-modal-lg" id="typology-modal" role="dialog" aria-labelledby="exampleModalLongTitle" aria-hidden="true">
                         <div class="modal-dialog">
@@ -285,7 +241,6 @@ if (isset ($_SESSION['username'])){
                             </form>
                         </div>
                     </div>
-
                     <!-- Edit Color Map Modal -->
                     <div class="modal fade bd-example-modal-lg" id="edit-colormap" role="dialog" aria-labelledby="exampleModalLongTitle" aria-hidden="true">
                         <div class="modal-dialog modal-sm">
@@ -313,7 +268,6 @@ if (isset ($_SESSION['username'])){
                             </form>
                         </div>
                     </div>
-
                     <!-- Delete Heatmap Modal -->
                     <div class="modal fade bd-example-modal-lg" id="delete-modal" role="dialog" aria-labelledby="exampleModalLongTitle" aria-hidden="true">
                         <div class="modal-dialog">
@@ -334,7 +288,6 @@ if (isset ($_SESSION['username'])){
                             </form>
                         </div>
                     </div>
-
                     <!-- Delete Data Modal -->
                     <div class="modal bd-example-modal-lg" id="data_elimination" role="dialog" aria-labelledby="exampleModalLongTitle" aria-hidden="true">
                         <div class="modal-dialog">
@@ -356,7 +309,6 @@ if (isset ($_SESSION['username'])){
                             </form>
                         </div>
                     </div>
-
                 </div>
             </div>
         </div>
@@ -380,17 +332,14 @@ if (isset ($_SESSION['username'])){
 													</form>
 												</div>
 											</div>
-	<!-- -->
-
-    <!-- JavaScript -->
+	<!-- -->    <!-- JavaScript -->
     <script type='text/javascript'>
 
         const host_trafficflowmanager = "<?=$host_trafficflowmanager;?>";
         const role = "<?=$role_att;?>";
-        var preview_path = "<?=$preview_path; ?>";
-
+        const token = "<?=$_SESSION['accessToken'];?>";
+		var preview_path = "<?=$preview_path; ?>";
         $(document).ready(function() {
-
             // Authentication
             if (role == "") {
                 $(document).empty();
@@ -401,6 +350,32 @@ if (isset ($_SESSION['username'])){
                     window.location.href = 'page.php?pageTitle=Process%20Loader:%20View%20Resources';
                 }
             }
+        //
+       // var url_api = host_trafficflowmanager + 'trafficflowmanager/api/metadata';
+       var url_api = 'getTrafficFlowData.php'
+        //
+              /*$.ajax({
+                    url: url_api,
+                    type: "GET",
+                    async: true,
+                    data: {
+                        action: 'list_data',
+                        accessToken: token
+                    },
+                    dataType: 'json',
+                    success: function(data) {
+                        console.log(data);
+                        var list_api = data;
+                        console.log(list_api);
+                        $('#trafficflow_table tbody').empty();
+                        for (var i = 0; i < list_api.length; i++) {
+                                var buttons = "<button type='button' class='viewDashBtn viewType' data-target='#typology-modal' data-toggle='modal' value='"+ list_api[i]['colorMap'] +"'>VIEW</button>  <button type='button' class='editDashBtn editColor' data-target='#edit-colormap' data-toggle='modal' map_name='"+ list_api[i]['fluxName'] +"' value='"+ list_api[i]['colorMap'] +"'>EDIT</button><p style='display: inline; margin-left: 2%;'>"+ list_api[i]['colorMap'] +"</p>";
+                                var button_delete = "<button type='button' class='delDashBtn del_metdata' data-target='#delete-modal' data-toggle='modal' value='"+ list_api[i]['fluxName'] +"'>DEL</button>";
+								var button_preview ="<td><button type='button' class='editDashBtn previewList' data-target='#preview-modal' data-toggle='modal' value='"+ list_api[i]['fluxName'] +"'>PREVIEW</button></td>";
+                                $('#trafficflow_table tbody').append("<tr><td>" + list_api[i]['fluxName'] + "</td><td>" + list_api[i]['locality'] + "</td><td>" + list_api[i]['organization'] + "</td><td>" + list_api[i]['scenarioID'] + "</td><td>" + list_api[i]['instances'] + "</td><td><button type='button' class='viewDashBtn viewList' data-target='#view-modal' data-toggle='modal' value='"+list_api[i]['fluxName']+"'>VIEW</button></td><td>" + list_api[i]['metricName'] + "</td><td>"+buttons+"</td><td>"+button_delete+"</td>"+button_preview+"<td>"+list_api[i]['unitOfMeasure']+"</td><td>"+list_api[i]['staticGraphName']+"</td></tr>");
+                                /////
+                            }
+
 
             $('#trafficflow_table').DataTable({
                 "searching": true,
@@ -423,6 +398,91 @@ if (isset ($_SESSION['username'])){
                 }
             });
 
+        }
+    });*/
+    $.ajax({
+    url: url_api,
+    type: "GET",
+    async: true,
+    data: {
+        action: 'list_data',
+        accessToken: token
+    },
+    dataType: 'json',
+    success: function(data) {
+        console.log(data);
+
+        var table = $('#trafficflow_table').DataTable();
+
+        // Svuota e distrugge la tabella per evitare duplicazioni
+        table.clear().destroy();
+
+        var rows = [];
+
+        data.forEach(item => {
+            var buttons = `<button type='button' class='viewDashBtn viewType' data-target='#typology-modal' data-toggle='modal' value='${item.colorMap}'>VIEW</button>  
+                           <button type='button' class='editDashBtn editColor' data-target='#edit-colormap' data-toggle='modal' map_name='${item.fluxName}' value='${item.colorMap}'>EDIT</button>
+                           <p style='display: inline; margin-left: 2%;'>${item.colorMap}</p>`;
+
+            var button_delete = `<button type='button' class='delDashBtn del_metdata' data-target='#delete-modal' data-toggle='modal' value='${item.fluxName}'>DEL</button>`;
+            var button_preview = `<td><button type='button' class='editDashBtn previewList' data-target='#preview-modal' data-toggle='modal' value='${item.fluxName}'>PREVIEW</button></td>`;
+
+            rows.push([
+                item.fluxName,
+                item.locality,
+                item.organization,
+                item.scenarioID,
+                item.instances,
+                `<button type='button' class='viewDashBtn viewList' data-target='#view-modal' data-toggle='modal' value='${item.fluxName}'>VIEW</button>`,
+                item.metricName,
+                buttons,
+                button_delete,
+                button_preview,
+                item.unitOfMeasure,
+                item.staticGraphName
+            ]);
+        });
+
+        // Inizializza DataTable con i nuovi dati
+        $('#trafficflow_table').DataTable({
+            data: rows,
+            columns: [
+                { title: "Flux Name" },
+                { title: "Locality" },
+                { title: "Organization" },
+                { title: "Scenario ID" },
+                { title: "Instances" },
+                { title: "View" },
+                { title: "Metric Name" },
+                { title: "Buttons" },
+                { title: "Delete" },
+                { title: "Preview" },
+                { title: "Unit of Measure" },
+                { title: "Static Graph Name" }
+            ],
+            searching: true,
+            paging: true,
+            ordering: true,
+            info: false,
+            responsive: true,
+            lengthMenu: [5, 10, 15],
+            pageLength: 10,
+            pagingType: "full_numbers",
+            dom: '<"pull-left"l><"pull-right"f>tip',
+            language: {
+                paginate: {
+                    first: "First",
+                    last: "Last",
+                    next: "Next >>",
+                    previous: "<< Prev"
+                },
+                lengthMenu: "Show _MENU_ "
+            }
+        });
+    }
+});
+
+
             // Function called when clicking 'View' in VIEW DATA column
             $(document).on('click', '.viewList', function() {
                 const flux_name = $(this).val();
@@ -443,7 +503,6 @@ if (isset ($_SESSION['username'])){
                     async: true,
                     dataType: 'json',
                     success: function(data) {
-
                         for (var i = 0; i < data.length; i++) {
                             var data_id = data[i]['id'];
                             var rgb = data[i]['rgb'];
@@ -457,10 +516,8 @@ if (isset ($_SESSION['username'])){
                             if (max == null) {
                                 max = '';
                             }
-
                             rgb0 = rgb.replace("[", "(");
                             rgb = rgb0.replace("]", ")");
-
                             $('#typology_table tbody').append('<tr><td>' + min + '</td><td>' + max + '</td><td>' + rgb + ' <p><i class="fa fa-circle" style="color: rgb' + rgb + '"></i></p></td><td>' + color + '</td><td>' + order + '</td></tr>');
                         }
                         //
@@ -526,14 +583,17 @@ if (isset ($_SESSION['username'])){
             $(document).on('click', '#delete_heatmap', function() {
                 const id_heat = $('#id_heat').val();
                 $.ajax({
-                    url: host_trafficflowmanager + 'trafficflowmanager/api/metadata',
+                    //url: host_trafficflowmanager + 'trafficflowmanager/api/metadata',
+                    url: 'getTrafficFlowData.php',
                     data: {
                         id: id_heat,
-                        action: 'delete_metadata'
+                        action: 'delete_metadata',
+                        accessToken: token
                     },
                     type: "POST",
                     async: true,
-                    success: function() {
+                    success: function(data) {
+                        console.log(data);
                         $('#delete_Heatmap').modal('hide');
                         alert('Successfully deleted');
                         location.reload();
@@ -587,9 +647,7 @@ if (isset ($_SESSION['username'])){
 								myIframe.src = preview_path+'?trafficFlow='+fluxname;
                                 console.log(myIframe.src);
 								$(myModal).modal('show');
-							});
-
-            // Function called when clicking VIEW JSON inside HEATMAP
+							});            // Function called when clicking VIEW JSON inside HEATMAP
             $(document).on('click', '.view-json', function() {
                 const layerName = $(this).data('layer');
                 const url = host_trafficflowmanager + 'trafficflowmanager/api/json?layerName=' + layerName;
@@ -662,10 +720,7 @@ if (isset ($_SESSION['username'])){
                 }
             });
         }
-
     </script>
-
 </body>
-
 </html>
 

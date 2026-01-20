@@ -47,6 +47,7 @@
 	//$query = new SolrQuery('*:*');
 	//$query->setFacet(true);
 	$role_att1 = $_REQUEST['role_att'];
+	$allowed_privileges = ['ToolAdmin', 'AreaManager', 'Manager', 'Public', 'link'];
 	//$utente_att = $_REQUEST['utente_att'];
 	
 	////////////////////View privileges///////////////////
@@ -67,6 +68,9 @@
 				}else{
 				$privilege='link';
 				}
+		if (!in_array($privilege, $allowed_privileges, true)) {
+			$privilege = 'link';
+		}
 	
 	///
 	$queryRole = "SELECT functionalities.* FROM processloader_db.functionalities WHERE functionalities.".$privilege." = '1' AND functionalities.functionality = 'view all resources from solr';";

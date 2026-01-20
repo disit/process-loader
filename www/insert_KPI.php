@@ -121,16 +121,17 @@ if(isset($_REQUEST['paramters'])){
 }
 //
 //ESISTE GIà?
-$verify = "select COUNT(*) FROM processloader_db.DashboardWizard WHERE high_level_type='KPI' AND sub_nature='".$subnature."' AND nature='".$nature."' AND unique_name_id='".$valuename ."'";
-$res_ver = mysqli_query($link,$verify) or die ("Operation failed".mysqli_error());
-$count_ver = array();
-				if ($res_ver->num_rows > 0) {
-					while($row = mysqli_fetch_assoc($res_ver)){
-						array_push($count_ver, $row);
-					}
-				}
-				//var_dump($count_list);
-				$total_rows = $count_ver[0]["COUNT(*)"];
+$verify = "SELECT COUNT(*) AS cnt FROM processloader_db.DashboardWizard WHERE high_level_type='KPI' AND sub_nature=? AND nature=? AND unique_name_id=?";
+$stmt_ver = mysqli_prepare($link, $verify);
+if (!$stmt_ver) {
+	die("Operation failed".mysqli_error());
+}
+mysqli_stmt_bind_param($stmt_ver, "sss", $subnature, $nature, $valuename);
+mysqli_stmt_execute($stmt_ver);
+$res_ver = mysqli_stmt_get_result($stmt_ver);
+$row_ver = mysqli_fetch_assoc($res_ver);
+$total_rows = isset($row_ver['cnt']) ? (int)$row_ver['cnt'] : 0;
+mysqli_stmt_close($stmt_ver);
 if ($total_rows > 0){
 		if (isset($_REQUEST['showFrame'])){
 			if ($_REQUEST['showFrame'] == 'false'){
@@ -143,7 +144,7 @@ if ($total_rows > 0){
 		}
 }else{
 //
-		$max = "SELECT MAX(id) FROM processloader_db.DashboardWizard;";
+		$max = "SELECT MAX(id) AS max_id FROM processloader_db.DashboardWizard;";
 		$res_max = mysqli_query($link,$max) or die ("Operation failed".mysqli_error());
 		$count_list = array();
 						if ($res_max->num_rows > 0) {
@@ -152,13 +153,42 @@ if ($total_rows > 0){
 							}
 						}
 						//var_dump($count_list);
-						$total_rows = $count_list[0]["MAX(id)"];
+						$total_rows = isset($count_list[0]["max_id"]) ? (int)$count_list[0]["max_id"] : 0;
 						$new_id = $total_rows+1;
 		//
-		$query_reg="INSERT INTO processloader_db.DashboardWizard (id,nature,high_level_type,sub_nature,low_level_type,unique_name_id,instance_uri,datetime_of_insert,ownership,Description,Info,latitudes,longitudes,parameters,healthiness,unit) VALUES (".$new_id.",'".$nature."','KPI','".$subnature."','".$valuetype."','".$valuename."',NULL,'".$datatime_of_insert."','".$ownership."','".$description."','".$info."','".$latitude."','".$longitudes."','".$parameters."','false','".$datatype."')";
-		echo ($query_reg);
-
-		$query_registrazione = mysqli_query($link,$query_reg) or die ("Operation failed".mysqli_error());
+		$query_reg = "INSERT INTO processloader_db.DashboardWizard (id,nature,high_level_type,sub_nature,low_level_type,unique_name_id,instance_uri,datetime_of_insert,ownership,Description,Info,latitudes,longitudes,parameters,healthiness,unit) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+		$instance_uri = null;
+		$high_level_type = 'KPI';
+		$healthiness = 'false';
+		$stmt_reg = mysqli_prepare($link, $query_reg);
+		if (!$stmt_reg) {
+			die ("Operation failed".mysqli_error());
+		}
+		mysqli_stmt_bind_param(
+			$stmt_reg,
+			"isssssssssssssss",
+			$new_id,
+			$nature,
+			$high_level_type,
+			$subnature,
+			$valuetype,
+			$valuename,
+			$instance_uri,
+			$datatime_of_insert,
+			$ownership,
+			$description,
+			$info,
+			$latitude,
+			$longitudes,
+			$parameters,
+			$healthiness,
+			$datatype
+		);
+		$exec_ok = mysqli_stmt_execute($stmt_reg);
+		mysqli_stmt_close($stmt_reg);
+		if (!$exec_ok) {
+			die ("Operation failed".mysqli_error());
+		}
 
 		if (isset($_REQUEST['showFrame'])){
 			if ($_REQUEST['showFrame'] == 'false'){

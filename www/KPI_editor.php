@@ -39,15 +39,13 @@ if (isset ($_SESSION['username'])){
 
 $pagina_attuale = $_SERVER['REQUEST_URI'];
 
-if (isset($_GET['orderBy'])){
-$order = $_GET['orderBy'];
-}else{
-$order = 'id';	
+$allowed_order = array('id', 'nature', 'high_level_type', 'sub_nature', 'low_level_type', 'unique_name_id', 'ownership');
+$order = isset($_GET['orderBy']) ? $_GET['orderBy'] : 'id';
+if (!in_array($order, $allowed_order, true)) {
+	$order = 'id';
 }
-
-if (isset($_GET['order'])){
-	$by = $_GET['order'];
-}else{
+$by = isset($_GET['order']) ? strtoupper($_GET['order']) : 'DESC';
+if ($by !== 'ASC' && $by !== 'DESC') {
 	$by = 'DESC';
 }
 
@@ -68,33 +66,31 @@ if (!isset($_GET['pageTitle'])){
 
 $start_from = 0;
 
-if (isset($_GET['limit'])|| $_GET['limit']!==""){
-$limit=$_GET['limit'];
-}else{
-$limit = 10;  
-}
-if ($_GET['limit'] == ""){
-$limit = 10;  
+$limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 10;
+if ($limit <= 0) {
+	$limit = 10;
 }
 
-if (isset($_GET["page"])) { 
-		$page  = $_GET["page"]; 
-	} else { 
-		$page=1; 
-	};
+$page = isset($_GET["page"]) ? (int)$_GET["page"] : 1;
+if ($page <= 0) {
+	$page = 1;
+}
 $start_from = ($page-1) * $limit; 
 //	
 $query_n = "SELECT DashboardWizard.* FROM processloader_db.DashboardWizard";
 //
 
-$total_rows_query = $query_n;
-$query_n = $query_n . "	ORDER BY ".$order." ".$by." LIMIT ".$start_from.", ".$limit.";";
+$total_rows_query = "SELECT COUNT(*) AS cnt FROM processloader_db.DashboardWizard";
+$query_n = $query_n . " ORDER BY ".$order." ".$by." LIMIT ?, ?;";
 //
 $link = mysqli_connect($host_kpi, $username_kpi, $password_kpi) or die("failed to connect to server !!");
 mysqli_set_charset($link, 'utf8');
 mysqli_select_db($link, $dbname_kpi);
 
-$result = mysqli_query($link, $query_n) or die(mysqli_error($link));
+$stmt = mysqli_prepare($link, $query_n) or die(mysqli_error($link));
+mysqli_stmt_bind_param($stmt, "ii", $start_from, $limit);
+mysqli_stmt_execute($stmt);
+$result = mysqli_stmt_get_result($stmt);
 $process_list = array();
 $num_rows = $result->num_rows;
 
@@ -106,8 +102,18 @@ $num_rows = $result->num_rows;
 				}
 	}
 
-$result0 = mysqli_query($link, $total_rows_query) or die(mysqli_error($link));
-		$total_rows = $result0->num_rows;
+$stmt_count = mysqli_prepare($link, $total_rows_query) or die(mysqli_error($link));
+mysqli_stmt_execute($stmt_count);
+$result0 = mysqli_stmt_get_result($stmt_count);
+$count_list = array();
+if ($result0->num_rows > 0) {
+	while($row = mysqli_fetch_assoc($result0)){
+		array_push($count_list, $row);
+	}
+}
+$total_rows = $count_list[0]["cnt"];
+mysqli_stmt_close($stmt);
+mysqli_stmt_close($stmt_count);
 	mysqli_close($link);
 ////
 $error_name="";

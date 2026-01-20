@@ -20,13 +20,13 @@ else{
     $values=null;
 }
  if (isset($_POST['limit'])){
-		$limit=$_POST['limit'];
+		$limit=(int) $_POST['limit'];
 	 }else{
 		$limit=5; 
 	 }
 	
 	if (isset($_POST["page_comment"])) { 
-		$page  = $_POST["page_comment"]; 
+		$page  = (int) $_POST["page_comment"]; 
 	} else { 
 		$page=1; 
 	}; 
@@ -39,15 +39,7 @@ else{
 $start_from = ($page-1) * $limit; 
 
 if($values!=null){
-    $value="";
-    for($i=0;$i<count($values);$i++){
-
-
-        if($i==count($values)-1){
-            $value=$value."'".$values[$i]."'";
-        } else{$value=$value."'".$values[$i]."'"." OR status=";}
-
-    }
+    $values = array_values($values);
 }
 
 $link = mysqli_connect($host_photo, $username_photo, $password_photo) or die("failed to connect to server !!");
@@ -63,27 +55,37 @@ if(isset($_POST['values'])){
 
 }
 
-if($values!=null){
-    $value="";
-    for($i=0;$i<count($values);$i++){
-//        echo json_encode($values2[$i]);
-
-        if($i==count($values)-1){
-            $value=$value."'".$values[$i]."'";
-        } else{$value=$value."'".$values[$i]."'"." OR status=";}
-
-    }
-//    echo json_encode($value);
-
-
-//	    $query2 = "SELECT * FROM ServicePhoto WHERE status='$value' ORDER BY timestamp DESC LIMIT 18";
-    $query = "SELECT * FROM ServiceComment WHERE status=$value AND timestamp>'$dateSearch'ORDER BY timestamp DESC LIMIT $start_from, $limit";
-//        $query=$query."ORDER BY timestamp DESC LIMIT 18";
-
+if($values!=null && !empty($values)){
+	$placeholders = implode(",", array_fill(0, count($values), "?"));
+    $query = "SELECT * FROM ServiceComment WHERE status IN (" . $placeholders . ") AND timestamp > ? ORDER BY timestamp DESC LIMIT ?, ?";
+	$stmt = mysqli_prepare($link, $query);
+	if (!$stmt) {
+		die(mysqli_error($link));
+	}
+	$params = $values;
+	$params[] = $dateSearch;
+	$params[] = $start_from;
+	$params[] = $limit;
+	$types = str_repeat("s", count($values)) . "sii";
+	$bind_names = [];
+	$bind_names[] = $types;
+	for ($i = 0; $i < count($params); $i++) {
+		$bind_names[] = &$params[$i];
+	}
+	call_user_func_array('mysqli_stmt_bind_param', $bind_names);
+	mysqli_stmt_execute($stmt);
+	$result = mysqli_stmt_get_result($stmt);
 }
-else{$query = "SELECT * FROM ServiceComment WHERE timestamp > '$dateSearch' ORDER BY timestamp DESC LIMIT $start_from, $limit";}
-
-$result = mysqli_query($link, $query) or die(mysqli_error($link));
+else{
+	$query = "SELECT * FROM ServiceComment WHERE timestamp > ? ORDER BY timestamp DESC LIMIT ?, ?";
+	$stmt = mysqli_prepare($link, $query);
+	if (!$stmt) {
+		die(mysqli_error($link));
+	}
+	mysqli_stmt_bind_param($stmt, "sii", $dateSearch, $start_from, $limit);
+	mysqli_stmt_execute($stmt);
+	$result = mysqli_stmt_get_result($stmt);
+}
 $list = array();
 $num = $result->num_rows;
 if ($num > 0) {
@@ -126,5 +128,7 @@ if ($num > 0) {
             array_push($list, $listFile);
     }
 }
+if (isset($stmt)) {
+	mysqli_stmt_close($stmt);
+}
 echo json_encode($list);
-

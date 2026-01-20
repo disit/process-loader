@@ -33,8 +33,14 @@ $url_accessToken = $access_token_userinfo;
 $userToken ="";
 $public =0;	
 if(isset($_GET['id'])) {
-	$query_public = "SELECT public FROM processloader_db.uploaded_files WHERE Id=".mysqli_real_escape_string($link,$_GET['id']);
-	$result_public = mysqli_query($link, $query_public) or die(mysqli_error($link));
+	$stmt_public = mysqli_prepare($link, "SELECT public FROM processloader_db.uploaded_files WHERE Id=?");
+	if (!$stmt_public) {
+		die(mysqli_error($link));
+	}
+	$id_public = (int) $_GET['id'];
+	mysqli_stmt_bind_param($stmt_public, "i", $id_public);
+	mysqli_stmt_execute($stmt_public);
+	$result_public = mysqli_stmt_get_result($stmt_public);
 	$list_public = 0;
 	 $num = $result_public->num_rows;
 					if ($num > 0) 
@@ -45,6 +51,7 @@ if(isset($_GET['id'])) {
 							$list_public=$row['public'];
 					}
 					}
+	mysqli_stmt_close($stmt_public);
 						
 	/*$handle1 = fopen("file_query.txt", "w");
 	  fwrite($handle1, $list_public." ".$_GET['id']);
@@ -111,14 +118,24 @@ else
 		// qui invece del get[resource_type] si può metter un ciclo su tutti i parametri del get e costruire una stringa da attaccare nel where della query, del tipo WHERE category=$_GET['nature'] and resource_type=$GET['resource_type'] and ....
 		if(isset($_GET['id']))
 		{
-						$id_query=mysqli_real_escape_string($link,$_GET['id']);
+			$id_query = (int) $_GET['id'];
 			if ($userToken !=""){
-			//$query = "SELECT * FROM processloader_db.uploaded_files WHERE Username='".$userToken."' and Id='".$id_query."'";	
-				$query = "SELECT * FROM processloader_db.uploaded_files WHERE Id='".$id_query."' AND ((Username='".$userToken."' AND public=0) OR (public=1))";	
+				$query = "SELECT * FROM processloader_db.uploaded_files WHERE Id=? AND ((Username=? AND public=0) OR (public=1))";	
+				$stmt = mysqli_prepare($link, $query);
+				if (!$stmt) {
+					die(mysqli_error($link));
+				}
+				mysqli_stmt_bind_param($stmt, "is", $id_query, $userToken);
 			}else{
-			$query = "SELECT * FROM processloader_db.uploaded_files WHERE public=1 and Id='".$id_query."'";
+				$query = "SELECT * FROM processloader_db.uploaded_files WHERE public=1 and Id=?";
+				$stmt = mysqli_prepare($link, $query);
+				if (!$stmt) {
+					die(mysqli_error($link));
+				}
+				mysqli_stmt_bind_param($stmt, "i", $id_query);
 			}
-			$result = mysqli_query($link, $query) or die(mysqli_error($link));
+			mysqli_stmt_execute($stmt);
+			$result = mysqli_stmt_get_result($stmt);
 			if(!$result)
 			{
 
@@ -412,22 +429,21 @@ else
 				
 							
 		
-			}
-
-			
-
-
-			
+				}
+				mysqli_stmt_close($stmt);
 		}
 		else
 		{
 			$n=count($_GET);
 			$keys=array_keys($_GET);
+			$conditions = [];
+			$params = [];
+			$types = "";
 			if ($userToken ==""){
-			$filter =  'WHERE public=1	';
+			$conditions[] = "public=1";
 			$allowed_keys=['nature','sub_nature','resource_type','licence','format','access','method'];
 			}else{
-			$filter = 'WHERE Username !=""	';
+			$conditions[] = "Username != ''";
 			$allowed_keys=['nature','sub_nature','resource_type','licence','format','access','method','user','status'];
 			}
 			$tok = 'n';
@@ -435,52 +451,81 @@ else
 			{
 				
 				if (isset ($_GET['nature'])){
-					$var2='Category';
-					$filter = $filter . " AND Category = '".$_GET['nature']."'";
+					$conditions[] = "Category = ?";
+					$params[] = $_GET['nature'];
+					$types .= "s";
 				}
 				if (isset ($_GET['sub_nature'])){
-					$var2='Resource_input';
-					$filter = $filter . " AND Resource_input = '".$_GET['sub_nature']."'";
+					$conditions[] = "Resource_input = ?";
+					$params[] = $_GET['sub_nature'];
+					$types .= "s";
 				}
 				if(isset ($_GET['resource_type'])){
-						$var2='file_type';
-						$filter = $filter . " AND file_type = '".$_GET['resource_type']."'";
+						$conditions[] = "file_type = ?";
+						$params[] = $_GET['resource_type'];
+						$types .= "s";
 					}
 				if (isset ($_GET['access'])){
-						$var2='Protocol';
-						$filter = $filter . " AND Protocol = '".$_GET['access']."'";
+						$conditions[] = "Protocol = ?";
+						$params[] = $_GET['access'];
+						$types .= "s";
 					}
 				if(isset ($_GET['licence'])){
-						$var2='license';
-						$filter = $filter . " AND license = '".$_GET['licence']."'";
+						$conditions[] = "license = ?";
+						$params[] = $_GET['licence'];
+						$types .= "s";
 					}
 				if(isset ($_GET['format'])){
-						$var2='format';
-						$filter = $filter . " AND format = '".$_GET['format']."'";
+						$conditions[] = "format = ?";
+						$params[] = $_GET['format'];
+						$types .= "s";
 					}
 				if (isset ($_GET['user'])){
-					$var2='Username';
 					if (isset ($_GET['status'])){
 							$var3=$_GET['status'];
 								 if ($var3 == 'Public'){
-									 $filter = $filter . " AND Username ='".$userToken."' AND public = 1"; 
+									 $conditions[] = "Username = ? AND public = 1";
+									 $params[] = $userToken;
+									 $types .= "s";
 								 }
 								 elseif($var3 == 'Private'){
-									 $filter = $filter . " AND Username ='".$userToken."' AND public = 0";
+									 $conditions[] = "Username = ? AND public = 0";
+									 $params[] = $userToken;
+									 $types .= "s";
 								 }
 								 elseif($var3 == 'All'){
-									 $filter = $filter . " AND (( public=1 ) OR (Username ='".$userToken."' AND public = 0))";
+									 $conditions[] = "(public=1 OR (Username = ? AND public = 0))";
+									 $params[] = $userToken;
+									 $types .= "s";
 								 }
 					}else{
-						$filter = $filter . " AND Username ='".$userToken."'";
+						$conditions[] = "Username = ?";
+						$params[] = $userToken;
+						$types .= "s";
 					}
 				}
-				$query = "SELECT * FROM processloader_db.uploaded_files " .$filter ;
+				$query = "SELECT * FROM processloader_db.uploaded_files";
+				if (!empty($conditions)) {
+					$query .= " WHERE " . implode(" AND ", $conditions);
+				}
 				  $handle = fopen("file.txt", "w");
 					fwrite($handle, $query);
 					fclose($handle);
 				$currente_date = date('Y-m-d-H-i-s');  
-				$result = mysqli_query($link, $query) or die(mysqli_error($link));
+				$stmt = mysqli_prepare($link, $query);
+				if (!$stmt) {
+					die(mysqli_error($link));
+				}
+				if ($types !== "") {
+					$bind_names = [];
+					$bind_names[] = $types;
+					for ($i = 0; $i < count($params); $i++) {
+						$bind_names[] = &$params[$i];
+					}
+					call_user_func_array('mysqli_stmt_bind_param', $bind_names);
+				}
+				mysqli_stmt_execute($stmt);
+				$result = mysqli_stmt_get_result($stmt);
 				if(!$result)
 				{
 
@@ -643,6 +688,7 @@ else
 						$response['code'] = 200;
 
 					}
+				mysqli_stmt_close($stmt);
 					else{
 							$response['result'] = 'Ok';
 							$response['code'] = 200;
@@ -683,6 +729,3 @@ else
 
 
 ?>
-
-
-

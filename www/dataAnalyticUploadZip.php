@@ -16,6 +16,12 @@
    along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
 include('config.php');
+function sanitize_filename($name) {
+    $name = basename($name);
+    $name = preg_replace('/[^A-Za-z0-9._-]/', '_', $name);
+    $name = preg_replace('/_+/', '_', $name);
+    return $name;
+}
 if (isset ($_SESSION['username'])&& isset($_SESSION['role'])){ 
 ini_set('upload-max-filesize', '100M');
 ini_set('post_max_size', '100M');
@@ -27,7 +33,11 @@ $tipo0 = mysqli_real_escape_string($connessione_al_server,$_POST['filetype']);
 $tipo = filter_var($tipo0, FILTER_SANITIZE_STRING);
 //
 $percorso = $_FILES['userfile']['tmp_name'];
-$nome = $_FILES['userfile']['name'];
+$nome = sanitize_filename($_FILES['userfile']['name']);
+if ($nome === '' || $nome === '.' || $nome === '..') {
+    header("location:upload.php?error=invalid_filename");
+    exit;
+}
 //
 $nature0= mysqli_real_escape_string($connessione_al_server,$_POST['filenat']);
 $nature = filter_var($nature0, FILTER_SANITIZE_STRING);
@@ -184,9 +194,22 @@ if (($tipo == 'MicroService')||($tipo == 'DataAnalyticMicroService')){
 	if (isset($_POST['micro_name'])){
 			$micro_name0 = $_POST['micro_name'];
 			$micro_name = filter_var($micro_name0, FILTER_SANITIZE_STRING);
-			}else{
+			$micro_name = sanitize_filename($micro_name);
+			if ($micro_name === '' || $micro_name === '.' || $micro_name === '..') {
+				header("location:upload.php?error=invalid_filename");
+				exit;
+			}
+	}else{
 			$micro_name = "GenericMicroService";	
+	}
+	$micro_script_name = '';
+	if (isset($_FILES['micro_scriptR']['name'])) {
+		$micro_script_name = sanitize_filename($_FILES['micro_scriptR']['name']);
+		if ($micro_script_name === '' || $micro_script_name === '.' || $micro_script_name === '..') {
+			header("location:upload.php?error=invalid_filename");
+			exit;
 		}
+	}
 	
 	$utente = $_SESSION['username'];
 	//$utente = 'Prova_microservice';
@@ -316,8 +339,8 @@ if (($tipo == 'MicroService')||($tipo == 'DataAnalyticMicroService')){
                     }
                 })
                 const form = r.form();
-                form.append("R_file", fs.createReadStream(__dirname + "/'.$_FILES['micro_scriptR']['name'].'"), {
-                    filename: "'.$_FILES['micro_scriptR']['name'].'"
+                form.append("R_file", fs.createReadStream(__dirname + "/'.$micro_script_name.'"), {
+                    filename: "'.$micro_script_name.'"
                 });
             } else {
                 node.error("Some Problems With This Data Analytic Microservice. Maybe authentication problem.");
@@ -403,7 +426,7 @@ if (($tipo == 'MicroService')||($tipo == 'DataAnalyticMicroService')){
 	fclose($myfilePackage);
 	/////
 	/////SCRIPT R
-	if (move_uploaded_file($_FILES['micro_scriptR']['tmp_name'], $_FILES['micro_scriptR']['name'])) {
+	if (move_uploaded_file($_FILES['micro_scriptR']['tmp_name'], $micro_script_name)) {
 		// file uploaded succeeded echo ('script uploaddeded');
 	  } else {
 		  //errorenella creazione echo ('zip finished');
@@ -419,7 +442,7 @@ if (($tipo == 'MicroService')||($tipo == 'DataAnalyticMicroService')){
 				$zip->addFile($nomeHTML,$micro_name.'/'.$nomeHTML);
 				$zip->addFile($nomeJS,$micro_name.'/'.$nomeJS);
 				$zip->addFile('package.json',$micro_name.'/package.json');
-				$zip->addFile($_FILES['micro_scriptR']['name'],$micro_name.'/'.$_FILES['micro_scriptR']['name']);
+				$zip->addFile($micro_script_name,$micro_name.'/'.$micro_script_name);
 				//$zip->addFile('xmlhttprequest/README.md',$micro_name.'/node_modules/xmlhttprequest/README.md');
 				//$zip->addFile('xmlhttprequest/LICENSE',$micro_name.'/node_modules/xmlhttprequest/LICENSE');
 				//$zip->addFile('xmlhttprequest/package.json',$micro_name.'/node_modules/xmlhttprequest/package.json');
@@ -444,7 +467,9 @@ if (($tipo == 'MicroService')||($tipo == 'DataAnalyticMicroService')){
 	//echo ('ERROR DURING ZIP CREATION');
 	}
 	$zip->close();
-	unlink($_FILES['micro_scriptR']['name']);
+	if ($micro_script_name !== '') {
+		unlink($micro_script_name);
+	}
 	echo ('zip finished');
 	//cancella files temporanei
 	unlink($nomeHTML);
@@ -454,8 +479,19 @@ if (($tipo == 'MicroService')||($tipo == 'DataAnalyticMicroService')){
 	$fileform = 'json';
 	$fileacc = 'http';
 	/////////CARICA SU DATABASE//////////////
-	$query_zip="INSERT INTO processloader_db.uploaded_files (Id,File_name,Description,User,Creation_date,file_type,status,Username,Resource_input,Img,Category,Format,Protocol,Realtime,Periodic,Public,Date_of_publication,License,Download_number,Votes,Average_stars,Total_stars,OpenSource,Url,Help,Html,Js,Method)VALUES (NULL,'".$nome_download."','".$descrizione."','0','".$data."','".$tipo."','Awaiting approval','".$utente_us."','".$subnat."','".$new_img ."','".$nature."','".$fileform."','".$fileacc."','0','0','0',NULL,'".$fileLic."','0','0','0','0','0','".$url."','".$help."','".$contentHtml."','".$contentjs."','".$method."')";
-	$query_caricamento = mysqli_query($connessione_al_server,$query_zip) or die ("Error during resource Upload	".mysqli_error($connessione_al_server));
+	$user_zero = "0";
+	$status = "Awaiting approval";
+	$sql = "INSERT INTO processloader_db.uploaded_files (Id,File_name,Description,User,Creation_date,file_type,status,Username,Resource_input,Img,Category,Format,Protocol,Realtime,Periodic,Public,Date_of_publication,License,Download_number,Votes,Average_stars,Total_stars,OpenSource,Url,Help,Html,Js,Method) VALUES (NULL,?,?,?,?,?,?,?,?,?,?,?,?,'0','0','0',NULL,?,'0','0','0','0','0',?,?,?,?,?)";
+	$stmt = mysqli_prepare($connessione_al_server, $sql);
+	if (!$stmt) {
+		die("Error during resource Upload\t" . mysqli_error($connessione_al_server));
+	}
+	mysqli_stmt_bind_param($stmt, "ssssssssssssssssss", $nome_download, $descrizione, $user_zero, $data, $tipo, $status, $utente_us, $subnat, $new_img, $nature, $fileform, $fileacc, $fileLic, $url, $help, $contentHtml, $contentjs, $method);
+	$query_caricamento = mysqli_stmt_execute($stmt);
+	mysqli_stmt_close($stmt);
+	if (!$query_caricamento) {
+		die("Error during resource Upload\t" . mysqli_error($connessione_al_server));
+	}
 		if (isset($_REQUEST['editor'])){
 			if (isset($_REQUEST['showFrame'])){
 						if ($_REQUEST['showFrame'] == 'false'){
@@ -486,8 +522,19 @@ if (($tipo == 'MicroService')||($tipo == 'DataAnalyticMicroService')){
 					///copiare pezzo ETL
 									$zip = new ZipArchive;
 									 if ($zip->open($cartella.'/'.$nome) === TRUE){
-										$query_zip="INSERT INTO processloader_db.uploaded_files (Id,File_name,Description,User,Creation_date,file_type,status,Username,Resource_input,Img,Category,Format,Protocol,Realtime,Periodic,Public,Date_of_publication,License,Download_number,Votes,Average_stars,Total_stars,OpenSource,Url,Help)VALUES (NULL,'".$nome."','".$descrizione."','0','".$data."','".$tipo."','Awaiting approval','".$utente_us."','".$subnat."','".$new_img ."','".$nature."','".$fileform."','".$fileacc."','0','0','0',NULL,'".$fileLic."','0','0','0','0','0','".$url."','".$help."')";
-										 $query_caricamento = mysqli_query($connessione_al_server,$query_zip) or die ("Error during resource Upload	".mysqli_error($connessione_al_server));
+											$user_zero = "0";
+											$status = "Awaiting approval";
+											$sql = "INSERT INTO processloader_db.uploaded_files (Id,File_name,Description,User,Creation_date,file_type,status,Username,Resource_input,Img,Category,Format,Protocol,Realtime,Periodic,Public,Date_of_publication,License,Download_number,Votes,Average_stars,Total_stars,OpenSource,Url,Help) VALUES (NULL,?,?,?,?,?,?,?,?,?,?,?,?,'0','0','0',NULL,?,'0','0','0','0','0',?,?)";
+											$stmt = mysqli_prepare($connessione_al_server, $sql);
+											if (!$stmt) {
+												die("Error during resource Upload\t" . mysqli_error($connessione_al_server));
+											}
+											mysqli_stmt_bind_param($stmt, "sssssssssssssss", $nome, $descrizione, $user_zero, $data, $tipo, $status, $utente_us, $subnat, $new_img, $nature, $fileform, $fileacc, $fileLic, $url, $help);
+											$query_caricamento = mysqli_stmt_execute($stmt);
+											mysqli_stmt_close($stmt);
+											if (!$query_caricamento) {
+												die("Error during resource Upload\t" . mysqli_error($connessione_al_server));
+											}
 										 if (isset($_REQUEST['showFrame'])){
 													if ($_REQUEST['showFrame'] == 'false'){
 														header ("location:file_archive.php?showFrame=false&result=ok");
@@ -513,8 +560,19 @@ if (($tipo == 'MicroService')||($tipo == 'DataAnalyticMicroService')){
 				}else{
 					echo ("NOT!");
 					///Copiare ALTRO
-							$query_zip="INSERT INTO processloader_db.uploaded_files (Id,File_name,Description,User,Creation_date,file_type,status,Username,Resource_input,Img,Category,Format,Protocol,Realtime,Periodic,Public,Date_of_publication,License,Download_number,Votes,Average_stars,Total_stars,OpenSource,Url,Help)VALUES (NULL,'".$nome."','".$descrizione."','0','".$data."','".$tipo."','Awaiting approval','".$utente_us."','".$subnat."','".$new_img ."','".$nature."','".$fileform."','".$fileacc."','0','0','0',NULL,'".$fileLic."','0','0','0','0','0','".$url."','".$help."')";
-							$query_caricamento = mysqli_query($connessione_al_server,$query_zip) or die ("Error during resource Upload	".mysqli_error($connessione_al_server));
+								$user_zero = "0";
+								$status = "Awaiting approval";
+								$sql = "INSERT INTO processloader_db.uploaded_files (Id,File_name,Description,User,Creation_date,file_type,status,Username,Resource_input,Img,Category,Format,Protocol,Realtime,Periodic,Public,Date_of_publication,License,Download_number,Votes,Average_stars,Total_stars,OpenSource,Url,Help) VALUES (NULL,?,?,?,?,?,?,?,?,?,?,?,?,'0','0','0',NULL,?,'0','0','0','0','0',?,?)";
+								$stmt = mysqli_prepare($connessione_al_server, $sql);
+								if (!$stmt) {
+									die("Error during resource Upload\t" . mysqli_error($connessione_al_server));
+								}
+								mysqli_stmt_bind_param($stmt, "sssssssssssssss", $nome, $descrizione, $user_zero, $data, $tipo, $status, $utente_us, $subnat, $new_img, $nature, $fileform, $fileacc, $fileLic, $url, $help);
+								$query_caricamento = mysqli_stmt_execute($stmt);
+								mysqli_stmt_close($stmt);
+								if (!$query_caricamento) {
+									die("Error during resource Upload\t" . mysqli_error($connessione_al_server));
+								}
 										 if (isset($_REQUEST['showFrame'])){
 													if ($_REQUEST['showFrame'] == 'false'){
 														header ("location:file_archive.php?showFrame=false&result=ok");

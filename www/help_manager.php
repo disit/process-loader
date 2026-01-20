@@ -32,15 +32,13 @@ if (isset ($_SESSION['username'])){
 
 $pagina_attuale = $_SERVER['REQUEST_URI'];
 
-if (isset($_GET['orderBy'])){
-$order = $_GET['orderBy'];
-}else{
-$order = 'id';	
+$allowed_order = array('id', 'label', 'url');
+$order = isset($_GET['orderBy']) ? $_GET['orderBy'] : 'id';
+if (!in_array($order, $allowed_order, true)) {
+	$order = 'id';
 }
-
-if (isset($_GET['order'])){
-	$by = $_GET['order'];
-}else{
+$by = isset($_GET['order']) ? strtoupper($_GET['order']) : 'DESC';
+if ($by !== 'ASC' && $by !== 'DESC') {
 	$by = 'DESC';
 }
 
@@ -61,45 +59,48 @@ if (!isset($_GET['pageTitle'])){
 
 $start_from = 0;
 
-if (isset($_GET['limit'])|| $_GET['limit']!==""){
-$limit=$_GET['limit'];
-}else{
-$limit = 10;  
-}
-if ($_GET['limit'] == ""){
-$limit = 10;  
+$limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 10;
+if ($limit <= 0) {
+	$limit = 10;
 }
 
-if (isset($_GET["page"])) { 
-		$page  = $_GET["page"]; 
-	} else { 
-		$page=1; 
-	};
+$page = isset($_GET["page"]) ? (int)$_GET["page"] : 1;
+if ($page <= 0) {
+	$page = 1;
+}
 $start_from = ($page-1) * $limit; 
 //	
 $query_n = "SELECT Help_manager.* FROM processloader_db.Help_manager";
+ $filters = array();
+ $params = array();
+ $types = "";
 //
 
 ///////PARAMETRI/////////////
-if ((isset($_REQUEST['elementId']))||(isset($_REQUEST['elementUrl']))||(isset($_REQUEST['elementTool']))){
-	$query_n = $query_n."	WHERE	id > 0";
-		if (isset($_REQUEST['elementId'])&&($_REQUEST['elementId'] !="")&&($_REQUEST['elementId'] !=null)&&($_REQUEST['elementId'] !='undefined')){
-			$query_n = $query_n." AND id LIKE '%".$_REQUEST['elementId']."%'";
-		}
-		////////////////////
-		if (isset($_REQUEST['elementUrl'])&&($_REQUEST['elementUrl'] !="")&&($_REQUEST['elementUrl'] !=null)&&($_REQUEST['elementUrl'] !='undefined')){
-			$query_n = $query_n." AND url LIKE '%".$_REQUEST['elementUrl']."%'";
-		}
-		//////////////////
-		if (isset($_REQUEST['elementTool'])&&($_REQUEST['elementTool'] !="")&&($_REQUEST['elementTool'] !=null)&&($_REQUEST['elementTool'] !='undefined')){
-			$query_n = $query_n." AND label LIKE '%".$_REQUEST['elementTool']."%'";
-		}
-		/////////////////
+if (isset($_REQUEST['elementId']) && $_REQUEST['elementId'] !== "" && $_REQUEST['elementId'] !== null && $_REQUEST['elementId'] !== 'undefined') {
+	$filters[] = "id LIKE ?";
+	$params[] = "%".$_REQUEST['elementId']."%";
+	$types .= "s";
+}
+if (isset($_REQUEST['elementUrl']) && $_REQUEST['elementUrl'] !== "" && $_REQUEST['elementUrl'] !== null && $_REQUEST['elementUrl'] !== 'undefined') {
+	$filters[] = "url LIKE ?";
+	$params[] = "%".$_REQUEST['elementUrl']."%";
+	$types .= "s";
+}
+if (isset($_REQUEST['elementTool']) && $_REQUEST['elementTool'] !== "" && $_REQUEST['elementTool'] !== null && $_REQUEST['elementTool'] !== 'undefined') {
+	$filters[] = "label LIKE ?";
+	$params[] = "%".$_REQUEST['elementTool']."%";
+	$types .= "s";
+}
+if (count($filters) > 0) {
+	$query_n .= " WHERE " . implode(" AND ", $filters);
 }
 //////////
-$total_rows_query = $query_n;
-
-$query_n = $query_n . "	ORDER BY ".$order." ".$by." LIMIT ".$start_from.", ".$limit.";";
+$total_rows_query = "SELECT COUNT(*) AS cnt FROM processloader_db.Help_manager";
+if (count($filters) > 0) {
+	$total_rows_query .= " WHERE " . implode(" AND ", $filters);
+}
+$query_n = $query_n . " ORDER BY ".$order." ".$by." LIMIT ?, ?;";
 //
 //echo ($query_n);
 //
@@ -107,7 +108,23 @@ $link = mysqli_connect($host, $username, $password) or die("failed to connect to
 mysqli_set_charset($link, 'utf8');
 mysqli_select_db($link, $dbname);
 
-$result = mysqli_query($link, $query_n) or die(mysqli_error($link));
+$stmt = mysqli_prepare($link, $query_n) or die(mysqli_error($link));
+$params_n = $params;
+$params_n[] = $start_from;
+$params_n[] = $limit;
+$types_n = $types . "ii";
+if ($types_n !== "ii") {
+	$bind = array_merge(array($types_n), $params_n);
+	$refs = array();
+	foreach ($bind as $k => &$v) {
+		$refs[$k] = &$v;
+	}
+	call_user_func_array('mysqli_stmt_bind_param', $refs);
+} else {
+	mysqli_stmt_bind_param($stmt, "ii", $params_n[0], $params_n[1]);
+}
+mysqli_stmt_execute($stmt);
+$result = mysqli_stmt_get_result($stmt);
 $process_list = array();
 $num_rows = $result->num_rows;
 
@@ -119,8 +136,26 @@ $num_rows = $result->num_rows;
 				}
 	}
 
-$result0 = mysqli_query($link, $total_rows_query) or die(mysqli_error($link));
-		$total_rows = $result0->num_rows;
+$stmt_count = mysqli_prepare($link, $total_rows_query) or die(mysqli_error($link));
+if ($types !== "") {
+	$bind_count = array_merge(array($types), $params);
+	$refs_count = array();
+	foreach ($bind_count as $k => &$v) {
+		$refs_count[$k] = &$v;
+	}
+	call_user_func_array('mysqli_stmt_bind_param', $refs_count);
+}
+mysqli_stmt_execute($stmt_count);
+$result0 = mysqli_stmt_get_result($stmt_count);
+$count_list = array();
+if ($result0->num_rows > 0) {
+	while($row = mysqli_fetch_assoc($result0)){
+		array_push($count_list, $row);
+	}
+}
+$total_rows = $count_list[0]["cnt"];
+mysqli_stmt_close($stmt);
+mysqli_stmt_close($stmt_count);
 	mysqli_close($link);
 ////
 $error_name="";

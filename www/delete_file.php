@@ -22,19 +22,53 @@ $link = mysqli_connect($host, $username, $password) or die("failed to connect to
 mysqli_set_charset($link, 'utf8');
 mysqli_select_db($link, $dbname);
 
-$id_file=mysqli_real_escape_string($link,$_POST["id_file_del"]);
-$path_del=mysqli_real_escape_string($link,$_POST["path_del"]);
-echo $id_file;
-echo $path_del;
-//DELETE FILE
-if (file_exists($path_del)) {
-unlink($path_del);
-$new_del= explode('/', $path_del,2);
-rmdir($new_del);
-}
+	$id_file = isset($_POST["id_file_del"]) ? (int)$_POST["id_file_del"] : 0;
+	$path_del = isset($_POST["path_del"]) ? $_POST["path_del"] : '';
+	$role_att = isset($_SESSION['role']) ? $_SESSION['role'] : '';
+	$session_user = isset($_SESSION['username']) ? $_SESSION['username'] : '';
+	$admin_roles = array('ToolAdmin', 'AreaManager', 'Manager', 'RootAdmin');
+
+	$stmt_check = mysqli_prepare($link, "SELECT Username FROM `uploaded_files` WHERE `Id`=?");
+	if (!$stmt_check) {
+		die(mysqli_error($link));
+	}
+	mysqli_stmt_bind_param($stmt_check, "i", $id_file);
+	mysqli_stmt_execute($stmt_check);
+	$result_check = mysqli_stmt_get_result($stmt_check);
+	$row_check = mysqli_fetch_assoc($result_check);
+	mysqli_stmt_close($stmt_check);
+	if (!$row_check) {
+		mysqli_close($link);
+		header("location:file_archive.php");
+		exit;
+	}
+	$owner = $row_check['Username'];
+	if (!in_array($role_att, $admin_roles, true) && $owner !== $session_user) {
+		mysqli_close($link);
+		http_response_code(403);
+		exit;
+	}
+	//DELETE FILE
+	if ($path_del !== '') {
+		$uploads_root = realpath(__DIR__ . '/uploads');
+		$target = realpath($path_del);
+		if ($uploads_root && $target && strpos($target, $uploads_root . DIRECTORY_SEPARATOR) === 0 && is_file($target)) {
+			unlink($target);
+			$dir = dirname($target);
+			if ($dir !== $uploads_root && strpos($dir, $uploads_root . DIRECTORY_SEPARATOR) === 0) {
+				@rmdir($dir);
+			}
+		}
+	}
 //
-$sql3 = "DELETE FROM `uploaded_files` WHERE `uploaded_files`.`Id`='".$id_file."'";
-$result3 = mysqli_query($link, $sql3) or die(mysqli_error($link));
+$stmt = mysqli_prepare($link, "DELETE FROM `uploaded_files` WHERE `uploaded_files`.`Id`=?");
+if (!$stmt) {
+	die(mysqli_error($link));
+}
+	$id_file_int = (int) $id_file;
+	mysqli_stmt_bind_param($stmt, "i", $id_file_int);
+$result3 = mysqli_stmt_execute($stmt);
+mysqli_stmt_close($stmt);
 $url = "http://localhost:8983/solr/collection1/dataimport?command=full-import";
 url_get($url);
 

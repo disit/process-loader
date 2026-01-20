@@ -43,17 +43,19 @@ if ($type=='st'){
 					}
 			}
 	
-	//ESISTE GIà?
-		$verify = "select COUNT(*) FROM processloader_db.DashboardWizard WHERE high_level_type='KPI' AND sub_nature='".$subnature."' AND nature='".$nature."' AND unique_name_id='".$_POST['valuename'] ."'";
-		$res_ver = mysqli_query($link,$verify) or die ("Operation failed".mysqli_error());
-		$count_ver = array();
-								if ($res_ver->num_rows > 0) {
-									while($row = mysqli_fetch_assoc($res_ver)){
-										array_push($count_ver, $row);
-									}
-								}
-								//var_dump($count_list);
-								$total_rows = $count_ver[0]["COUNT(*)"];
+		//ESISTE GIà?
+			$verify = "SELECT COUNT(*) AS cnt FROM processloader_db.DashboardWizard WHERE high_level_type='KPI' AND sub_nature=? AND nature=? AND unique_name_id=?";
+			$stmt_ver = mysqli_prepare($link, $verify);
+			if (!$stmt_ver) {
+				die ("Operation failed".mysqli_error());
+			}
+			$valuename_check = isset($_POST['valuename']) ? $_POST['valuename'] : '';
+			mysqli_stmt_bind_param($stmt_ver, "sss", $subnature, $nature, $valuename_check);
+			mysqli_stmt_execute($stmt_ver);
+			$res_ver = mysqli_stmt_get_result($stmt_ver);
+			$row_ver = mysqli_fetch_assoc($res_ver);
+			$total_rows = isset($row_ver['cnt']) ? (int)$row_ver['cnt'] : 0;
+			mysqli_stmt_close($stmt_ver);
 				/*if ($total_rows > 0){
 						if (isset($_REQUEST['showFrame'])){
 							if ($_REQUEST['showFrame'] == 'false'){
@@ -67,11 +69,44 @@ if ($type=='st'){
 						*/
 		//}else{
 				//
-				$query_reg="UPDATE processloader_db.DashboardWizard SET nature='".$nature."', sub_nature='".$subnature."', unique_name_id='".$_POST['valuename']."', unit='".$_POST['datatype']."', ownership='".$_POST['ownership']."', description='".$_POST['description']."', longitudes='".$_POST['longitudes']."', low_level_type='".$_POST['valuetype']."', latitudes='".$_POST['latitudes']."', parameters='".$_POST['paramters']."', Info='".$_POST['info']."' WHERE Id='".$_POST['id']."'";
-				echo ($query_reg);
-				$query_registrazione = mysqli_query($link,$query_reg) or die ("Operation failed".mysqli_error());	
-				mysqli_close($link);
-				//
+					$query_reg = "UPDATE processloader_db.DashboardWizard SET nature=?, sub_nature=?, unique_name_id=?, unit=?, ownership=?, description=?, longitudes=?, low_level_type=?, latitudes=?, parameters=?, Info=? WHERE Id=?";
+					$stmt_reg = mysqli_prepare($link, $query_reg);
+					if (!$stmt_reg) {
+						die ("Operation failed".mysqli_error());
+					}
+					$valuename = isset($_POST['valuename']) ? $_POST['valuename'] : '';
+					$datatype = isset($_POST['datatype']) ? $_POST['datatype'] : '';
+					$ownership = isset($_POST['ownership']) ? $_POST['ownership'] : '';
+					$description = isset($_POST['description']) ? $_POST['description'] : '';
+					$longitudes = isset($_POST['longitudes']) ? $_POST['longitudes'] : '';
+					$valuetype = isset($_POST['valuetype']) ? $_POST['valuetype'] : '';
+					$latitudes = isset($_POST['latitudes']) ? $_POST['latitudes'] : '';
+					$parameters = isset($_POST['paramters']) ? $_POST['paramters'] : '';
+					$info = isset($_POST['info']) ? $_POST['info'] : '';
+					$id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
+					mysqli_stmt_bind_param(
+						$stmt_reg,
+						"sssssssssssi",
+						$nature,
+						$subnature,
+						$valuename,
+						$datatype,
+						$ownership,
+						$description,
+						$longitudes,
+						$valuetype,
+						$latitudes,
+						$parameters,
+						$info,
+						$id
+					);
+					$exec_ok = mysqli_stmt_execute($stmt_reg);
+					mysqli_stmt_close($stmt_reg);
+					if (!$exec_ok) {
+						die ("Operation failed".mysqli_error());
+					}
+					mysqli_close($link);
+					//
 	//}
 	//
 }elseif ($type=='rt'){
@@ -102,13 +137,33 @@ if ($type=='st'){
 	echo ($value);
 
 			//if ($check == 1){
-					$query_reg="UPDATE processloader_db.DashboardWizard SET last_date='".$_POST['last_date']."', last_value='".$var."' WHERE Id='".$_POST['id']."'";
-						$query_registrazione = mysqli_query($link,$query_reg) or die ("Operation failed".mysqli_error());
+						$query_reg = "UPDATE processloader_db.DashboardWizard SET last_date=?, last_value=? WHERE Id=?";
+						$stmt_reg = mysqli_prepare($link, $query_reg);
+						if (!$stmt_reg) {
+							die ("Operation failed".mysqli_error());
+						}
+						$last_date = isset($_POST['last_date']) ? $_POST['last_date'] : '';
+						$id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
+						mysqli_stmt_bind_param($stmt_reg, "ssi", $last_date, $var, $id);
+						$exec_ok = mysqli_stmt_execute($stmt_reg);
+						mysqli_stmt_close($stmt_reg);
+						if (!$exec_ok) {
+							die ("Operation failed".mysqli_error());
+						}
 						//INSERIMENTO IN KPI_values
-						$query_ins = "INSERT INTO processloader_db.kpi_values (id, kpi, date, value) VALUES (NULL,'".$_POST['id']."','".$_POST['last_date']."','".$var."')";
-						$result_ins = mysqli_query($link,$query_ins) or die ("Operation failed".mysqli_error());
-						//
-						mysqli_close($link);
+						$query_ins = "INSERT INTO processloader_db.kpi_values (id, kpi, date, value) VALUES (NULL,?,?,?)";
+						$stmt_ins = mysqli_prepare($link, $query_ins);
+						if (!$stmt_ins) {
+							die ("Operation failed".mysqli_error());
+						}
+						mysqli_stmt_bind_param($stmt_ins, "iss", $id, $last_date, $var);
+						$exec_ok = mysqli_stmt_execute($stmt_ins);
+						mysqli_stmt_close($stmt_ins);
+						if (!$exec_ok) {
+							die ("Operation failed".mysqli_error());
+						}
+							//
+							mysqli_close($link);
 				//}else{
 				//	echo ('ERROR!');
 				//	//header ("location:page.php");

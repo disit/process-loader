@@ -30,45 +30,45 @@ $link = mysqli_connect($host, $username, $password) or die("failed to connect to
 mysqli_set_charset($link, 'utf8');
 mysqli_select_db($link, $dbname);
 */
-$id=$_REQUEST['id'];
+$id = (int) $_REQUEST['id'];
 
 if (isset($_REQUEST['limit'])){
-	$limit = $_REQUEST['limit'];
-}else{
-	$limit = 10;
-}
+		$limit = (int) $_REQUEST['limit'];
+	}else{
+		$limit = 10;
+	}
 
 if (isset($_REQUEST['currente_page'])){
-	$currente_page = $_REQUEST['currente_page'];
-}else{
-	$currente_page = 1;
-}
+		$currente_page = (int) $_REQUEST['currente_page'];
+	}else{
+		$currente_page = 1;
+	}
 
-if (isset($_REQUEST['filter'])){
+	if (isset($_REQUEST['filter'])){
+		
+		if (isset($_REQUEST['date']) && ($_REQUEST['date'] !="")){
+			$date = $_REQUEST['date'];
+			$date01 = $_REQUEST['date'];
+		}else{
+			$date = null;
+			$date01 = null;
+		}
 	
-	if (isset($_REQUEST['date']) && ($_REQUEST['date'] !="")){
-		$date = "	AND date>='".$_REQUEST['date']."'	";
-		$date01 = "	AND last_date>='".$_REQUEST['date']."'	";
-	}else{
-		$date = "";
-		$date01 = "";
-	}
+		if (isset($_REQUEST['date2']) && ($_REQUEST['date2'] !="")){
+			$date2 = $_REQUEST['date2'];
+			$date02 = $_REQUEST['date2'];
+		}else{
+			$date2 = null;
+			$date02 = null;
+		}
 	
-	if (isset($_REQUEST['date2']) && ($_REQUEST['date2'] !="")){
-		$date2 = "	AND date<='".$_REQUEST['date2']."'	";
-		$date02 = "	AND last_date<='".$_REQUEST['date2']."'	";
-	}else{
-		$date2 = "";
-		$date02 = "";
-	}
-	
-	if (isset($_REQUEST['filter']) && ($_REQUEST['filter'] !="")){
-		$value_filter = "	AND value LIKE '%".$_REQUEST['filter']."%'	";
-		$value_filter0 = "	AND last_value LIKE '%".$_REQUEST['filter']."%'	";
-	}else{
-		$value_filter = "";
-		$value_filter0 = "";
-	}
+		if (isset($_REQUEST['filter']) && ($_REQUEST['filter'] !="")){
+			$value_filter = $_REQUEST['filter'];
+			$value_filter0 = $_REQUEST['filter'];
+		}else{
+			$value_filter = null;
+			$value_filter0 = null;
+		}
 
 	if ($currente_page > 0){
 
@@ -80,11 +80,43 @@ if (isset($_REQUEST['filter'])){
 		$end = $limit;
 	}
 
-		$query="SELECT * FROM processloader_db.kpi_values WHERE kpi='".$id."' ".$date." ".$date2." ".$value_filter." ORDER BY date DESC LIMIT ".$limit." OFFSET ".$start;
-		$result = mysqli_query($link, $query) or die(mysqli_error($link));
-				$process_list = array();
-				if ($result->num_rows > 0) {
-					while ($row = mysqli_fetch_array($result)) {
+			$conditions = ["kpi = ?"];
+			$params = [$id];
+			$types = "i";
+			if ($date !== null) {
+				$conditions[] = "date >= ?";
+				$params[] = $date;
+				$types .= "s";
+			}
+			if ($date2 !== null) {
+				$conditions[] = "date <= ?";
+				$params[] = $date2;
+				$types .= "s";
+			}
+			if ($value_filter !== null) {
+				$conditions[] = "value LIKE ?";
+				$params[] = "%" . $value_filter . "%";
+				$types .= "s";
+			}
+			$query = "SELECT * FROM processloader_db.kpi_values WHERE " . implode(" AND ", $conditions) . " ORDER BY date DESC LIMIT ? OFFSET ?";
+			$params[] = $limit;
+			$params[] = $start;
+			$types .= "ii";
+			$stmt = mysqli_prepare($link, $query);
+			if (!$stmt) {
+				die(mysqli_error($link));
+			}
+			$bind_names = [];
+			$bind_names[] = $types;
+			for ($i = 0; $i < count($params); $i++) {
+				$bind_names[] = &$params[$i];
+			}
+			call_user_func_array('mysqli_stmt_bind_param', $bind_names);
+			mysqli_stmt_execute($stmt);
+			$result = mysqli_stmt_get_result($stmt);
+					$process_list = array();
+					if ($result->num_rows > 0) {
+						while ($row = mysqli_fetch_array($result)) {
 						$process = array("process" => array(
 								"id" => $row['id'],
 								"kpi" => $row['kpi'],
@@ -94,12 +126,44 @@ if (isset($_REQUEST['filter'])){
 						);
 						array_push($process_list, $process);
 					}
-				}else{
-					//
-					$query2="SELECT * FROM processloader_db.DashboardWizard WHERE id='".$id."' ".$date01." ".$date02." ".$value_filter0." ORDER BY last_date DESC LIMIT ".$limit." OFFSET ".$start;
-					$result2 = mysqli_query($link, $query2) or die(mysqli_error($link));
-							if ($result2->num_rows > 0) {
-									while ($row = mysqli_fetch_array($result2)) {
+					}else{
+						//
+						$conditions2 = ["id = ?"];
+						$params2 = [$id];
+						$types2 = "i";
+						if ($date01 !== null) {
+							$conditions2[] = "last_date >= ?";
+							$params2[] = $date01;
+							$types2 .= "s";
+						}
+						if ($date02 !== null) {
+							$conditions2[] = "last_date <= ?";
+							$params2[] = $date02;
+							$types2 .= "s";
+						}
+						if ($value_filter0 !== null) {
+							$conditions2[] = "last_value LIKE ?";
+							$params2[] = "%" . $value_filter0 . "%";
+							$types2 .= "s";
+						}
+						$query2 = "SELECT * FROM processloader_db.DashboardWizard WHERE " . implode(" AND ", $conditions2) . " ORDER BY last_date DESC LIMIT ? OFFSET ?";
+						$params2[] = $limit;
+						$params2[] = $start;
+						$types2 .= "ii";
+						$stmt2 = mysqli_prepare($link, $query2);
+						if (!$stmt2) {
+							die(mysqli_error($link));
+						}
+						$bind_names2 = [];
+						$bind_names2[] = $types2;
+						for ($i = 0; $i < count($params2); $i++) {
+							$bind_names2[] = &$params2[$i];
+						}
+						call_user_func_array('mysqli_stmt_bind_param', $bind_names2);
+						mysqli_stmt_execute($stmt2);
+						$result2 = mysqli_stmt_get_result($stmt2);
+								if ($result2->num_rows > 0) {
+										while ($row = mysqli_fetch_array($result2)) {
 										$process = array("process" => array(
 												"id" => $row['id'],
 												"kpi" => $row['id'],
@@ -109,18 +173,20 @@ if (isset($_REQUEST['filter'])){
 										);
 										array_push($process_list, $process);
 									}
-								}
-					//
-				}
+									}
+						mysqli_stmt_close($stmt2);
+						//
+					}
 
-				echo json_encode($process_list);
-				mysqli_close($link);
-}else{
+					echo json_encode($process_list);
+					mysqli_stmt_close($stmt);
+					mysqli_close($link);
+	}else{
 
 		if (isset($_REQUEST['value_filter'])){
 			$value_filter = $_REQUEST['value_filter'];
 		}else{
-			$value_filter = "";
+			$value_filter = null;
 		}
 		if ($currente_page > 0){
 
@@ -131,12 +197,32 @@ if (isset($_REQUEST['filter'])){
 		$end = $limit;
 	}
 		
-		$query="SELECT * FROM processloader_db.kpi_values WHERE kpi='".$id."' ".$value_filter." ORDER BY date DESC LIMIT ".$limit;
-
-		$result = mysqli_query($link, $query) or die(mysqli_error($link));
-				$process_list = array();
-				if ($result->num_rows > 0) {
-					while ($row = mysqli_fetch_array($result)) {
+		$conditions = ["kpi = ?"];
+		$params = [$id];
+		$types = "i";
+		if ($value_filter !== null && $value_filter !== "") {
+			$conditions[] = "value LIKE ?";
+			$params[] = "%" . $value_filter . "%";
+			$types .= "s";
+		}
+		$query="SELECT * FROM processloader_db.kpi_values WHERE " . implode(" AND ", $conditions) . " ORDER BY date DESC LIMIT ?";
+		$params[] = $limit;
+		$types .= "i";
+		$stmt = mysqli_prepare($link, $query);
+		if (!$stmt) {
+			die(mysqli_error($link));
+		}
+		$bind_names = [];
+		$bind_names[] = $types;
+		for ($i = 0; $i < count($params); $i++) {
+			$bind_names[] = &$params[$i];
+		}
+		call_user_func_array('mysqli_stmt_bind_param', $bind_names);
+		mysqli_stmt_execute($stmt);
+		$result = mysqli_stmt_get_result($stmt);
+					$process_list = array();
+					if ($result->num_rows > 0) {
+						while ($row = mysqli_fetch_array($result)) {
 						$process = array("process" => array(
 								"id" => $row['id'],
 								"kpi" => $row['kpi'],
@@ -146,12 +232,18 @@ if (isset($_REQUEST['filter'])){
 						);
 						array_push($process_list, $process);
 					}
-				}else{
-					//
-					$query2="SELECT * FROM processloader_db.DashboardWizard WHERE id='".$id."' ORDER BY last_date DESC LIMIT ".$limit;
-					$result2 = mysqli_query($link, $query2) or die(mysqli_error($link));
-							if ($result2->num_rows > 0) {
-									while ($row = mysqli_fetch_array($result2)) {
+					}else{
+						//
+						$query2="SELECT * FROM processloader_db.DashboardWizard WHERE id=? ORDER BY last_date DESC LIMIT ?";
+						$stmt2 = mysqli_prepare($link, $query2);
+						if (!$stmt2) {
+							die(mysqli_error($link));
+						}
+						mysqli_stmt_bind_param($stmt2, "ii", $id, $limit);
+						mysqli_stmt_execute($stmt2);
+						$result2 = mysqli_stmt_get_result($stmt2);
+								if ($result2->num_rows > 0) {
+										while ($row = mysqli_fetch_array($result2)) {
 										$process = array("process" => array(
 												"id" => $row['id'],
 												"kpi" => $row['id'],
@@ -161,10 +253,12 @@ if (isset($_REQUEST['filter'])){
 										);
 										array_push($process_list, $process);
 									}
-								}
-					//
-				}
-				echo json_encode($process_list);
-				mysqli_close($link);
-}
+									}
+						mysqli_stmt_close($stmt2);
+						//
+					}
+					echo json_encode($process_list);
+					mysqli_stmt_close($stmt);
+					mysqli_close($link);
+	}
 ?>

@@ -369,20 +369,65 @@ mysqli_select_db($link, $dbname);
 	if(strpos($http_response_header[0], '200') !== false)
 	{
 		
-		$query="INSERT INTO `processes` (`Id`, `Process_name`, `Process_group`, `job_type`, `Start_time`, `End_time`, `Time_interval`, `Status`, `Process_Type`, `Creation_date`, `non_concurrent`, `StoreDurably`, `RequestRecovery`, `Process_description`, `url`, `process_path`, `MisfireInstruction`, `Email`, `id_disces`, `trigger_name`, `trigger_group`, `trigger_description`, `priority`, `repeat_count`, `time_out`, `dataMap`, `nextJob`, `JobConstraint`, `ProcessParameter`, `file_position`) VALUES (NULL, '".$name_p."', '".$group_p."', '".$id_p."', '".$start_p."', '".$end_p."', '".$interval_trig_p."', 'CREATED', '".$type_p."', '".$creation_date_p."', '".$conc_p."', '".$store_p."', '".$recovery_p."', '".$desc_p."', '".$url_p."', '".$path_p."', '".$misfire_p."', '".$email_p."', '".$indirizzo."', '".$nome_trig_p."', '".$gruppo_trig_p."', '".$descrizione_trig_p."', '".$priority_p."', '".$repeat_trig_p."', '".$time_out_p."', '".$DataMap_p."', '".$NextJob_p."', '".$JobConstraint_p."', '".$ProcessParameter_p."', '".$file_position."')"; 
-	    $query_process = mysqli_query($connessione_al_server,$query) or die ("query di creazione del job type non riuscita    ".mysqli_error($connessione_al_server));
+		$query = "INSERT INTO `processes` (`Id`, `Process_name`, `Process_group`, `job_type`, `Start_time`, `End_time`, `Time_interval`, `Status`, `Process_Type`, `Creation_date`, `non_concurrent`, `StoreDurably`, `RequestRecovery`, `Process_description`, `url`, `process_path`, `MisfireInstruction`, `Email`, `id_disces`, `trigger_name`, `trigger_group`, `trigger_description`, `priority`, `repeat_count`, `time_out`, `dataMap`, `nextJob`, `JobConstraint`, `ProcessParameter`, `file_position`) VALUES (NULL,?,?,?,?,?,?,'CREATED',?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"; 
+	    $stmt_proc = mysqli_prepare($connessione_al_server, $query) or die ("query di creazione del job type non riuscita    ".mysqli_error($connessione_al_server));
+	    mysqli_stmt_bind_param(
+	    	$stmt_proc,
+	    	"ssisssssssssssssssssisissss",
+	    	$name_p,
+	    	$group_p,
+	    	$id_p,
+	    	$start_p,
+	    	$end_p,
+	    	$interval_trig_p,
+	    	$type_p,
+	    	$creation_date_p,
+	    	$conc_p,
+	    	$store_p,
+	    	$recovery_p,
+	    	$desc_p,
+	    	$url_p,
+	    	$path_p,
+	    	$misfire_p,
+	    	$email_p,
+	    	$indirizzo,
+	    	$nome_trig_p,
+	    	$gruppo_trig_p,
+	    	$descrizione_trig_p,
+	    	$priority_p,
+	    	$repeat_trig_p,
+	    	$time_out_p,
+	    	$DataMap_p,
+	    	$NextJob_p,
+	    	$JobConstraint_p,
+	    	$ProcessParameter_p,
+	    	$file_position
+	    );
+	    $query_process = mysqli_stmt_execute($stmt_proc);
+	    mysqli_stmt_close($stmt_proc);
+	    if (!$query_process) {
+	    	die ("query di creazione del job type non riuscita    ".mysqli_error($connessione_al_server));
+	    }
 	   
 	   //CARICAMENTO ARCHIVIO -- Trovare un modo di ottenere l'ide del processo nuovo.
 	   
-	   $sql = "SELECT MAX(`Id`) FROM `processes`";
+	   $sql = "SELECT MAX(`Id`) AS max_id FROM `processes`";
 	   $result3 = mysqli_query($connessione_al_server, $sql) or die(mysqli_error($connessione_al_server));
 	   $id_proc = $result3->fetch_assoc();
 	   echo (var_dump($id_proc));
 	   
 	   //$id_proc = $result3[0];
 	   
-	   $query2="INSERT INTO `process_archive`(`Id`,`Activity_date`,`Process_id`,`Process_name`,`Process_group`,`Description_activity`)VALUES(NULL,'".$creation_date_p."','".$id_proc["MAX(`Id`)"]."','".$name_p."','".$group_p."','CREATION')";
-	   $query_process2 = mysqli_query($connessione_al_server,$query2) or die ("query di creazione del job type non riuscita    ".mysqli_error($connessione_al_server));
+	   $query2="INSERT INTO `process_archive`(`Id`,`Activity_date`,`Process_id`,`Process_name`,`Process_group`,`Description_activity`)VALUES(NULL,?,?,?,?,?)";
+	   $stmt_arch = mysqli_prepare($connessione_al_server, $query2) or die ("query di creazione del job type non riuscita    ".mysqli_error($connessione_al_server));
+	   $desc = 'CREATION';
+	   $process_id = isset($id_proc["max_id"]) ? (int)$id_proc["max_id"] : 0;
+	   mysqli_stmt_bind_param($stmt_arch, "sisss", $creation_date_p, $process_id, $name_p, $group_p, $desc);
+	   $query_process2 = mysqli_stmt_execute($stmt_arch);
+	   mysqli_stmt_close($stmt_arch);
+	   if (!$query_process2) {
+	   	 die ("query di creazione del job type non riuscita    ".mysqli_error($connessione_al_server));
+	   }
 	   
 	  //header("location:job_type.php?message=ok");
 							if (isset($_REQUEST['showFrame'])){

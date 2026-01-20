@@ -34,15 +34,16 @@ if (isset ($_SESSION['username'])){
 
 $pagina_attuale = $_SERVER['REQUEST_URI'];
 
-if (isset($_GET['orderBy'])){
-$order = $_GET['orderBy'];
-}else{
-$order = 'id';	
+$allowed_order = array('id', 'username', 'elementId', 'elementType', 'elementUrl');
+$order = isset($_GET['orderBy']) ? $_GET['orderBy'] : 'id';
+if (!in_array($order, $allowed_order, true)) {
+	$order = 'id';
 }
-
-if (isset($_GET['order'])){
-	$by = $_GET['order'];
-}else{
+if (!in_array($order, $allowed_order, true)) {
+	$order = 'id';
+}
+$by = isset($_GET['order']) ? strtoupper($_GET['order']) : 'DESC';
+if ($by !== 'ASC' && $by !== 'DESC') {
 	$by = 'DESC';
 }
 
@@ -67,115 +68,109 @@ $start_from = 0;
 //$limit = 10;
 
 //$total_rows = 0;
-if (isset($_GET['limit'])|| $_GET['limit']!==""){
-$limit=$_GET['limit'];
-}else{
-$limit = 10;  
-}
-if ($_GET['limit'] == ""){
-$limit = 10;  
+$limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 10;
+if ($limit <= 0) {
+	$limit = 10;
 }
 
-if (isset($_GET["page"])) { 
-		$page  = $_GET["page"]; 
-	} else { 
-		$page=1; 
-	};  
+$page = isset($_GET["page"]) ? (int)$_GET["page"] : 1;
+if ($page <= 0) {
+	$page = 1;
+}
 $start_from = ($page-1) * $limit; 
 
 if (isset($_GET["user"])){
-	//$user = $_GET["user"];
 	$user_lab=$_GET["user"];
 	$user_lab_trim = str_replace(' ','',$user_lab);
-	$user = "username LIKE '%".$user_lab_trim."%' ";
 }else{
 	$user_lab = "";
-	$user = "username LIKE '%%'	";
-	//$user = "";
-	
+	$user_lab_trim = "";
 }
+$user = $user_lab_trim !== "" ? $user_lab_trim : "";
 
 if (isset($_GET['elementId'])){
 	$element_id_lab=$_GET['elementId'];
 	$element_id_lab_trim = str_replace(' ','',$element_id_lab);
-	$element_id = " elementId LIKE '%".$element_id_lab_trim."%'	";
 }else{
 	$element_id_lab="";
-	$element_id = "	elementId LIKE '%%'	";
+	$element_id_lab_trim = "";
 }
+$element_id = $element_id_lab_trim !== "" ? $element_id_lab_trim : "";
 
 if (isset($_GET['elementType'])){
-	//$elementType="AND elementType LIKE '%".$_GET['elementType']."%'	";
-	$elementType=" elementType='".$_GET['elementType']."' ";
-	//$elementType=" elementType='DashboardID' ";
 	$elementType_lab=$_GET['elementType'];
 }else{
-	//$elementType="	AND elementType LIKE '%%'	";
-	$elementType="";
 	$elementType_lab="";
 }
+$elementType = $elementType_lab !== "" ? $elementType_lab : "";
 
 if (isset($_GET['elementUrl'])){
 	$elementUrl_lab=$_GET['elementUrl'];
 	$elementUrl_lab_trim = str_replace(' ','',$elementUrl_lab);
-	$elementUrl=" elementUrl LIKE '%".$elementUrl_lab_trim."%'	";
-	
 }else{
-	$elementUrl="	elementUrl LIKE '%%'";
-	//$elementUrl="";
 	$elementUrl_lab="";
+	$elementUrl_lab_trim = "";
 }
+$elementUrl = $elementUrl_lab_trim !== "" ? $elementUrl_lab_trim : "";
 //
 $query_n = "SELECT ownership.* FROM profiledb.ownership";
+$filters = array();
+$params = array();
+$types = "";
 /////////////////
 
-if (($user_lab != "")||($element_id_lab != "")||($elementType_lab !="")||($elementUrl_lab !="")){
-	
-	$query_n = $query_n . " WHERE ";
-
-			if ($user_lab != ""){
-				$query_n = $query_n . $user;
-			}
-
-			if ($element_id_lab != ""){
-				//if c'e' qualcosa prima//
-				if (($user_lab != "")){
-					$query_n = $query_n . ' AND ';
-				}
-				//
-				$query_n = $query_n . $element_id;
-			}
-			
-			if ($elementType_lab != ""){
-				//
-				if (($user_lab != "")||($element_id_lab != "")){
-					$query_n = $query_n . ' AND ';
-				}
-				//
-				$query_n = $query_n . $elementType;
-			}
-			
-			if ($elementUrl_lab != ""){
-				//
-				if (($user_lab != "")||($element_id_lab != "")||($elementType_lab != "")){
-					$query_n = $query_n . ' AND ';
-				}
-				//
-				$query_n = $query_n . $elementUrl;
-			}
-
+if ($user != "") {
+	$filters[] = "username LIKE ?";
+	$params[] = "%".$user."%";
+	$types .= "s";
+}
+if ($element_id != "") {
+	$filters[] = "elementId LIKE ?";
+	$params[] = "%".$element_id."%";
+	$types .= "s";
+}
+if ($elementType != "") {
+	$filters[] = "elementType = ?";
+	$params[] = $elementType;
+	$types .= "s";
+}
+if ($elementUrl != "") {
+	$filters[] = "elementUrl LIKE ?";
+	$params[] = "%".$elementUrl."%";
+	$types .= "s";
 }
 
 ////////
-$total_rows_query = $query_n;
-$query_n = $query_n . "	ORDER BY ".$order." ".$by." LIMIT ".$start_from.", ".$limit.";";
+$total_rows_query = "SELECT COUNT(*) AS cnt FROM profiledb.ownership";
+if (count($filters) > 0) {
+	$where = " WHERE " . implode(" AND ", $filters);
+	$query_n .= $where;
+	$total_rows_query .= $where;
+}
+$query_n = $query_n . " ORDER BY ".$order." ".$by." LIMIT ?, ?;";
 
 //echo ($query_n);
 $link = mysqli_connect($host, $username, $password) or die("failed to connect to server !!");
 mysqli_set_charset($link, 'utf8');
 mysqli_select_db($link, $dbname);
 
-$result = mysqli_query($link, $query_n) or die(mysqli_error($link));
+$stmt = mysqli_prepare($link, $query_n) or die(mysqli_error($link));
+$params_n = $params;
+$params_n[] = $start_from;
+$params_n[] = $limit;
+$types_n = $types . "ii";
+if ($types_n !== "ii") {
+	$bind = array_merge(array($types_n), $params_n);
+	$refs = array();
+	foreach ($bind as $k => &$v) {
+		$refs[$k] = &$v;
+	}
+	call_user_func_array('mysqli_stmt_bind_param', $refs);
+} else {
+	mysqli_stmt_bind_param($stmt, "ii", $params_n[0], $params_n[1]);
+}
+mysqli_stmt_execute($stmt);
+$result = mysqli_stmt_get_result($stmt);
 $process_list = array();
 $num_rows = $result->num_rows;
 
@@ -187,8 +182,26 @@ $num_rows = $result->num_rows;
 				}
 	}
 
-$result0 = mysqli_query($link, $total_rows_query) or die(mysqli_error($link));
-		$total_rows = $result0->num_rows;
+$stmt_count = mysqli_prepare($link, $total_rows_query) or die(mysqli_error($link));
+if ($types !== "") {
+	$bind_count = array_merge(array($types), $params);
+	$refs_count = array();
+	foreach ($bind_count as $k => &$v) {
+		$refs_count[$k] = &$v;
+	}
+	call_user_func_array('mysqli_stmt_bind_param', $refs_count);
+}
+mysqli_stmt_execute($stmt_count);
+$result0 = mysqli_stmt_get_result($stmt_count);
+$count_list = array();
+if ($result0->num_rows > 0) {
+	while($row = mysqli_fetch_assoc($result0)){
+		array_push($count_list, $row);
+	}
+}
+$total_rows = $count_list[0]["cnt"];
+mysqli_stmt_close($stmt);
+mysqli_stmt_close($stmt_count);
 	mysqli_close($link);
 	
 /////SELECT DEI TIPI////

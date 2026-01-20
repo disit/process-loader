@@ -26,7 +26,9 @@ mysqli_select_db($link, $dbname_valueunit);
 $query = "SELECT value as 'nature', label
 FROM processloader_db.dictionary_table where type='nature' and delete_time is null order by nature";
 		
-$result = mysqli_query($link, $query) or die(mysqli_error($link));
+$stmt = mysqli_prepare($link, $query) or die(mysqli_error($link));
+mysqli_stmt_execute($stmt);
+$result = mysqli_stmt_get_result($stmt);
 while ($row = mysqli_fetch_assoc($result)) {
 $vt=str_replace(' ','_',$row['nature']);
 $langs = htmlspecialchars_decode($row['label']);
@@ -63,7 +65,9 @@ WHERE {
 $query = "SELECT value as subnature, label,
 ( SELECT dt2.value FROM processloader_db.dictionary_relations dr join processloader_db.dictionary_table dt2 on dt2.id=dr.parent where dr.child=dt.id LIMIT 1) as nature
 FROM processloader_db.dictionary_table dt where dt.type='subnature' and delete_time is null order by subnature";
-$subresult = mysqli_query($link, $query) or die(mysqli_error($link));	
+$stmt2 = mysqli_prepare($link, $query) or die(mysqli_error($link));
+mysqli_stmt_execute($stmt2);
+$subresult = mysqli_stmt_get_result($stmt2);	
 
 while ($row = mysqli_fetch_assoc($subresult)) {
 $vt=str_replace(' ','_',$row['subnature']);
@@ -89,6 +93,8 @@ if (is_array($langs)) {
   <http://www.disit.org/km4city/schema#". $vt."> rdf-schema:label \"".$row['label']."\"@it.
   <http://www.disit.org/km4city/schema#". $vt."> rdf-schema:label \"".$row['label']."\"@en.";
 }
+mysqli_stmt_close($stmt);
+mysqli_stmt_close($stmt2);
 
 echo "
   <http://www.disit.org/km4city/schema#". $vt."> rdf-schema:subClassOf km4c:".$row['nature'].".

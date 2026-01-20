@@ -22,49 +22,88 @@ mysqli_select_db($link, $dbname);
 echo ('Archivio = '.$_GET['archive']);
 
 if (isset($_GET['archive']) && !empty($_GET['archive'])) {
-	$archive = $_GET['archive'];
-	//echo ('Archivio = '.$archive);
-			if ($archive == 'run'){
-				$id_run = $_GET['id_run'];
-				$n_run = $_GET['n_run'];
-				$g_run = $_GET['g_run'];
-				echo ('$id_run: '.$id_run);
-				echo ('$n_run:  '.$n_run);
-				echo ('$g_run:  '.$g_run);
-				$sql = "UPDATE  `processes` SET `processes`.`Status`='RUNNING' WHERE `id`='".$id_run."'";
-				$result = mysqli_query($link, $sql) or die(mysqli_error($link));
-				//archivio 
-				$date_run = date("Y-m-d H:i:s");
-				$query="INSERT INTO `process_archive`(`Id`,`Activity_date`,`Process_id`,`Process_name`,`Process_group`,`Description_activity`)VALUES(NULL,'".$date_run."','".$id_run."','".$n_run."','".$g_run."','RUN')";
-				$archive = mysqli_query($link, $query) or die(mysqli_error($link));
-				mysqli_close($link);
-				header("location:process_loader.php");
-			} elseif($archive == 'stop'){
-				$id_pause = $_GET['id_pause'];
-				$n_pause = $_GET['n_pause'];
-				$g_pause = $_GET['g_pause'];
-				$sql4 = "UPDATE  `processes` SET `status`='PAUSE' WHERE `id`='".$id_pause."'";
-				$result4 = mysqli_query($link, $sql4) or die(mysqli_error($link));
-				//archivio 
-				$date_pause = date("Y-m-d H:i:s");
-				$query4="INSERT INTO `process_archive`(`Id`,`Activity_date`,`Process_id`,`Process_name`,`Process_group`,`Description_activity`)VALUES(NULL,'".$date_pause."','".$id_pause."','".$n_pause."','".$g_pause."','PAUSE')";
-				$archive4 = mysqli_query($link, $query4) or die(mysqli_error($link));
-				mysqli_close($link);
-				header("location:process_loader.php");
-			}
-			elseif ($archive='remove'){
-				$id_rem = $_GET['id_rem'];
-				$n_rem = $_GET['n_rem'];
-				$g_rem = $_GET['g_rem'];
-				$sql3 = "DELETE FROM `processes` WHERE `processes`.`id`='".$id_rem."'";
-				$result3 = mysqli_query($link, $sql3) or die(mysqli_error($link));
+		$archive = $_GET['archive'];
+		//echo ('Archivio = '.$archive);
+				if ($archive == 'run'){
+					$id_run = isset($_GET['id_run']) ? (int)$_GET['id_run'] : 0;
+					$n_run = isset($_GET['n_run']) ? $_GET['n_run'] : '';
+					$g_run = isset($_GET['g_run']) ? $_GET['g_run'] : '';
+					echo ('$id_run: '.$id_run);
+					echo ('$n_run:  '.$n_run);
+					echo ('$g_run:  '.$g_run);
+					$sql = "UPDATE  `processes` SET `processes`.`Status`='RUNNING' WHERE `id`=?";
+					$stmt = mysqli_prepare($link, $sql);
+					if (!$stmt) {
+						die(mysqli_error($link));
+					}
+					mysqli_stmt_bind_param($stmt, "i", $id_run);
+					$result = mysqli_stmt_execute($stmt);
+					mysqli_stmt_close($stmt);
 					//archivio 
-				$date_rem = date("Y-m-d H:i:s");
-				$query3="INSERT INTO `process_archive`(`Id`,`Activity_date`,`Process_id`,`Process_name`,`Process_group`,`Description_activity`)VALUES(NULL,'".$date_rem."','".$id_rem."','".$n_rem."','".$g_rem."','DELETE')";
-				$archive3 = mysqli_query($link, $query3) or die(mysqli_error($link));
-				mysqli_close($link);
-				header("location:process_loader.php");
-			}
+					$date_run = date("Y-m-d H:i:s");
+					$query="INSERT INTO `process_archive`(`Id`,`Activity_date`,`Process_id`,`Process_name`,`Process_group`,`Description_activity`)VALUES(NULL,?,?,?,?,?)";
+					$stmt = mysqli_prepare($link, $query);
+					if (!$stmt) {
+						die(mysqli_error($link));
+					}
+					$desc = 'RUN';
+					mysqli_stmt_bind_param($stmt, "sisss", $date_run, $id_run, $n_run, $g_run, $desc);
+					$archive = mysqli_stmt_execute($stmt);
+					mysqli_stmt_close($stmt);
+					mysqli_close($link);
+					header("location:process_loader.php");
+				} elseif($archive == 'stop'){
+					$id_pause = isset($_GET['id_pause']) ? (int)$_GET['id_pause'] : 0;
+					$n_pause = isset($_GET['n_pause']) ? $_GET['n_pause'] : '';
+					$g_pause = isset($_GET['g_pause']) ? $_GET['g_pause'] : '';
+					$sql4 = "UPDATE  `processes` SET `status`='PAUSE' WHERE `id`=?";
+					$stmt = mysqli_prepare($link, $sql4);
+					if (!$stmt) {
+						die(mysqli_error($link));
+					}
+					mysqli_stmt_bind_param($stmt, "i", $id_pause);
+					$result4 = mysqli_stmt_execute($stmt);
+					mysqli_stmt_close($stmt);
+					//archivio 
+					$date_pause = date("Y-m-d H:i:s");
+					$query4="INSERT INTO `process_archive`(`Id`,`Activity_date`,`Process_id`,`Process_name`,`Process_group`,`Description_activity`)VALUES(NULL,?,?,?,?,?)";
+					$stmt = mysqli_prepare($link, $query4);
+					if (!$stmt) {
+						die(mysqli_error($link));
+					}
+					$desc = 'PAUSE';
+					mysqli_stmt_bind_param($stmt, "sisss", $date_pause, $id_pause, $n_pause, $g_pause, $desc);
+					$archive4 = mysqli_stmt_execute($stmt);
+					mysqli_stmt_close($stmt);
+					mysqli_close($link);
+					header("location:process_loader.php");
+				}
+				elseif ($archive == 'remove'){
+					$id_rem = isset($_GET['id_rem']) ? (int)$_GET['id_rem'] : 0;
+					$n_rem = isset($_GET['n_rem']) ? $_GET['n_rem'] : '';
+					$g_rem = isset($_GET['g_rem']) ? $_GET['g_rem'] : '';
+					$sql3 = "DELETE FROM `processes` WHERE `processes`.`id`=?";
+					$stmt = mysqli_prepare($link, $sql3);
+					if (!$stmt) {
+						die(mysqli_error($link));
+					}
+					mysqli_stmt_bind_param($stmt, "i", $id_rem);
+					$result3 = mysqli_stmt_execute($stmt);
+					mysqli_stmt_close($stmt);
+						//archivio 
+					$date_rem = date("Y-m-d H:i:s");
+					$query3="INSERT INTO `process_archive`(`Id`,`Activity_date`,`Process_id`,`Process_name`,`Process_group`,`Description_activity`)VALUES(NULL,?,?,?,?,?)";
+					$stmt = mysqli_prepare($link, $query3);
+					if (!$stmt) {
+						die(mysqli_error($link));
+					}
+					$desc = 'DELETE';
+					mysqli_stmt_bind_param($stmt, "sisss", $date_rem, $id_rem, $n_rem, $g_rem, $desc);
+					$archive3 = mysqli_stmt_execute($stmt);
+					mysqli_stmt_close($stmt);
+					mysqli_close($link);
+					header("location:process_loader.php");
+				}
 			}else{
 			echo ("ERRORE CREAZIONE");
 }

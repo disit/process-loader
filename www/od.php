@@ -133,17 +133,17 @@ if ($num_rows > 0) {
         if($row['table_id'] == "od_data") { // modifica per considerare poi, ace, ecc...
             $shape = "communes";
             if(str_contains($od_id,"poi")){
-                $shape = "POIs";
+                $shape = "poi";//"POIs";
             } else if (str_contains($od_id,"section")){
-                $shape = "Sections";
+                $shape = "section";//"Sections";
             } else if (str_contains($od_id,"ace")){
-                $shape = "ACEs";
+                $shape = "ACE";//"ACEs";
             } else if (str_contains($od_id,"municipality")){
-                $shape = "Municipalities";
+                $shape = "municipality";//"Municipalities";
             } else if (str_contains($od_id,"province")){
-                $shape = "Provinces";
+                $shape = "province";//"Provinces";
             } else if (str_contains($od_id,"region")){
-                $shape = "Regions";
+                $shape = "region";//"Regions";
             } 
         }else if($row['table_id'] == "od_data_mgrs"){
             $shape = "square";
@@ -356,7 +356,7 @@ if ($num_rows > 0) {
                                     echo("<td>" . $process_list[$i]['purpose'] . "</td>");
                                     echo("<td><button type='button' class='viewDashBtn viewType' data-target='#typology-modal' data-toggle='modal' value='".$process_list[$i]['metric_name']."'>VIEW</button></td>");
                                     echo("<td><button type='button' class='viewDashBtn viewList' data-target='#view-modal' data-toggle='modal' value='".$process_list[$i]['od_id']."' shape='".$process_list[$i]['shape']."' precision='".$process_list[$i]['precision']."'>VIEW</button></td>");
-                                    echo("<td><button type='button' class='editDashBtn previewList' data-target='#preview-modal' data-toggle='modal' value='".$process_list[$i]['od_id']."' org='".$process_list[$i]['organization']."' shape='".$process_list[$i]['shape']."'>PREVIEW</button></td>");
+                                    echo("<td><button type='button' class='editDashBtn previewList' data-target='#preview-modal' data-toggle='modal' value='".$process_list[$i]['od_id']."' org='".$process_list[$i]['organization']."' shape='".$process_list[$i]['shape']."' precision='".$process_list[$i]['precision']."'>PREVIEW</button></td>");
                                     echo("</tr>");
                                 }
                             }
@@ -589,6 +589,7 @@ if ($num_rows > 0) {
 								var layers = $(this).val();
 								var org = $(this).attr('org');
                                 var shape = $(this).attr('shape');
+                                var precision = $(this).attr('precision');
                                 var from_date = '';
                                 try {
                                 $.ajax({
@@ -613,10 +614,16 @@ if ($num_rows > 0) {
                             }catch (e) {
                                     console.error("Eccezione durante la chiamata AJAX: " + e.message);
                                 }
-                                //preview_path = '../dashboardSmartCity/view/preview.php';
+                                let base_url = <?php echo json_encode($preview_base_url); ?>;
+                                console.log("BASE: "+ base_url)
+                                if(base_url === null || base_url === '')
+                                    preview_path = '../dashboardSmartCity/view/preview.php'; //Naldi -> enable preview
+                                else
+                                    preview_path = `${base_url}/preview.php`;
                                 console.log(preview_path);
+                                var passedPrecision = precision === '' ? shape : precision
                                                 var od_action = 'dates';
-                                                myIframe.src = preview_path+'?OD='+od+'&action='+od_action+'&organization='+org+'&from_date='+from_date+'&precision='+shape;
+                                                myIframe.src = preview_path+'?OD='+od+'&action='+od_action+'&organization='+org+'&from_date='+from_date+'&precision='+passedPrecision;
                                                 console.log(myIframe.src);
                                                 $(myModal).modal('show');
 							});

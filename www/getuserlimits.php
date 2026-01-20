@@ -69,12 +69,22 @@ if (isset($_SESSION['role'])) {
             //
 
             if (($sel_org !== null) && ($sel_org !== '')) {
-                $par_org = "AND elementType='" . $sel_org . "'";
+                $query = "SELECT * FROM limits WHERE (organization=? OR organization='any') AND elementType=?";
+                $stmt = mysqli_prepare($link, $query);
+                if (!$stmt) {
+                    die(mysqli_error($link));
+                }
+                mysqli_stmt_bind_param($stmt, "ss", $type, $sel_org);
             } else {
-                $par_org = "";
+                $query = "SELECT * FROM limits WHERE (organization=? OR organization='any')";
+                $stmt = mysqli_prepare($link, $query);
+                if (!$stmt) {
+                    die(mysqli_error($link));
+                }
+                mysqli_stmt_bind_param($stmt, "s", $type);
             }
-            $query = "SELECT * FROM limits WHERE (organization='" . $type . "' OR organization='any')" . $par_org;
-            $result = mysqli_query($link, $query) or die(mysqli_error($link));
+            mysqli_stmt_execute($stmt);
+            $result = mysqli_stmt_get_result($stmt);
 
             $list = array();
             if ($result->num_rows > 0) {
@@ -83,6 +93,7 @@ if (isset($_SESSION['role'])) {
                     array_push($list, $row);
                 }
             }
+            mysqli_stmt_close($stmt);
             //$list1 = array_unique($list);
             //$content1 = array_values($list1);
             echo json_encode($list);
@@ -101,19 +112,39 @@ if (isset($_SESSION['role'])) {
             $column = filter_var($column, FILTER_SANITIZE_STRING);
             //
             $list = array();
-            if (($sel_org !== null) && ($sel_org !== '')) {
-                $par_org = "AND (organization='" . $sel_org . "' OR organization='any')";
-            } else {
-                $par_org = "";
-            }
-            $type = "elementType !=''";
+            $allowed_columns = array('username', 'organization', 'role', 'elementType', 'maxCount');
+            $column_safe = in_array($column, $allowed_columns, true) ? $column : 'username';
+            $order_safe = strtoupper($order) === 'DESC' ? 'DESC' : 'ASC';
+            $query = "SELECT * FROM limits WHERE ";
+            $params = array();
+            $types = "";
             if (($type_sel !== null) && ($type_sel !== '')) {
-                $type = "elementType='" . $type_sel . "'";
+                $query .= "elementType=? ";
+                $params[] = $type_sel;
+                $types .= "s";
             } else {
-                $type = "elementType !=''";
+                $query .= "elementType !='' ";
             }
-            $query = "SELECT * FROM limits WHERE " . $type . " " . $par_org . "ORDER BY " . $column . " " . $order;
-            $result = mysqli_query($link, $query) or die(mysqli_error($link));
+            if (($sel_org !== null) && ($sel_org !== '')) {
+                $query .= "AND (organization=? OR organization='any') ";
+                $params[] = $sel_org;
+                $types .= "s";
+            }
+            $query .= "ORDER BY " . $column_safe . " " . $order_safe;
+            $stmt = mysqli_prepare($link, $query);
+            if (!$stmt) {
+                die(mysqli_error($link));
+            }
+            if ($types !== "") {
+                $bind_params = array_merge(array($types), $params);
+                $refs = array();
+                foreach ($bind_params as $k => &$v) {
+                    $refs[$k] = &$v;
+                }
+                call_user_func_array('mysqli_stmt_bind_param', $refs);
+            }
+            mysqli_stmt_execute($stmt);
+            $result = mysqli_stmt_get_result($stmt);
             $list = array();
             if ($result->num_rows > 0) {
                 while ($row = mysqli_fetch_assoc($result)) {
@@ -121,21 +152,33 @@ if (isset($_SESSION['role'])) {
                     array_push($list, $row);
                 }
             }
+            mysqli_stmt_close($stmt);
             echo json_encode($list);
         } elseif ($action == 'details') {
             //$type=$_REQUEST['type'];
             $type = mysqli_real_escape_string($link, $_REQUEST['type']);
             $type = filter_var($type, FILTER_SANITIZE_STRING);
             //
-            $sel_org = $_REQUEST['org_sel'];
+            $sel_org = mysqli_real_escape_string($link, $_REQUEST['org_sel']);
+            $sel_org = filter_var($sel_org, FILTER_SANITIZE_STRING);
 
             if (($sel_org !== null) && ($sel_org !== '')) {
-                $par_org = "AND (organization='" . $sel_org . "' OR organization='any')";
+                $query = "SELECT * FROM limits WHERE elementType=? AND (organization=? OR organization='any')";
+                $stmt = mysqli_prepare($link, $query);
+                if (!$stmt) {
+                    die(mysqli_error($link));
+                }
+                mysqli_stmt_bind_param($stmt, "ss", $type, $sel_org);
             } else {
-                $par_org = "";
+                $query = "SELECT * FROM limits WHERE elementType=?";
+                $stmt = mysqli_prepare($link, $query);
+                if (!$stmt) {
+                    die(mysqli_error($link));
+                }
+                mysqli_stmt_bind_param($stmt, "s", $type);
             }
-            $query = "SELECT * FROM limits WHERE elementType='" . $type . "'" . $par_org;
-            $result = mysqli_query($link, $query) or die(mysqli_error($link));
+            mysqli_stmt_execute($stmt);
+            $result = mysqli_stmt_get_result($stmt);
 
             $list = array();
             if ($result->num_rows > 0) {
@@ -144,6 +187,7 @@ if (isset($_SESSION['role'])) {
                     array_push($list, $row);
                 }
             }
+            mysqli_stmt_close($stmt);
             //$list1 = array_unique($list);
             //$content1 = array_values($list1);
             echo json_encode($list);
@@ -152,8 +196,14 @@ if (isset($_SESSION['role'])) {
             $type = mysqli_real_escape_string($link, $_REQUEST['type']);
             $type = filter_var($type, FILTER_SANITIZE_STRING);
             //
-            $query = "SELECT * FROM limits WHERE username='" . $type . "'";
-            $result = mysqli_query($link, $query) or die(mysqli_error($link));
+            $query = "SELECT * FROM limits WHERE username=?";
+            $stmt = mysqli_prepare($link, $query);
+            if (!$stmt) {
+                die(mysqli_error($link));
+            }
+            mysqli_stmt_bind_param($stmt, "s", $type);
+            mysqli_stmt_execute($stmt);
+            $result = mysqli_stmt_get_result($stmt);
 
             $list = array();
             if ($result->num_rows > 0) {
@@ -163,6 +213,7 @@ if (isset($_SESSION['role'])) {
                 }
                 echo json_encode($list);
             }
+            mysqli_stmt_close($stmt);
         } elseif ($action == 'mod_type') {
             //
             $user = mysqli_real_escape_string($link, $_POST['user']);
@@ -202,9 +253,16 @@ if (isset($_SESSION['role'])) {
                 if (in_array($elementtype, $types_limits)) {
                     if (in_array($organization, $check_org)) {
                         if (is_numeric($limits_n)) {
-                            $query = "UPDATE limits SET maxCount=" . $limits_n . " WHERE username='" . $user . "' AND organization='" . $organization . "' AND role='" . $role . "' AND elementType='" . $elementtype . "' AND maxCount='" . $limits . "';";
-                            //
-                            $result = mysqli_query($link, $query) or die(mysqli_error($link));
+                            $limits_n_int = (int)$limits_n;
+                            $limits_int = (int)$limits;
+                            $query = "UPDATE limits SET maxCount=? WHERE username=? AND organization=? AND role=? AND elementType=? AND maxCount=?";
+                            $stmt = mysqli_prepare($link, $query);
+                            if (!$stmt) {
+                                die(mysqli_error($link));
+                            }
+                            mysqli_stmt_bind_param($stmt, "issssi", $limits_n_int, $user, $organization, $role, $elementtype, $limits_int);
+                            $result = mysqli_stmt_execute($stmt);
+                            mysqli_stmt_close($stmt);
 
                             if ($result) {
                                 $message['result'] = 'ok';
@@ -252,9 +310,16 @@ if (isset($_SESSION['role'])) {
             $limits = filter_var($limits, FILTER_SANITIZE_STRING);
 
 			///
-            $query_select = "SELECT * FROM limits WHERE username='" . htmlspecialchars($user) . "' AND organization='" . htmlspecialchars($organization) . "' AND role='" . htmlspecialchars($role) . "' AND elementType='" . htmlspecialchars($elementtype) . "' ";
-            $result_select = mysqli_query($link, $query_select);
+            $query_select = "SELECT * FROM limits WHERE username=? AND organization=? AND role=? AND elementType=?";
+            $stmt_select = mysqli_prepare($link, $query_select);
+            if (!$stmt_select) {
+                die(mysqli_error($link));
+            }
+            mysqli_stmt_bind_param($stmt_select, "ssss", $user, $organization, $role, $elementtype);
+            mysqli_stmt_execute($stmt_select);
+            $result_select = mysqli_stmt_get_result($stmt_select);
             $num = $result_select->num_rows;
+            mysqli_stmt_close($stmt_select);
             //
             //echo($num);
             //
@@ -288,9 +353,15 @@ if (isset($_SESSION['role'])) {
                     if (in_array($elementtype, $types_limits)) {
                         if (in_array($organization, $check_org)) {
                             if (is_numeric($limits)) {
-                                //
-                                $query = "INSERT INTO limits(username,organization, role, elementType, maxCount) VALUES ('" . htmlspecialchars($user) . "','" . htmlspecialchars($organization) . "', '" . htmlspecialchars($role) . "','" . htmlspecialchars($elementtype) . "', '" . htmlspecialchars($limits) . "');";
-                                $result = mysqli_query($link, $query) or die(mysqli_error($link));
+                                $limits_int = (int)$limits;
+                                $query = "INSERT INTO limits(username,organization, role, elementType, maxCount) VALUES (?,?,?,?,?)";
+                                $stmt = mysqli_prepare($link, $query);
+                                if (!$stmt) {
+                                    die(mysqli_error($link));
+                                }
+                                mysqli_stmt_bind_param($stmt, "ssssi", $user, $organization, $role, $elementtype, $limits_int);
+                                $result = mysqli_stmt_execute($stmt);
+                                mysqli_stmt_close($stmt);
                                 //
                                 $message['result'] = 'ok';
                                 $message['message'] = 'created';
@@ -355,9 +426,15 @@ if (isset($_SESSION['role'])) {
                 //
                 if (in_array($elementtype, $types_limits)) {
                     if (in_array($organization, $check_org)) {
-                        $query_del = "DELETE FROM limits WHERE username='" . htmlspecialchars($user) . "' AND organization='" . htmlspecialchars($organization) . "' AND role='" . htmlspecialchars($role) . "' AND elementType='" . htmlspecialchars($elementtype) . "' AND maxCount='" . htmlspecialchars($limits) . "';";
-                        //echo($query);
-                        $result = mysqli_query($link, $query_del) or die(mysqli_error($link));
+                        $limits_int = (int)$limits;
+                        $query_del = "DELETE FROM limits WHERE username=? AND organization=? AND role=? AND elementType=? AND maxCount=?";
+                        $stmt = mysqli_prepare($link, $query_del);
+                        if (!$stmt) {
+                            die(mysqli_error($link));
+                        }
+                        mysqli_stmt_bind_param($stmt, "ssssi", $user, $organization, $role, $elementtype, $limits_int);
+                        $result = mysqli_stmt_execute($stmt);
+                        mysqli_stmt_close($stmt);
                         //
                         if ($result) {
                             $message['result'] = 'ok';

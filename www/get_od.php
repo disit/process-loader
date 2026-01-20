@@ -21,31 +21,37 @@ include('external_service.php');
 $link = new PDO("pgsql:host=".$host_od.";dbname=".$dbname_od, $username_od, $password_od) or die("failed to connect to server !!");
 $action = $_REQUEST['action'];
 if ($action == 'get_date_info') {
-    $od_id = $_REQUEST['od_id'];
-    $precision = $_REQUEST['precision'];
-    $table_id = $_REQUEST['table_id'];
-    $query_date = "";
-    if ($table_id == 'od_data_mgrs'){
-        $query_date = "SELECT MIN(from_date) as min_date, MAX(to_date) as max_date, COUNT(DISTINCT from_date) as count_number FROM ".$table_id." WHERE od_id='".$od_id."' AND precision=".$precision." GROUP BY od_id, precision";
-    }else if($table_id == 'od_data'){
-        $query_date = "SELECT MIN(from_date) as min_date, MAX(to_date) as max_date, COUNT(DISTINCT from_date) as count_number FROM ".$table_id." WHERE od_id='".$od_id."' AND precision is null GROUP BY od_id, precision";
+    $od_id = isset($_REQUEST['od_id']) ? $_REQUEST['od_id'] : '';
+    $precision = isset($_REQUEST['precision']) ? (int)$_REQUEST['precision'] : 0;
+    $table_id = isset($_REQUEST['table_id']) ? $_REQUEST['table_id'] : '';
+    $allowed_tables = array('od_data_mgrs', 'od_data');
+    if (!in_array($table_id, $allowed_tables, true)) {
+        echo('ERROR');
+        return;
     }
-    if($query_date != ""){
-        $result = $link->query($query_date) or die($link->errorInfo());
+    if ($table_id === 'od_data_mgrs'){
+        $query_date = "SELECT MIN(from_date) as min_date, MAX(to_date) as max_date, COUNT(DISTINCT from_date) as count_number FROM od_data_mgrs WHERE od_id=:od_id AND precision=:precision GROUP BY od_id, precision";
+        $stmt = $link->prepare($query_date);
+        $stmt->bindValue(':od_id', $od_id, PDO::PARAM_STR);
+        $stmt->bindValue(':precision', $precision, PDO::PARAM_INT);
+    } else {
+        $query_date = "SELECT MIN(from_date) as min_date, MAX(to_date) as max_date, COUNT(DISTINCT from_date) as count_number FROM od_data WHERE od_id=:od_id AND precision is null GROUP BY od_id, precision";
+        $stmt = $link->prepare($query_date);
+        $stmt->bindValue(':od_id', $od_id, PDO::PARAM_STR);
+    }
+    if ($stmt->execute()) {
         $process_list = array();
+        $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
         foreach ($result as $row) {
-            $min_date = $row['min_date'];
-            $max_date = $row['max_date'];
-            $count_number = $row['count_number'];
             $listFile = array(
-                "min_date" => $min_date,
-                "max_date" => $max_date,
-                "count_number" => $count_number
+                "min_date" => $row['min_date'],
+                "max_date" => $row['max_date'],
+                "count_number" => $row['count_number']
             );
             array_push($process_list, $listFile);
         }
         echo json_encode($process_list);
-    }else{
+    } else {
         echo('ERROR');
     }
 }else {

@@ -21,6 +21,48 @@ header("Access-Control-Allow-Origin: *\r\n");
 include('../config.php'); 
 include('../curl.php');
 
+function sanitize_filename($name) {
+	$name = basename($name);
+	$name = preg_replace('/[^A-Za-z0-9._-]/', '_', $name);
+	$name = preg_replace('/_+/', '_', $name);
+	return $name;
+}
+
+function insert_uploaded_file_basic($conn, $file_name, $description, $user, $creation_date, $file_type, $status, $username, $public, $license, $category, $resource_input, $protocol, $img, $format = null)
+{
+	if ($format === null) {
+		$sql = "INSERT INTO processloader_db.uploaded_files (Id,File_name,Description,User,Creation_date,file_type,status,Username,Public,Date_of_publication,License,Download_number,Votes,Average_stars,Total_stars,Category,Resource_input,Protocol,Img) VALUES (NULL,?,?,?,?,?,?,?,?,NULL,?,'0','0','0','0',?,?,?,?)";
+		$stmt = mysqli_prepare($conn, $sql);
+		if (!$stmt) {
+			return false;
+		}
+		mysqli_stmt_bind_param($stmt, "sssssssssssss", $file_name, $description, $user, $creation_date, $file_type, $status, $username, $public, $license, $category, $resource_input, $protocol, $img);
+	} else {
+		$sql = "INSERT INTO processloader_db.uploaded_files (Id,File_name,Description,User,Creation_date,file_type,status,Username,Public,Date_of_publication,License,Download_number,Votes,Average_stars,Total_stars,Category,Format,Resource_input,Protocol,Img) VALUES (NULL,?,?,?,?,?,?,?,?,NULL,?,'0','0','0','0',?,?,?,?)";
+		$stmt = mysqli_prepare($conn, $sql);
+		if (!$stmt) {
+			return false;
+		}
+		mysqli_stmt_bind_param($stmt, "ssssssssssssss", $file_name, $description, $user, $creation_date, $file_type, $status, $username, $public, $license, $category, $format, $resource_input, $protocol, $img);
+	}
+	$ok = mysqli_stmt_execute($stmt);
+	mysqli_stmt_close($stmt);
+	return $ok;
+}
+
+function insert_uploaded_file_microservice($conn, $file_name, $description, $user, $creation_date, $file_type, $status, $username, $public, $license, $category, $format, $resource_input, $protocol, $method, $url, $help, $img, $html, $js)
+{
+	$sql = "INSERT INTO processloader_db.uploaded_files (Id,File_name,Description,User,Creation_date,file_type,status,Username,Public,Date_of_publication,License,Download_number,Votes,Average_stars,Total_stars,Category,Format,Resource_input,Protocol,Method,Url,Help,Img,Html,Js) VALUES (NULL,?,?,?,?,?,?,?,?,NULL,?,'0','0','0','0',?,?,?,?,?,?,?,?,?,?)";
+	$stmt = mysqli_prepare($conn, $sql);
+	if (!$stmt) {
+		return false;
+	}
+	mysqli_stmt_bind_param($stmt, "sssssssssssssssssss", $file_name, $description, $user, $creation_date, $file_type, $status, $username, $public, $license, $category, $format, $resource_input, $protocol, $method, $url, $help, $img, $html, $js);
+	$ok = mysqli_stmt_execute($stmt);
+	mysqli_stmt_close($stmt);
+	return $ok;
+}
+
    $link = mysqli_connect($host, $username, $password);
    mysqli_select_db($link, $dbname);
    	$response = [];
@@ -103,6 +145,12 @@ if(isset($_POST)){
 						if(isset($request->name) && isset($request->sub_nature) && isset($request->nature) && isset($request->licence) && isset($request->description) && isset($request->user) && isset($request->data) && $request->name!="" && $request->nature!="" && $request->sub_nature!="" && $request->licence!="" && $request->user!="" && $request->description!="" && $request->data!=""  )
 						{	
 							$name = mysqli_real_escape_string($link, $request->name);
+							$name = sanitize_filename($name);
+							if ($name === '' || $name === '.' || $name === '..') {
+								$response['result'] = 'KO';
+								$response['code'] = 402;
+								$response['message'] = 'invalid file name';
+							} else {
 							$sub_nature = mysqli_real_escape_string($link, $request->sub_nature);
 							$nature = mysqli_real_escape_string($link, $request->nature);
 							
@@ -130,22 +178,37 @@ if(isset($_POST)){
 							$fp = fopen($target_path, 'w') or die("Unable to open file!");;
 							fwrite($fp, json_encode($data));
 							fclose($fp);
-							if(!isset($request->format))
-							{
+								if(!isset($request->format))
+								{
 
-								$format=null;
-								$query="INSERT INTO processloader_db.uploaded_files (Id,File_name,Description,User,Creation_date,file_type,status,Username,Public,Date_of_publication,License,Download_number,Votes,Average_stars,Total_stars,Category,Resource_input,Protocol,Img)VALUES (NULL,'".$name.".json','".$description."','0','".$date."','".$file_type."','Awaiting approval','".$user."','0',NULL,'".$licence."','0','0','0','0','".$nature."','".$sub_nature."','ToBeDefined','".$img."')";
+									$format = null;
+								}
+								else
+								{
+									$format = $request->format;
+								}
+								//aggiungo riga al DB con i metadati del nuovo file
 
-							}
-							else
-							{
-								$format=$request->format;
-								$query="INSERT INTO processloader_db.uploaded_files (Id,File_name,Description,User,Creation_date,file_type,status,Username,Public,Date_of_publication,License,Download_number,Votes,Average_stars,Total_stars,Category,Format,Resource_input,Protocol,Img)VALUES (NULL,'".$name.".json','".$description."','0','".$date."','".$file_type."','Awaiting approval','".$user."','0',NULL,'".$licence."','0','0','0','0','".$nature."','".$format."','".$sub_nature."','ToBeDefined','".$img."')";
-
-							}
-							//aggiungo riga al DB con i metadati del nuovo file
-
-							$query_caricamento = mysqli_query($connessione_al_server,$query) or die ("Creazione record non riuscita".mysqli_error($connessione_al_server));
+								$query_caricamento = insert_uploaded_file_basic(
+									$connessione_al_server,
+									$name . ".json",
+									$description,
+									"0",
+									$date,
+									$file_type,
+									"Awaiting approval",
+									$user,
+									"0",
+									$licence,
+									$nature,
+									$sub_nature,
+									"ToBeDefined",
+									$img,
+									$format
+								);
+								if (!$query_caricamento) {
+									die("Creazione record non riuscita" . mysqli_error($connessione_al_server));
+								}
 							$url = "http://localhost:8983/solr/collection1/dataimport?command=full-import";
 							url_get($url);
 							if($query_caricamento)
@@ -163,6 +226,7 @@ if(isset($_POST)){
 								$response['message'] = 'Database problem';
 								$response['code'] = 501;
 						
+							}
 							}
 						}
 						else
@@ -182,6 +246,12 @@ if(isset($_POST)){
 						if(isset($request->name) && isset($request->sub_nature) && isset($request->nature) && isset($request->licence) && isset($request->description) && isset($request->user) && isset($request->data) && $request->name!="" && $request->nature!="" && $request->sub_nature!="" && $request->licence!="" && $request->user!="" && $request->description!="" && $request->data!="")
 						{	
 							$name = mysqli_real_escape_string($link, $request->name);
+							$name = sanitize_filename($name);
+							if ($name === '' || $name === '.' || $name === '..') {
+								$response['result'] = 'KO';
+								$response['code'] = 402;
+								$response['message'] = 'invalid file name';
+							} else {
 							$sub_nature = mysqli_real_escape_string($link, $request->sub_nature);
 							$nature = mysqli_real_escape_string($link, $request->nature);
 							
@@ -210,23 +280,37 @@ if(isset($_POST)){
 							fwrite($fp, json_encode($data));
 							fclose($fp);
 							
-							if(!isset($request->format))
-							{
+								if(!isset($request->format))
+								{
+									$format = null;
+								}
+								else
+								{
+									$format = $request->format;
+								}
+								
+								//aggiungo riga al DB con i metadati del nuovo file
 
-								$format=null;
-								$query="INSERT INTO processloader_db.uploaded_files (Id,File_name,Description,User,Creation_date,file_type,status,Username,Public,Date_of_publication,License,Download_number,Votes,Average_stars,Total_stars,Category,Resource_input,Protocol,Img)VALUES (NULL,'".$name.".json','".$description."','0','".$date."','".$file_type."','Awaiting approval','".$user."','0',NULL,'".$licence."','0','0','0','0','".$nature."','".$sub_nature."','ToBeDefined','".$img."')";
-
-							}
-							else
-							{
-								$format=$request->format;
-								$query="INSERT INTO processloader_db.uploaded_files (Id,File_name,Description,User,Creation_date,file_type,status,Username,Public,Date_of_publication,License,Download_number,Votes,Average_stars,Total_stars,Category,Format,Resource_input,Protocol,Img)VALUES (NULL,'".$name.".json','".$description."','0','".$date."','".$file_type."','Awaiting approval','".$user."','0',NULL,'".$licence."','0','0','0','0','".$nature."','".$format."','".$sub_nature."','ToBeDefined','".$img."')";
-
-							}
-							
-							//aggiungo riga al DB con i metadati del nuovo file
-
-							$query_caricamento = mysqli_query($connessione_al_server,$query) or die ("Creazione record non riuscita".mysqli_error($connessione_al_server));
+								$query_caricamento = insert_uploaded_file_basic(
+									$connessione_al_server,
+									$name . ".json",
+									$description,
+									"0",
+									$date,
+									$file_type,
+									"Awaiting approval",
+									$user,
+									"0",
+									$licence,
+									$nature,
+									$sub_nature,
+									"ToBeDefined",
+									$img,
+									$format
+								);
+								if (!$query_caricamento) {
+									die("Creazione record non riuscita" . mysqli_error($connessione_al_server));
+								}
 							$url = "http://localhost:8983/solr/collection1/dataimport?command=full-import";
 							url_get($url);
 							if($query_caricamento)
@@ -244,6 +328,7 @@ if(isset($_POST)){
 								$response['message'] = 'Database problem';
 								$response['code'] = 501;
 						
+							}
 							}
 						}
 						else
@@ -265,6 +350,12 @@ if(isset($_POST)){
 						{	
 							$percorso = $_FILES['resource']['tmp_name'];
 							$nome = $_FILES['resource']['name'];
+							$nome = sanitize_filename($nome);
+							if ($nome === '' || $nome === '.' || $nome === '..') {
+								$response['result'] = 'KO';
+								$response['code'] = 503;
+								$response['message'] = 'invalid file name';
+							} else {
 							$data1=date('Y-m-d');
 							$time2=date('H');
 							$time3=date('Y-m-d-H-i-s'); 
@@ -300,18 +391,34 @@ if(isset($_POST)){
 									$user=$utente_us;
 									$name=$nome;
 									$date=date('Y-m-d H:i:s');
-									if(!isset($request->format))
-									{
-										$query="INSERT INTO processloader_db.uploaded_files (Id,File_name,Description,User,Creation_date,file_type,status,Username,Public,Date_of_publication,License,Download_number,Votes,Average_stars,Total_stars,Category,Resource_input,Protocol,Img)VALUES (NULL,'".$name."','".$description."','0','".$date."','".$file_type."','Awaiting approval','".$user."','0',NULL,'".$licence."','0','0','0','0','".$nature."','".$sub_nature."','ToBeDefined','".$img."')";
-
-									}
-									else
-									{
-										$format=$request->format;
-										$query="INSERT INTO processloader_db.uploaded_files (Id,File_name,Description,User,Creation_date,file_type,status,Username,Public,Date_of_publication,License,Download_number,Votes,Average_stars,Total_stars,Category,Format,Resource_input,Protocol,Img)VALUES (NULL,'".$name."','".$description."','0','".$date."','".$file_type."','Awaiting approval','".$user."','0',NULL,'".$licence."','0','0','0','0','".$nature."','".$format."','".$sub_nature."','ToBeDefined','".$img."')";
-
-									}
-									$query_caricamento = mysqli_query($connessione_al_server,$query) or die ("Creazione record non riuscita".mysqli_error($connessione_al_server));
+										if(!isset($request->format))
+										{
+											$format = null;
+										}
+										else
+										{
+											$format = $request->format;
+										}
+										$query_caricamento = insert_uploaded_file_basic(
+											$connessione_al_server,
+											$name,
+											$description,
+											"0",
+											$date,
+											$file_type,
+											"Awaiting approval",
+											$user,
+											"0",
+											$licence,
+											$nature,
+											$sub_nature,
+											"ToBeDefined",
+											$img,
+											$format
+										);
+										if (!$query_caricamento) {
+											die("Creazione record non riuscita" . mysqli_error($connessione_al_server));
+										}
 									$url = "http://localhost:8983/solr/collection1/dataimport?command=full-import";
 									url_get($url);
 									if($query_caricamento)
@@ -346,6 +453,7 @@ if(isset($_POST)){
 								$response['message'] = 'file not zip!';
 						}
 						}
+						}
 						else
 						{
 							$response['result'] = 'KO';
@@ -378,6 +486,12 @@ if(isset($_POST)){
 										{	
 											$percorso = $_FILES['resource']['tmp_name'];
 											$nome = $_FILES['resource']['name'];
+											$nome = sanitize_filename($nome);
+											if ($nome === '' || $nome === '.' || $nome === '..') {
+												$response['result'] = 'KO';
+												$response['code'] = 503;
+												$response['message'] = 'invalid file name';
+											} else {
 											$data1=date('Y-m-d');
 											$time2=date('H');
 											$time3=date('Y-m-d-H-i-s'); 
@@ -409,18 +523,34 @@ if(isset($_POST)){
 													$user=$utente_us;
 													$name=$nome;
 													$date=date('Y-m-d H:i:s');
-													if(!isset($request->format))
-													{
-														$query="INSERT INTO processloader_db.uploaded_files (Id,File_name,Description,User,Creation_date,file_type,status,Username,Public,Date_of_publication,License,Download_number,Votes,Average_stars,Total_stars,Category,Resource_input,Protocol,Img)VALUES (NULL,'".$name."','".$description."','0','".$date."','".$file_type."','Awaiting approval','".$user."','0',NULL,'".$licence."','0','0','0','0','".$nature."','".$sub_nature."','ToBeDefined','".$img."')";
-
-													}
-													else
-													{
-														$format=$request->format;
-														$query="INSERT INTO processloader_db.uploaded_files (Id,File_name,Description,User,Creation_date,file_type,status,Username,Public,Date_of_publication,License,Download_number,Votes,Average_stars,Total_stars,Category,Format,Resource_input,Protocol,Img)VALUES (NULL,'".$name."','".$description."','0','".$date."','".$file_type."','Awaiting approval','".$user."','0',NULL,'".$licence."','0','0','0','0','".$nature."','".$format."','".$sub_nature."','ToBeDefined','".$img."')";
-
-													}
-													$query_caricamento = mysqli_query($connessione_al_server,$query) or die ("Creazione record non riuscita".mysqli_error($connessione_al_server));
+														if(!isset($request->format))
+														{
+															$format = null;
+														}
+														else
+														{
+															$format = $request->format;
+														}
+														$query_caricamento = insert_uploaded_file_basic(
+															$connessione_al_server,
+															$name,
+															$description,
+															"0",
+															$date,
+															$file_type,
+															"Awaiting approval",
+															$user,
+															"0",
+															$licence,
+															$nature,
+															$sub_nature,
+															"ToBeDefined",
+															$img,
+															$format
+														);
+														if (!$query_caricamento) {
+															die("Creazione record non riuscita" . mysqli_error($connessione_al_server));
+														}
 													$url = "http://localhost:8983/solr/collection1/dataimport?command=full-import";
 													url_get($url);
 													if($query_caricamento)
@@ -452,6 +582,7 @@ if(isset($_POST)){
 												$response['result'] = 'KO';
 												$response['code'] = 503;
 												$response['message'] = 'file not zip!';
+										}
 										}
 										}
 										else
@@ -556,6 +687,12 @@ if(isset($_POST)){
 						if(isset($request->name) && isset($request->sub_nature) && isset($request->nature) && isset($request->licence) && isset($request->description) && isset($request->user) && isset($request->data) &&(($request->user)!=""))
 						{	
 							$name = mysqli_real_escape_string($link, $request->name);
+							$name = sanitize_filename($name);
+							if ($name === '' || $name === '.' || $name === '..') {
+								$response['result'] = 'KO';
+								$response['code'] = 400;
+								$response['message'] = 'invalid file name';
+							} else {
 							$sub_nature = mysqli_real_escape_string($link, $request->sub_nature);
 							$nature = mysqli_real_escape_string($link, $request->nature);
 							
@@ -566,15 +703,14 @@ if(isset($_POST)){
 							//
 							$data =  $request->data;
 							$file_type = $app_type;
-							if(!isset($request->format))
-							{
-
-								$format=null;
-							}
-							else
-							{
-								$format=$request->format;
-							}
+								if(!isset($request->format))
+								{
+									$format = "";
+								}
+								else
+								{
+									$format = $request->format;
+								}
 							$date=date('Y-m-d H:i:s');
 							$data1=date('Y-m-d');
 							$time2=date('H');
@@ -592,8 +728,26 @@ if(isset($_POST)){
 							fclose($fp);
 							
 
-							$query="INSERT INTO processloader_db.uploaded_files (Id,File_name,Description,User,Creation_date,file_type,status,Username,Public,Date_of_publication,License,Download_number,Votes,Average_stars,Total_stars,Category,Format,Resource_input,Protocol,Img)VALUES (NULL,'".$name.".json','".$description."','0','".$date."','".$file_type."','Awaiting approval','".$user."','0',NULL,'".$licence."','0','0','0','0','".$nature."','".$format."','".$sub_nature."','ToBeDefined','".$img."')";
-							$query_caricamento = mysqli_query($connessione_al_server,$query) or die ("Creazione record non riuscita".mysqli_error($connessione_al_server));
+								$query_caricamento = insert_uploaded_file_basic(
+									$connessione_al_server,
+									$name . ".json",
+									$description,
+									"0",
+									$date,
+									$file_type,
+									"Awaiting approval",
+									$user,
+									"0",
+									$licence,
+									$nature,
+									$sub_nature,
+									"ToBeDefined",
+									$img,
+									$format
+								);
+								if (!$query_caricamento) {
+									die("Creazione record non riuscita" . mysqli_error($connessione_al_server));
+								}
 							$url = "http://localhost:8983/solr/collection1/dataimport?command=full-import";
 							url_get($url);
 							if($query_caricamento)
@@ -614,6 +768,7 @@ if(isset($_POST)){
 						//http_response_code(500);
 						
 							}
+							}
 						}
 						else
 						{
@@ -633,6 +788,12 @@ if(isset($_POST)){
 							if(isset($request->name) && isset($request->sub_nature) && isset($request->nature) && isset($request->licence) && isset($request->description) && isset($request->user) && isset($request->data) &&(($request->user)!=""))
 									{	
 										$name = mysqli_real_escape_string($link, $request->name);
+										$name = sanitize_filename($name);
+										if ($name === '' || $name === '.' || $name === '..') {
+											$response['result'] = 'KO';
+											$response['code'] = 400;
+											$response['message'] = 'invalid file name';
+										} else {
 										$sub_nature = mysqli_real_escape_string($link, $request->sub_nature);
 										$nature = mysqli_real_escape_string($link, $request->nature);
 										
@@ -643,15 +804,14 @@ if(isset($_POST)){
 										//
 										$data =  $request->data;
 										$file_type = $app_type;
-										if(!isset($request->format))
-										{
-
-											$format=null;
-										}
-										else
-										{
-											$format=$request->format;
-										}
+											if(!isset($request->format))
+											{
+												$format = "";
+											}
+											else
+											{
+												$format = $request->format;
+											}
 										$date=date('Y-m-d H:i:s');
 										$data1=date('Y-m-d');
 										$time2=date('H');
@@ -669,8 +829,26 @@ if(isset($_POST)){
 										fclose($fp);
 										
 
-										$query="INSERT INTO processloader_db.uploaded_files (Id,File_name,Description,User,Creation_date,file_type,status,Username,Public,Date_of_publication,License,Download_number,Votes,Average_stars,Total_stars,Category,Format,Resource_input,Protocol,Img)VALUES (NULL,'".$name.".json','".$description."','0','".$date."','".$file_type."','Awaiting approval','".$user."','0',NULL,'".$licence."','0','0','0','0','".$nature."','".$format."','".$sub_nature."','ToBeDefined','".$img."')";
-										$query_caricamento = mysqli_query($connessione_al_server,$query) or die ("Creazione record non riuscita".mysqli_error($connessione_al_server));
+											$query_caricamento = insert_uploaded_file_basic(
+												$connessione_al_server,
+												$name . ".json",
+												$description,
+												"0",
+												$date,
+												$file_type,
+												"Awaiting approval",
+												$user,
+												"0",
+												$licence,
+												$nature,
+												$sub_nature,
+												"ToBeDefined",
+												$img,
+												$format
+											);
+											if (!$query_caricamento) {
+												die("Creazione record non riuscita" . mysqli_error($connessione_al_server));
+											}
 										$url = "http://localhost:8983/solr/collection1/dataimport?command=full-import";
 										url_get($url);
 										if($query_caricamento)
@@ -690,6 +868,7 @@ if(isset($_POST)){
 									//header('Access-Control-Allow-Origin: *');
 									//http_response_code(500);
 									
+										}
 										}
 									}
 									else
@@ -744,7 +923,8 @@ if(isset($_POST)){
 						
 									$sub_nature = mysqli_real_escape_string($link, $request->sub_nature);
 									$nature = mysqli_real_escape_string($link, $request->nature);
-									$title = mysqli_real_escape_string($link, $request->name);
+									$title_raw = isset($request->name) ? $request->name : '';
+									$title = mysqli_real_escape_string($link, $title_raw);
 									$licence = mysqli_real_escape_string($link, $request->licence);
 									$description = mysqli_real_escape_string($link, $request->description);
 									$file_type = $app_type;
@@ -794,9 +974,12 @@ if(isset($_POST)){
 													//
 													}
 													//
-													if (isset($title)){
-															$micro_name =$title;
-															}else{
+													if ($title_raw !== '') {
+															$micro_name = sanitize_filename($title_raw);
+															if ($micro_name === '' || $micro_name === '.' || $micro_name === '..') {
+																$micro_name = "GenericMicroService";
+															}
+															} else {
 															$micro_name = "GenericMicroService";	
 														}
 													
@@ -977,20 +1160,39 @@ if(isset($_POST)){
 									{
 										$access=$request->acces;
 									}
-									if(!isset($request->format))
-									{
-										$format="json";
-										$query="INSERT INTO processloader_db.uploaded_files (Id,File_name,Description,User,Creation_date,file_type,status,Username,Public,Date_of_publication,License,Download_number,Votes,Average_stars,Total_stars,Category,Format,Resource_input,Protocol,Method,Url,Help,Img,Html,Js)VALUES (NULL,'".$nome_download."','".$description."','0','".$date."','".$file_type."','OK - ".$date."','".$user."','0',NULL,'".$licence."','0','0','0','0','".$nature."','".$format."','".$sub_nature."','".$access."','".$method."','".$url."','".$help."','".$img."','".$contentHtml."','".$contentjs."')";
-
-										
-									}
-									else
-									{
-										$format=$request->format;
-										$query="INSERT INTO processloader_db.uploaded_files (Id,File_name,Description,User,Creation_date,file_type,status,Username,Public,Date_of_publication,License,Download_number,Votes,Average_stars,Total_stars,Category,Format,Resource_input,Protocol,Method,Url,Help,Img,Html,Js)VALUES (NULL,'".$nome_download."','".$description."','0','".$date."','".$file_type."','OK - ".$date."','".$user."','0',NULL,'".$licence."','0','0','0','0','".$nature."','".$format."','".$sub_nature."','".$access."','".$method."','".$url."','".$help."','".$img."','".$contentHtml."','".$contentjs."')";
-
-									}
-									$query_caricamento = mysqli_query($connessione_al_server,$query) or die ("Creazione record non riuscita".mysqli_error($connessione_al_server));
+										if(!isset($request->format))
+										{
+											$format = "json";
+										}
+										else
+										{
+											$format = $request->format;
+										}
+										$query_caricamento = insert_uploaded_file_microservice(
+											$connessione_al_server,
+											$nome_download,
+											$description,
+											"0",
+											$date,
+											$file_type,
+											"OK - " . $date,
+											$user,
+											"0",
+											$licence,
+											$nature,
+											$format,
+											$sub_nature,
+											$access,
+											$method,
+											$url,
+											$help,
+											$img,
+											$contentHtml,
+											$contentjs
+										);
+										if (!$query_caricamento) {
+											die("Creazione record non riuscita" . mysqli_error($connessione_al_server));
+										}
 									$url = "http://localhost:8983/solr/collection1/dataimport?command=full-import";
 									url_get($url);
 									if($query_caricamento)
@@ -1056,6 +1258,3 @@ if(isset($_POST)){
     echo json_encode($response);
 }
 ?>
-
-
-

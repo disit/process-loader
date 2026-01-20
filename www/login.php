@@ -20,8 +20,14 @@ include("ssoLogin.php");
 
 if($ldapOk == false){
 			echo('<script type="text/javascript">alert(no LDAP);</script>');
-			$query= ("SELECT * FROM users WHERE Username='".$_POST["username"]."' AND password ='".md5($_POST["password"])."'");
-			$query_login = mysqli_query($connessione_al_server,$query) or die ("Login non riuscito".mysqli_error($connessione_al_server));
+			$password_hash = md5($_POST["password"]);
+			$stmt = mysqli_prepare($connessione_al_server, "SELECT * FROM users WHERE Username=? AND password=?");
+			if (!$stmt) {
+				die("Login non riuscito" . mysqli_error($connessione_al_server));
+			}
+			mysqli_stmt_bind_param($stmt, "ss", $_POST["username"], $password_hash);
+			mysqli_stmt_execute($stmt);
+			$query_login = mysqli_stmt_get_result($stmt);
 			if(mysqli_num_rows($query_login)>0){
 			while ($row = mysqli_fetch_array($query_login)) {
 				//creazione variabile $_SESSION
@@ -29,9 +35,11 @@ if($ldapOk == false){
 				$_SESSION['username']= $row['Username'];
 				$_SESSION['role']= $row['Role'];
 			}
+			}
+			mysqli_stmt_close($stmt);
 			if(isset($_SESSION['username'])){
 				header("location:page.php?pageTitle=Process%20Loader:%20View%20Resources"); 
-		}
+			}
 		}else{
 			$_SESSION['error_log']="Error Log";
 			header("location:page.php?pageTitle=Process%20Loader:%20View%20Resources");

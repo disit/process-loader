@@ -92,23 +92,35 @@ if (isset($_GET["page"])) {
 $start_from = ($page - 1) * $limit;
 
 
-if ($values != null) {
-    $value = "";
-    for ($i = 0; $i < count($values); $i++) {
-        if ($i == count($values) - 1) {
-            $value = $value . "'" . $values[$i] . "'";
-        } else {
-            $value = $value . "'" . $values[$i] . "'" . " OR status=";
-        }
-        
-    }
-    $query = "SELECT * FROM ServicePhoto WHERE status=$value ";
-} else {
-    $query = "SELECT * FROM ServicePhoto ";
+if (!is_array($values) || count($values) === 0) {
+    $values = null;
 }
-
-
-$result = mysqli_query($link, $query) or die(mysqli_error($link));
+if ($values !== null) {
+    $values = array_values(array_filter($values, 'strlen'));
+    if (count($values) > 0) {
+        $placeholders = implode(',', array_fill(0, count($values), '?'));
+        $query = "SELECT * FROM ServicePhoto WHERE status IN ($placeholders)";
+        $stmt = mysqli_prepare($link, $query);
+        if (!$stmt) {
+            die(mysqli_error($link));
+        }
+        $types = str_repeat('s', count($values));
+        $bind_params = array_merge(array($types), $values);
+        $refs = array();
+        foreach ($bind_params as $k => &$v) {
+            $refs[$k] = &$v;
+        }
+        call_user_func_array('mysqli_stmt_bind_param', $refs);
+        mysqli_stmt_execute($stmt);
+        $result = mysqli_stmt_get_result($stmt);
+    } else {
+        $query = "SELECT * FROM ServicePhoto";
+        $result = mysqli_query($link, $query) or die(mysqli_error($link));
+    }
+} else {
+    $query = "SELECT * FROM ServicePhoto";
+    $result = mysqli_query($link, $query) or die(mysqli_error($link));
+}
 $list = array();
 $num  = $result->num_rows;
 
@@ -154,6 +166,10 @@ $total_pages0   = ceil($total_records0 / $limit);
 $prev_page0     = $page0 - 1;
 $suc_page0      = $page0 + 1;
 $corr_page0     = $page0;
+if (isset($stmt)) {
+    mysqli_stmt_close($stmt);
+    unset($stmt);
+}
 ?>
 
 

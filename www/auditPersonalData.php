@@ -32,15 +32,25 @@ if (isset ($_SESSION['username'])){
  $role_att= "";	
 }
 
-if (isset($_GET['orderBy'])){
-$order = $_GET['orderBy'];
-}else{
-$order = 'id';	
+$allowed_order = array(
+	'id',
+	'time',
+	'username',
+	'app_name',
+	'delegated_username',
+	'delegated_app_name',
+	'source_request',
+	'variable_name',
+	'motivation',
+	'access_type',
+	'domain'
+);
+$order = isset($_GET['orderBy']) ? $_GET['orderBy'] : 'id';
+if (!in_array($order, $allowed_order, true)) {
+	$order = 'id';
 }
-
-if (isset($_GET['order'])){
-	$by = $_GET['order'];
-}else{
+$by = isset($_GET['order']) ? strtoupper($_GET['order']) : 'DESC';
+if ($by !== 'ASC' && $by !== 'DESC') {
 	$by = 'DESC';
 }
 
@@ -60,280 +70,189 @@ if (!isset($_GET['pageTitle'])){
 	$default_title = "";
 }
 
-if (isset($_GET['user'])||$_GET['user'] !==""){
-	//$user = $_GET['user'];
+if (isset($_GET['user'])){
 	$user_lab = $_GET['user'];
 	$user_trim = str_replace(' ','',$user_lab); 
-	//$user = "username LIKE '%".$_GET['user']."%' ";
-	$user = "username LIKE '%".$user_trim."%' ";
 }else{
-	//$user = "username LIKE '%%'	";
-	$user = "";
+	$user_lab = "";
+	$user_trim = "";
 }
-if ($_GET['user'] ==""){
-	//$user = "username LIKE '%%' ";
-	$user = "";
-	$user_lab ="";
-}
+$user = $user_trim !== "" ? $user_trim : "";
 
-if (isset($_GET['appName'])||$_GET['appName'] !==""){
+if (isset($_GET['appName'])){
 	$appN_lab = $_GET['appName'];
 	$appN_trim = str_replace(' ','',$appN_lab); 
-	$appN = " app_name LIKE '%".$appN_trim."%'	";
-	//$appN = " app_name LIKE '%".$_GET['appName']."%'	";
 }else{
-	$appN = "";
-}
-if ($_GET['appName'] == ""){
-	$appN = "";
 	$appN_lab = "";
+	$appN_trim = "";
 }
+$appN = $appN_trim !== "" ? $appN_trim : "";
 
-if(isset($_GET['accesstype'])||$_GET['accesstype'] !==""){
+if (isset($_GET['accesstype'])){
 	$accessType_lab=$_GET['accesstype'];
 	$accessType_lab_trim = str_replace(' ','',$accessType_lab); 
-	$accesstype = " access_type ='".$accessType_lab_trim."'";
-	//$accesstype = " access_type ='".$_GET['accesstype']."'";
 }else{
-	$accesstype = "";
-}
-
-if ($_GET['accesstype']==""){
-	$accesstype = "";
 	$accessType_lab = "";
+	$accessType_lab_trim = "";
 }
+$accesstype = $accessType_lab_trim !== "" ? $accessType_lab_trim : "";
 
-if (isset($_GET['sourceRequest'])||$_GET['sourceRequest'] !==""){
-	$sourceRequest = " source_request ='".$_GET['sourceRequest']."'";
+if (isset($_GET['sourceRequest'])){
 	$sourceRequest_lab = $_GET['sourceRequest'];
 }else{
-	$sourceRequest = "";
-}
-
-if ($_GET['sourceRequest'] ==""){
-	$sourceRequest = "";
 	$sourceRequest_lab = "";
 }
+$sourceRequest = $sourceRequest_lab !== "" ? $sourceRequest_lab : "";
 
-if (isset($_GET['varN'])||$_GET['varN'] !==""){
+if (isset($_GET['varN'])){
 	$varN_lab = $_GET['varN'];
 	$varN_lab_trim = str_replace(' ','',$varN_lab); 
-	//$varN = " variable_name LIKE'%".$_GET['varN']."%'	";
-	$varN = " variable_name LIKE'%".$varN_lab_trim."%'	";
 }else{
-	$varN = "";
 	$varN_lab = "";
+	$varN_lab_trim = "";
 }
+$varN = $varN_lab_trim !== "" ? $varN_lab_trim : "";
 
-if(isset($_GET['domain'])||$_GET['domain'] !==""){
-	$domain= "domain='".$_GET['domain']."'	";
-	$domain_lab=$_GET['domain'];
+if(isset($_GET['domain'])){
+	$domain_lab = $_GET['domain'];
 }else{
-	$domain= "";
-	$domain_lab="";
+	$domain_lab = "";
 }
+$domain = $domain_lab !== "" ? $domain_lab : "";
 
-if ($_GET['domain'] == ""){
-	$domain = "";
-	$domain_lab="";
-}
-
-if ($_GET['varN'] == ""){
-	$varN = "";
-	$varN_lab = "";
-}
-
-if (isset($_GET['mot'])||$_GET['mot'] !==""){
+if (isset($_GET['mot'])){
 	$mot_lab = $_GET['mot'];
-	$mot = "motivation LIKE '%".$_GET['mot']."%'	";
 }else{
-	$mot = "";
-	$mot_lab ="";
+	$mot_lab = "";
 }
+$mot = $mot_lab !== "" ? $mot_lab : "";
 
-if ($_GET['mot'] == ""){
-	$mot = "";
-	$mot_lab="";
-}
-
-if (isset($_GET['delUser'])||$_GET['delUser'] !==""){
-	//$delUser = " delegated_username LIKE '%".$_GET['delUser']."%'	";
+if (isset($_GET['delUser'])){
 	$delUser_lab = $_GET['delUser'];
 	$delUser_trim = str_replace(' ','',$delUser_lab); 
-	$delUser = " delegated_username LIKE '%".$delUser_trim."%'	";
 }else{
-	$delUser = "";
-	$delUser_lab ="";
+	$delUser_lab = "";
+	$delUser_trim = "";
 }
+$delUser = $delUser_trim !== "" ? $delUser_trim : "";
 
-if (isset($_GET['delApp'])||$_GET['delApp'] !==""){
+if (isset($_GET['delApp'])){
 	$delApp_lab=$_GET['delApp'];
 	$delApp_trim = str_replace(' ','',$delApp_lab); 
-	$delApp = " delegated_app_name LIKE '%".$delApp_trim."%'	";
-	
 }else{
-	$delApp = "";
-	$delApp_lab="";
+	$delApp_lab = "";
+	$delApp_trim = "";
 }
-
-if ($_GET['delUser'] ==""){
-	$delUser = "";
-	$delUser_lab = "";
-}
-
-if ($_GET['delApp'] ==""){
-	$delApp = "";
-}
+$delApp = $delApp_trim !== "" ? $delApp_trim : "";
 
 //$total_rows = 0;
-if (isset($_GET['limit'])|| $_GET['limit']!==""){
-$limit=$_GET['limit'];
-}else{
-$limit = 10;  
-}
-if ($_GET['limit'] == ""){
-$limit = 10;  
+$limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 10;
+if ($limit <= 0) {
+	$limit = 10;
 }
 
-if (isset($_GET["page"])) { 
-		$page  = $_GET["page"]; 
-	} else { 
-		$page=1; 
-	};  
+$page = isset($_GET["page"]) ? (int)$_GET["page"] : 1;
+if ($page <= 0) {
+	$page = 1;
+}
 $start_from = ($page-1) * $limit; 
 
-if (isset($_GET["start"])||$_GET["start"] !=""){
-	$start_lab = $_GET["start"];
-	$start_d = "time>='". $_GET["start"]."'	";
-}else{
-	$start_d = "";
-	$start_lab ="";
-}
-
-if ($_GET["start"] == ""){
-	$start_d ="";
-	$start_lab ="";
-}
-
-if (isset($_GET["end"])|| $_GET["end"] !=""){
-	$end_d ="time<='".$_GET["end"]."'";
-	$end_lab=$_GET['end'];
-}else{
-	$end_d = "";
-}
-if ($_GET["end"] == ""){
-	$end_d ="";
-	$end_lab="";
-}
+$start_lab = isset($_GET["start"]) ? $_GET["start"] : "";
+$end_lab = isset($_GET["end"]) ? $_GET["end"] : "";
 
 $query_n = "SELECT activity.* FROM profiledb.activity";
-$query_count = "select COUNT(*) FROM profiledb.activity";
+$query_count = "SELECT COUNT(*) AS cnt FROM profiledb.activity";
+$filters = array();
+$params = array();
+$types = "";
 //Controlla//
 //if (isset($_GET['user'])||isset($_GET['appName'])||isset($_GET['varN'])||isset($_GET['mot'])||isset($_GET["start"])||isset($_GET["end"])){
-if (($user_lab !="")||($appN_lab != "")||($varN_lab !="")||($mot_lab !="")||($start_lab !="")||($end_lab !="")||($domain_lab!="")||($accessType_lab!="")||($sourceRequest_lab!="")||($delApp_lab!="")||($delUser_lab !="")){
-	//$query_n = $query_n . "WHERE activity.id >0 ";
-	$query_n = $query_n . "	WHERE ";
-	$query_count = $query_count . "	WHERE ";
-///
-if ($user != ""){
-	$query_n = $query_n . $user;
-	$query_count = $query_count . $user;
+if ($user != "") {
+	$filters[] = "username LIKE ?";
+	$params[] = "%".$user."%";
+	$types .= "s";
 }
-if ($start_d !=""){
-	if ($user != ""){
-	$query_n = $query_n . 'AND	';
-	$query_count = $query_count . 'AND	';	
-	}
-	$query_n = $query_n . $start_d;
-	$query_count = $query_count . $start_d;	
+if ($start_lab != "") {
+	$filters[] = "time >= ?";
+	$params[] = $start_lab;
+	$types .= "s";
 }
-if ($end_d !=""){
-	if (($user != "")||($start_d !="")){
-	$query_n = $query_n . 'AND	';
-	$query_count = $query_count . 'AND	';		
-	}
-	$query_n = $query_n . $end_d;
-	$query_count = $query_count . $end_d;	
+if ($end_lab != "") {
+	$filters[] = "time <= ?";
+	$params[] = $end_lab;
+	$types .= "s";
 }
-if ($varN !=""){
-	if (($user != "")||($start_d !="")||($end_d !="")){
-	$query_n = $query_n . 'AND	';
-	$query_count = $query_count . 'AND	';
-	}
-	$query_n = $query_n . $varN;
-	$query_count = $query_count . $varN;
+if ($varN != "") {
+	$filters[] = "variable_name LIKE ?";
+	$params[] = "%".$varN."%";
+	$types .= "s";
 }
-if ($appN !=""){
-	if (($user != "")||($start_d !="")||($end_d !="")||($varN !="")){
-	$query_n = $query_n . 'AND	';
-	$query_count = $query_count . 'AND	';	
-	}
-	$query_n = $query_n . $appN;
-	$query_count = $query_count . $appN;
+if ($appN != "") {
+	$filters[] = "app_name LIKE ?";
+	$params[] = "%".$appN."%";
+	$types .= "s";
 }
-if ($mot !=""){
-	if (($user != "")||($start_d !="")||($end_d !="")||($appN !="")||($varN !="")){
-	$query_n = $query_n . 'AND	';	
-	$query_count = $query_count . 'AND	';
-	}
-	$query_n = $query_n . $mot;
-	$query_count = $query_count . $mot;
+if ($mot != "") {
+	$filters[] = "motivation LIKE ?";
+	$params[] = "%".$mot."%";
+	$types .= "s";
 }
-if ($domain !=""){
-	if (($user != "")||($start_d !="")||($end_d !="")||($appN !="")||($varN !="")||($mot !="")){
-	$query_n = $query_n . 'AND	';
-	$query_count = $query_count . 'AND	';
-	}
-	$query_n = $query_n . $domain;
-	$query_count = $query_count . $domain;
+if ($domain != "") {
+	$filters[] = "`domain` = ?";
+	$params[] = $domain;
+	$types .= "s";
 }
-if ($accesstype != ""){
-	if (($user != "")||($start_d !="")||($end_d !="")||($appN !="")||($varN !="")||($mot !="")||($domain !="")){
-	$query_n = $query_n . 'AND	';	
-	$query_count = $query_count . 'AND	';
-	}
-	$query_n = $query_n . $accesstype;
-	$query_count = $query_count . $accesstype;
+if ($accesstype != "") {
+	$filters[] = "access_type = ?";
+	$params[] = $accesstype;
+	$types .= "s";
 }
-if ($delApp != ""){
-	if (($user != "")||($start_d !="")||($end_d !="")||($appN !="")||($varN !="")||($mot !="")||($domain !="")||($accesstype != "")){
-	$query_n = $query_n . 'AND	';
-	$query_count = $query_count . 'AND	';	
-	}
-	$query_n = $query_n . $delApp;
-	$query_count = $query_count . $delApp;
+if ($delApp != "") {
+	$filters[] = "delegated_app_name LIKE ?";
+	$params[] = "%".$delApp."%";
+	$types .= "s";
 }
-if ($delUser != ""){
-	if (($user != "")||($start_d !="")||($end_d !="")||($appN !="")||($varN !="")||($mot !="")||($domain !="")||($delApp != "")||($accesstype != "")){
-	$query_n = $query_n . 'AND	';
-	$query_count = $query_count . 'AND	';	
-	}
-	$query_n = $query_n . $delUser;
-	$query_count = $query_count . $delUser;
+if ($delUser != "") {
+	$filters[] = "delegated_username LIKE ?";
+	$params[] = "%".$delUser."%";
+	$types .= "s";
+}
+if ($sourceRequest != "") {
+	$filters[] = "source_request = ?";
+	$params[] = $sourceRequest;
+	$types .= "s";
 }
 
-if ($sourceRequest != ""){
-	if (($user != "")||($start_d !="")||($end_d !="")||($appN !="")||($varN !="")||($mot !="")||($domain !="")||($delUser != "")||($delApp != "")||($accesstype != "")){
-	$query_n = $query_n . 'AND	';	
-	$query_count = $query_count . 'AND	';
-	}
-	$query_n = $query_n . $sourceRequest;
-	$query_count = $query_count . $sourceRequest;
-}
-/////  OTTENRERE IL TOTAL ROWS  //////
-}
-
-//$total_rows_query = $query_n;
 $total_rows_query = $query_count;
-/////
-$query_n = $query_n . "	ORDER BY ".$order." ".$by." LIMIT ".$start_from.", ".$limit.";";
+if (count($filters) > 0) {
+	$where = " WHERE " . implode(" AND ", $filters);
+	$query_n .= $where;
+	$total_rows_query .= $where;
+}
+$query_n .= " ORDER BY ".$order." ".$by." LIMIT ?, ?";
 //echo ($query_n);
 ///
 $link = mysqli_connect($host, $username, $password) or die("failed to connect to server !!");
 mysqli_set_charset($link, 'utf8');
 mysqli_select_db($link, $dbname);
 
-$result = mysqli_query($link, $query_n) or die(mysqli_error($link));
+$stmt = mysqli_prepare($link, $query_n) or die(mysqli_error($link));
+$params_n = $params;
+$params_n[] = $start_from;
+$params_n[] = $limit;
+$types_n = $types . "ii";
+if ($types_n !== "ii") {
+	$bind = array_merge(array($types_n), $params_n);
+	$refs = array();
+	foreach ($bind as $k => &$v) {
+		$refs[$k] = &$v;
+	}
+	call_user_func_array('mysqli_stmt_bind_param', $refs);
+} else {
+	mysqli_stmt_bind_param($stmt, "ii", $params_n[0], $params_n[1]);
+}
+mysqli_stmt_execute($stmt);
+$result = mysqli_stmt_get_result($stmt);
 $process_list = array();
 $num_rows = $result->num_rows;
 
@@ -345,7 +264,17 @@ $num_rows = $result->num_rows;
 				}
 	}
 	
-$result0 = mysqli_query($link, $total_rows_query) or die(mysqli_error($link));
+$stmt_count = mysqli_prepare($link, $total_rows_query) or die(mysqli_error($link));
+if ($types !== "") {
+	$bind_count = array_merge(array($types), $params);
+	$refs_count = array();
+	foreach ($bind_count as $k => &$v) {
+		$refs_count[$k] = &$v;
+	}
+	call_user_func_array('mysqli_stmt_bind_param', $refs_count);
+}
+mysqli_stmt_execute($stmt_count);
+$result0 = mysqli_stmt_get_result($stmt_count);
 		//$total_rows = $result0->num_rows;
 		///////////
 				$count_list = array();
@@ -355,7 +284,7 @@ $result0 = mysqli_query($link, $total_rows_query) or die(mysqli_error($link));
 					}
 				}
 				//var_dump($count_list);
-				$total_rows = $count_list[0]["COUNT(*)"];
+					$total_rows = $count_list[0]["cnt"];
 		////////////
 	
 //
@@ -375,6 +304,8 @@ $lun_sr = count($array_sr);
 //var_dump($array_sr);
 //
 
+mysqli_stmt_close($stmt);
+mysqli_stmt_close($stmt_count);
 mysqli_close($link);
 //	
 ?>

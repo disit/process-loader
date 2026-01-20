@@ -4,6 +4,11 @@ include('config.php'); // Includes Login Script
 include('control.php');
 
 include("curl.php");
+
+function h($value)
+{
+	return htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8');
+}
 // funzione per aggiornare il numero di download
 function update_down()
 {
@@ -678,46 +683,63 @@ $total=$response_array->offsetGet('response')->numFound;
 			$per='yes';}
 
 	// echo che stampa html con visualizzazione risultati ricerca
+		$id = (int)$row3b->Id;
+		$download_number = (int)$row3b->Download_number;
+		$votes = (int)$row3b->Votes;
+		$avg_stars = h($row3b->Average_stars);
+		$username_safe = h($row3b->username);
+		$file_name_raw = (string)$row3b->File_name;
+		$file_name_safe = h($file_name_raw);
+		$description_safe = h($row3b->Description);
+		$img_safe = h($row3b['Img']);
+		$resource_input_safe = h($row3b->Resource_input);
+		$category_safe = h($row3b->Category);
+		$protocol_safe = h($row3b->Protocol);
+		$license_safe = h($row3b->license);
+		$file_type_safe = isset($row3b->file_type[0]) ? h($row3b->file_type[0]) : '';
+		$date_safe = h($data3);
+		$href = 'uploads/' . rawurlencode($us) . '/' . rawurlencode($data6) . '/' . rawurlencode($file1[0]) . '/' . rawurlencode($file_name_raw);
+
 		echo('<div  class="container" >
 		<div class="row" >
 			<div class="list-group" >
 				<div class="list-group-item clearfix " >
 					<div class="profile-teaser-left" style="float: left; width: 25%; margin-right: 1%;">
-						<div class="profile-img"><img style="width: 180px; height: 180px;" src="'.$row3b['Img'].'"/></div>
+						<div class="profile-img"><img style="width: 180px; height: 180px;" src="'.$img_safe.'"/></div>
 					</div>
 					<div class="profile-teaser-main" style="    float: left; width: 74%;">
-						<h2 class="profile-name"><a onclick="agg_down('.$row3b->Id.','.$row3b->Download_number.')" href="uploads/'.$us.'/'.$data6.'/'.$file1[0].'/'.$row3b->File_name.' " class="file_archive_link">'.$row3b->File_name.'</a></h2>
+						<h2 class="profile-name"><a onclick="agg_down('.$id.','.$download_number.')" href="'.$href.' " class="file_archive_link">'.$file_name_safe.'</a></h2>
 						<div class="profile-info">
-							<div class="user_id" name='.$row3b->username.' style={display:"none"}></div>
-							<div class="proc_id" name='.$row3b->Id.' style={display:"none"}></div>
-							<div class="info" style="display: inline-block; margin-right: 10px; color: #777; "><span class="" style="font-weight: bold;">User:</span> ' .$row3b->username. '</div>
-							<div class="info" style="display: inline-block; margin-right: 10px; color: #777; "><span class="" style="font-weight: bold;">Description:</span> ' .$row3b->Description. '</div>
-							<div class="info" style="display: inline-block; margin-right: 10px; color: #777; "><span class="" style="font-weight: bold;">Downloads:</span> ' .$row3b->Download_number. '</div>
-							<div class="info" style="display: inline-block; margin-right: 10px; color: #777; "><span class="" style="font-weight: bold;">Votes:</span> ' .$row3b->Votes. '</div>
-							<div>    <input id="'.$row3b->Id.'" "value="0" onclick="agg_down('.$row3b->Id.','.$row3b->Download_number.')" type="number" class="rating" min=0 max=5 step=0.5 data-size="xs" data-stars="5" data-show-caption="false"></div>
-							<div ><span style="color:blue" data-toggle="modal" data-target="#info-modal_proc'.$row3b->Id.'" id="hovers"">View Details</span></div>
+							<div class="user_id" name="'.$username_safe.'" style={display:"none"}></div>
+							<div class="proc_id" name="'.$id.'" style={display:"none"}></div>
+							<div class="info" style="display: inline-block; margin-right: 10px; color: #777; "><span class="" style="font-weight: bold;">User:</span> ' .$username_safe. '</div>
+							<div class="info" style="display: inline-block; margin-right: 10px; color: #777; "><span class="" style="font-weight: bold;">Description:</span> ' .$description_safe. '</div>
+							<div class="info" style="display: inline-block; margin-right: 10px; color: #777; "><span class="" style="font-weight: bold;">Downloads:</span> ' .$download_number. '</div>
+							<div class="info" style="display: inline-block; margin-right: 10px; color: #777; "><span class="" style="font-weight: bold;">Votes:</span> ' .$votes. '</div>
+							<div>    <input id="'.$id.'" "value="0" onclick="agg_down('.$id.','.$download_number.')" type="number" class="rating" min=0 max=5 step=0.5 data-size="xs" data-stars="5" data-show-caption="false"></div>
+							<div ><span style="color:blue" data-toggle="modal" data-target="#info-modal_proc'.$id.'" id="hovers"">View Details</span></div>
 						</div>
 					</div>
 				</div><!-- item -->
 				
 		<!-- Modal info sul processo-->
 		
-		<div class="modal fade" id="info-modal_proc'.$row3b->Id.'" role="dialog">
+		<div class="modal fade" id="info-modal_proc'.$id.'" role="dialog">
 		<div class="modal-dialog"> 
 		<div class="modal-content">
 			<div class="modal-header">
 			  <button type="button" class="close" data-dismiss="modal">&times;</button>
-			  <h4 class="modal-title">Details of file: '.$row3b->File_name.'</h4>
+			  <h4 class="modal-title">Details of file: '.$file_name_safe.'</h4>
 			</div>
 			<div class="modal-body">
 					 <center>
-						<img src="'.$row3b->Img.'" height="50%" width="50%" border="0" ></a>
+						<img src="'.$img_safe.'" height="50%" width="50%" border="0" ></a>
 						 <div class="row">
-							<h4>File name: <span>'.$row3b->File_name.'</span></h4>
+							<h4>File name: <span>'.$file_name_safe.'</span></h4>
 							<h4>Rating:</h4>
 							<div class="rating">
-							 <input id="input" name="input"  class="rating-loading" step="0.1 "value="'.$row3b->Average_stars.'">
-								( mean '.$row3b->Average_stars.' on '.$row3b->Votes.' votes)
+							 <input id="input" name="input"  class="rating-loading" step="0.1 "value="'.$avg_stars.'">
+								( mean '.$avg_stars.' on '.$votes.' votes)
 							</div>
 							<!--
 							<h4>Description:</h4>
@@ -746,16 +768,16 @@ $total=$response_array->offsetGet('response')->numFound;
 							 -->
 							<!--Organizzazione DATI -->
 							<ul class="list-group">
-									<li class="list-group-item"><b>Description: </b>'.$row3b->Description.'</li>
-									<li class="list-group-item"><b>User: </b>'.$row3b->username.'</li>
-									<li class="list-group-item"><b>File type: </b>'.$row3b->file_type[0].'</li>
-									<li class="list-group-item"><b>Resource: </b>'.$row3b->Resource_input.'</li>
-									<li class="list-group-item"><b>Category: </b>'.$row3b->Category.'</li>
-									<li class="list-group-item"><b>Protocol: </b>'.$row3b->Protocol.'</li>
+									<li class="list-group-item"><b>Description: </b>'.$description_safe.'</li>
+									<li class="list-group-item"><b>User: </b>'.$username_safe.'</li>
+									<li class="list-group-item"><b>File type: </b>'.$file_type_safe.'</li>
+									<li class="list-group-item"><b>Resource: </b>'.$resource_input_safe.'</li>
+									<li class="list-group-item"><b>Category: </b>'.$category_safe.'</li>
+									<li class="list-group-item"><b>Protocol: </b>'.$protocol_safe.'</li>
 									<li class="list-group-item"><b>Real-time: </b>'.$rt.'</li>
 									<li class="list-group-item"><b>Periodic: </b>'.$per.'</li>
-									<li class="list-group-item"><b>Date_of_publication: </b>'.$data3.'</li>
-									<li class="list-group-item"><b>License: </b>'.$row3b->license.'</li>
+									<li class="list-group-item"><b>Date_of_publication: </b>'.$date_safe.'</li>
+									<li class="list-group-item"><b>License: </b>'.$license_safe.'</li>
 								</ul>
 							
 							<!-- Fine Organizzazione-->
@@ -884,7 +906,15 @@ If the user enters incorrect fields in the text search, it will be returned an e
 
 <script type='text/javascript'>
 
-
+function escapeHtml(value) {
+	return String(value)
+		.replace(/&/g, '&amp;')
+		.replace(/</g, '&lt;')
+		.replace(/>/g, '&gt;')
+		.replace(/"/g, '&quot;')
+		.replace(/'/g, '&#39;')
+		.replace(/`/g, '&#96;');
+}
 
 $(document).ready(function(){  
  //funzione per mantenere i menù aperti
@@ -954,7 +984,13 @@ $(document).ready(function () {
 					var file_n =array_act[i]['name'];
 					var file1 = file_n.split(".");					
 					
-					$("#storico2").append('<tr><td class="file_id" >'+array_act[i]['id']+'</td><td><a onclick="agg_down('+array_act[i]['id']+','+array_act[i]['downloads']+')" href="uploads/'+us+'/'+data4+'/'+file1[0]+'/'+array_act[i]['name']+' " class="file_archive_link">'+array_act[i]['name']+'</a></td><td>'+array_act[i]['description']+'</td><td class="file_id" >'+array_act[i]['user']+'</td><td class="file_id" >'+array_act[i]['downloads']+'</td></tr>');
+					var safeId = Number(array_act[i]['id']) || 0;
+					var safeDownloads = Number(array_act[i]['downloads']) || 0;
+					var safeName = escapeHtml(array_act[i]['name']);
+					var safeDescription = escapeHtml(array_act[i]['description']);
+					var safeUser = escapeHtml(array_act[i]['user']);
+					var href = 'uploads/' + encodeURIComponent(us) + '/' + encodeURIComponent(data4) + '/' + encodeURIComponent(file1[0]) + '/' + encodeURIComponent(array_act[i]['name']);
+					$("#storico2").append('<tr><td class="file_id" >'+safeId+'</td><td><a onclick="agg_down('+safeId+','+safeDownloads+')" href="'+href+' " class="file_archive_link">'+safeName+'</a></td><td>'+safeDescription+'</td><td class="file_id" >'+safeUser+'</td><td class="file_id" >'+safeDownloads+'</td></tr>');
 					}
 				}
 		});

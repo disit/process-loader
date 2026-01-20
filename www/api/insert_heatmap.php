@@ -43,19 +43,22 @@ $request = json_decode(file_get_contents('php://input'));
 						$date = $request->heatmap_date;
 						$points = $request-> points;
 						//
-						$query = "INSERT INTO ".$dbname_heatmap.".heatmap (id, name, unit, type, comment,x1y1,x2y2) VALUES (NULL,'".$name."','".$unit."','".$type."','".$comment."','".$x1y1."','".$x2y2."')";
-						$result = mysqli_query($link, $query) or die(mysqli_error($link));
+							$query = "INSERT INTO ".$dbname_heatmap.".heatmap (id, name, unit, type, comment, x1y1, x2y2) VALUES (NULL,?,?,?,?,?,?)";
+							$stmt = mysqli_prepare($link, $query) or die(mysqli_error($link));
+							mysqli_stmt_bind_param($stmt, "ssssss", $name, $unit, $type, $comment, $x1y1, $x2y2);
+							$result = mysqli_stmt_execute($stmt);
+							mysqli_stmt_close($stmt);
 						/////
 						if($result == 1){
-						$query_max = "SELECT max(id) FROM ".$dbname_heatmap.".heatmap;";
-						$result_max = mysqli_query($link, $query_max) or die(mysqli_error($link));
-						$id_max=0;
+							$query_max = "SELECT max(id) AS max_id FROM ".$dbname_heatmap.".heatmap;";
+							$result_max = mysqli_query($link, $query_max) or die(mysqli_error($link));
+							$id_max=0;
 						//
 						//
 						if ($result_max == 1){
-							while ($row = mysqli_fetch_array($result_max)) {
-								$id_max = $row['max(id)'];
-							}
+								while ($row = mysqli_fetch_array($result_max)) {
+									$id_max = $row['max_id'];
+								}
 							//
 							if(!is_array($points)){
 									$response['code'] = 400;
@@ -78,8 +81,15 @@ $request = json_decode(file_get_contents('php://input'));
 									$date_point = $date;
 								}
 								//
-								$query2 = "INSERT INTO ".$dbname_heatmap.".heatmap_values (id, heatmap_id, value,lat,lng,date) VALUES (NULL, '".$id_max."', '".$valore."','".$lat."','".$lng."','".$date_point."')";
-								$result2 = mysqli_query($link, $query2) or die(mysqli_error($link));
+									$query2 = "INSERT INTO ".$dbname_heatmap.".heatmap_values (id, heatmap_id, value,lat,lng,date) VALUES (NULL,?,?,?,?,?)";
+									$stmt2 = mysqli_prepare($link, $query2) or die(mysqli_error($link));
+									$id_max_int = (int)$id_max;
+									$valore_num = (float)$valore;
+									$lat_num = (float)$lat;
+									$lng_num = (float)$lng;
+									mysqli_stmt_bind_param($stmt2, "iddds", $id_max_int, $valore_num, $lat_num, $lng_num, $date_point);
+									$result2 = mysqli_stmt_execute($stmt2);
+									mysqli_stmt_close($stmt2);
 								//
 							}
 							

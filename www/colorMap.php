@@ -59,49 +59,54 @@ $link = mysqli_connect($host_heatmap, $username_heatmap, $password_heatmap) or d
 mysqli_set_charset($link, 'utf8');
 mysqli_select_db($link, $dbname_heatmap);
 
-if (isset($_REQUEST['orderBy'])){
-$order = $_REQUEST['orderBy'];
-}else{
-$order = 'metric_name';	
+$allowed_order = array('metric_name');
+$order = isset($_REQUEST['orderBy']) ? $_REQUEST['orderBy'] : 'metric_name';
+if (!in_array($order, $allowed_order, true)) {
+	$order = 'metric_name';
 }
-
-if (isset($_REQUEST['order'])){
-	$by = $_REQUEST['order'];
-}else{
+$by = isset($_REQUEST['order']) ? strtoupper($_REQUEST['order']) : 'ASC';
+if ($by !== 'ASC' && $by !== 'DESC') {
 	$by = 'ASC';
 }
 
 $start_from = 0;
-if (isset($_REQUEST['limit'])|| $_REQUEST['limit']!==""){
-$limit=$_REQUEST['limit'];
-}else{
-$limit = 10;  
+$limit = isset($_REQUEST['limit']) ? (int)$_REQUEST['limit'] : 10;
+if ($limit <= 0) {
+	$limit = 10;
 }
 
-if ($_REQUEST['limit'] == ""){
-$limit = 10;  
+$page = isset($_REQUEST["page"]) ? (int)$_REQUEST["page"] : 1;
+if ($page <= 0) {
+	$page = 1;
 }
 
-if (isset($_REQUEST["page"])) { 
-		$page  = $_REQUEST["page"]; 
-	} else { 
-		$page=1; 
-	};  
-
-$filter = '';
-if (isset($_REQUEST["filter"])) { 
-	$filter  = $_REQUEST["filter"]; 
-} else { 
-	$filter= ''; 
-};  
+$filter = isset($_REQUEST["filter"]) ? $_REQUEST["filter"] : '';
 $start_from = ($page-1) * $limit; 
-if($filter != ''){
-$query_n = "SELECT DISTINCT colors.metric_name FROM heatmap.colors WHERE colors.metric_name LIKE '%" .$filter."%' ORDER BY colors.metric_name ".$by." LIMIT " . $start_from . ", " . $limit;
-}else{
-	$query_n = "SELECT DISTINCT colors.metric_name FROM heatmap.colors ORDER BY colors.metric_name ".$by." LIMIT " . $start_from . ", " . $limit;
+$query_n = "SELECT DISTINCT colors.metric_name FROM heatmap.colors";
+$params = array();
+$types = "";
+if ($filter !== '') {
+	$query_n .= " WHERE colors.metric_name LIKE ?";
+	$params[] = "%".$filter."%";
+	$types .= "s";
 }
-
-    $result = mysqli_query($link, $query_n) or die(mysqli_error($link));
+$query_n .= " ORDER BY colors.metric_name ".$by." LIMIT ?, ?";
+$params[] = $start_from;
+$params[] = $limit;
+$types .= "ii";
+$stmt = mysqli_prepare($link, $query_n) or die(mysqli_error($link));
+if ($types !== "ii") {
+	$bind = array_merge(array($types), $params);
+	$refs = array();
+	foreach ($bind as $k => &$v) {
+		$refs[$k] = &$v;
+	}
+	call_user_func_array('mysqli_stmt_bind_param', $refs);
+} else {
+	mysqli_stmt_bind_param($stmt, "ii", $params[0], $params[1]);
+}
+mysqli_stmt_execute($stmt);
+$result = mysqli_stmt_get_result($stmt);
     $process_list = array();
     $num_rows     = $result->num_rows;
     if ($result->num_rows > 0) {
@@ -114,17 +119,24 @@ $query_n = "SELECT DISTINCT colors.metric_name FROM heatmap.colors WHERE colors.
     }
 
 //
-if($filter != ''){
-	$query_n0 = "SELECT DISTINCT colors.metric_name FROM heatmap.colors WHERE colors.metric_name LIKE '%" .$filter."%'";
-}else{
-	$query_n0 = "SELECT DISTINCT colors.metric_name FROM heatmap.colors";
+$query_n0 = "SELECT COUNT(DISTINCT colors.metric_name) AS cnt FROM heatmap.colors";
+if ($filter !== '') {
+	$query_n0 .= " WHERE colors.metric_name LIKE ?";
 }
-$total_rows_query = $query_n0;
-$result0 = mysqli_query($link, $total_rows_query) or die(mysqli_error($link));
+$stmt_count = mysqli_prepare($link, $query_n0) or die(mysqli_error($link));
+if ($filter !== '') {
+	$filter_param = "%".$filter."%";
+	mysqli_stmt_bind_param($stmt_count, "s", $filter_param);
+}
+mysqli_stmt_execute($stmt_count);
+$result0 = mysqli_stmt_get_result($stmt_count);
 if ($result0->num_rows >0){
-$total_rows = $result0->num_rows;
+	$row0 = mysqli_fetch_assoc($result0);
+	$total_rows = (int)$row0['cnt'];
 }
 
+mysqli_stmt_close($stmt);
+mysqli_stmt_close($stmt_count);
 //LIST OF USERS
 $query_users = "SELECT * FROM heatmap.colormapUsers";
 $result_users = mysqli_query($link, $query_users) or die(mysqli_error($link));
@@ -515,8 +527,8 @@ $json_Auth_users = json_encode($data_Auth_users);
 									<!-- -->
 									<div class="input-group"><span class="input-group-addon">Color map Name: </span><input name="name_color_map" id="name_color_map" type="text" class="form-control" required="required"/></div>
 									<br />
-									<input id="filetype1" name="action" value="color_map_create" style="display: none;"></input>
-									<input type="text" name="count_rows0" id="count_rows0" value="0" readonly hidden></input>									
+									<input id="filetype1" name="action" value="color_map_create" hidden></input>
+									<input type="text" name="count_rows0" id="count_rows0" value="0" hidden></input>									
 									<!-- -->
 									<div>
 									<table id="colormap_table_create" class="table table-striped table-bordered">
@@ -944,11 +956,31 @@ $(document).on('click','#add_color0',function(){
 	//
 	var count_rows0 = $('#count_rows0').val();
 	var count = $('#colormap_table_create tbody tr').length;
+	console.log('count', count);
 	var min = count-1;
 		var cont2 = count+1;
-	
+
+	//
+	let items = $("[name^='paramMax0['][name$=']']").map(function () {
+			// Estrarre l'indice dal nome usando una regex
+			let match = $(this).attr("name").match(/paramMax0\[(\d+)\]/);
+			return match ? { index: parseInt(match[1]), value: $(this).val() } : null;
+		}).get();
+			
+		console.log('items',items); // Stampa un array di oggetti con indice e valore
+		var new_index = 0;
+		var current_index = 0;
+		if(items.length > 0){
+			let maxIndex = Math.max(...items
+				.filter(item => item && typeof item.index === 'number') // Filtra solo oggetti validi
+				.map(item => item.index) // Estrai l'indice
+			);
+			new_index = maxIndex+1;
+			current_index =maxIndex; 
+		}
+	//
 	if(min >= 0){
-			var value0 = $('input[name="paramMax0['+min+']"]').val();
+			var value0 = $('input[name="paramMax0['+current_index+']"]').val();
 			if(value0 == null){
 				value0 = "";
 			}
@@ -957,7 +989,8 @@ $(document).on('click','#add_color0',function(){
 	}
 	
 	//$('#colormap_table_create tbody').append('<tr><td class="hidden"></td><td><input type="text" class="form-control val_min ed_min" name="paramMin0['+count+']" id="val_min0" value="'+value0+'" readonly></input></td><td><input type="text" class="form-control val_max ed_max" id="val_max0" name="paramMax0['+count+']" value=""></input></td><td><div id="color-picker-rgb" class="input-group rgb_color"><input type="text" value="rgb(255,255,255)" class="form-control" name="paramRgb0['+count+']"/><span class="input-group-addon"><i></i></span></div></td><td><input name="paramColor0['+count+']" type="text" class="form-control" class="val_rgb" value="" required></input></td><td><input type="text" class="form-control" class="val_order" name="paramOrder0['+count+']" value="'+cont2+'"></input></td><td><button type="button" class="delDashBtn del_color1" value="'+count+'" data-target="" data-toggle="modal">DEL</button></td></tr>');
-	$('#colormap_table_create tbody').append('<tr><td class="hidden"></td><td><input type="text" class="form-control val_min ed_min" name="paramMin0['+count_rows0+']" id="val_min0" value="'+value0+'" readonly></input></td><td><input type="text" class="form-control val_max ed_max" id="val_max0" name="paramMax0['+count_rows0+']" value=""></input></td><td><div id="color-picker-rgb" class="input-group rgb_color"><input type="text" value="rgb(255,255,255)" class="form-control" name="paramRgb0['+count_rows0+']"/><span class="input-group-addon"><i></i></span></div></td><td><input name="paramColor0['+count_rows0+']" type="text" class="form-control" class="val_rgb" value="" required></input></td><td><input type="text" class="form-control" class="val_order" name="paramOrder0['+count_rows0+']" value="'+cont2+'"></input></td><td><button type="button" class="delDashBtn del_color0" value="'+count_rows0+'" data-target="" data-toggle="modal">DEL</button></td></tr>');
+	//$('#colormap_table_create tbody').append('<tr><td class="hidden"></td><td><input type="text" class="form-control val_min ed_min" name="paramMin0['+count_rows0+']" id="val_min0" value="'+value0+'" readonly></input></td><td><input type="text" class="form-control val_max ed_max" id="val_max0" name="paramMax0['+count_rows0+']" value=""></input></td><td><div id="color-picker-rgb" class="input-group rgb_color"><input type="text" value="rgb(255,255,255)" class="form-control" name="paramRgb0['+count_rows0+']"/><span class="input-group-addon"><i></i></span></div></td><td><input name="paramColor0['+count_rows0+']" type="text" class="form-control" class="val_rgb" value="" required></input></td><td><input type="text" class="form-control" class="val_order" name="paramOrder0['+count_rows0+']" value="'+cont2+'"></input></td><td><button type="button" class="delDashBtn del_color0" value="'+count_rows0+'" data-target="" data-toggle="modal">DEL</button></td></tr>');
+	$('#colormap_table_create tbody').append('<tr><td class="hidden"></td><td><input type="text" class="form-control val_min ed_min" name="paramMin0['+new_index+']" id="val_min0" value="'+value0+'" readonly></input></td><td><input type="text" class="form-control val_max ed_max" id="val_max0" name="paramMax0['+new_index+']" value=""></input></td><td><div id="color-picker-rgb" class="input-group rgb_color"><input type="text" value="rgb(255,255,255)" class="form-control" name="paramRgb0['+new_index+']"/><span class="input-group-addon"><i></i></span></div></td><td><input name="paramColor0['+new_index+']" type="text" class="form-control" class="val_rgb" value="" required></input></td><td><input type="text" class="form-control" class="val_order" name="paramOrder0['+new_index+']" value="'+cont2+'"></input></td><td><button type="button" class="delDashBtn del_color0" value="'+new_index+'" data-target="" data-toggle="modal">DEL</button></td></tr>');
 	$('.rgb_color').colorpicker();
 	$('#count_rows0').val(count + 1);
 	//
@@ -1115,6 +1148,7 @@ $(document).on('click','#command_clone', function(){
 	//
 });
 
+
 $(document).on('click','.del_color0',function(){
 	var id= $(this).parent().parent();
 	var id2=$(this).parent().parent().first().children().text();
@@ -1129,6 +1163,9 @@ $(document).on('click','.del_color0',function(){
 	var data_min = $(el_max).val();
 	$(el_min).val(data_min);
 	//
+	var count_rows0 = $('#count_rows0').val();
+	var count_rows0_v2 = parseInt(count_rows0)-1;
+	$('#count_rows0').val(count_rows0_v2);
 	 
 	id3= id2.replace('DEL','');
 	//
@@ -1163,6 +1200,7 @@ $(document).on('click','.del_color1',function(){
 //
 //
 $(document).on('keyup','.ed_max',function(){
+	
 	var str = $(this).attr('name');
 	var val = $(this).val();
 	var mySubString = str.substring(
@@ -1172,9 +1210,24 @@ $(document).on('keyup','.ed_max',function(){
 	console.log('mySubString: '+mySubString);
 	var count =  Number(mySubString)+1;
 	console.log('val: '+val);
-	var el = document.getElementsByName("paramMin0["+count+"]");
+	//
+	let items = $("[name^='paramMax0['][name$=']']").map(function () {
+			// Estrarre l'indice dal nome usando una regex
+			let match = $(this).attr("name").match(/paramMax0\[(\d+)\]/);
+			return match ? { index: parseInt(match[1]), value: $(this).val() } : null;
+		}).get();
+		console.log('Le items:',items);
+
+// Trova la posizione dell'oggetto con l'indice successivo
+		let currentIndex = items.findIndex(item => item.index === Number(mySubString));
+		console.log('currentIndex:',currentIndex);
+		var nextIndexPosition = items[currentIndex+1].index;
+console.log('nextIndexPosition',nextIndexPosition);
+	//
+	//var el = document.getElementsByName("paramMin0["+count+"]");
+	var el = document.getElementsByName("paramMin0["+nextIndexPosition+"]");
 	$(el).val(val);
-	//console.log('el:'+el);
+	console.log('el:'+el);
 	
 });
 //

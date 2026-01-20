@@ -37,8 +37,16 @@ if($ext == 'zip'){
                      $zip = new ZipArchive;
                      if ($zip->open($cartella.'/'.$nome) === TRUE){
                          //il file è stato aperto, ora inizia l'analisi.
-						 $query_zip="INSERT INTO processloader_db.uploaded_files (Id,File_name,Description,User,Creation_date,file_type,status,Username)VALUES (NULL,'".$nome."','".$descrizione."','0','".$data."','".$tipo."','NO','".$utente_us."')";
-						 $query_caricamento = mysqli_query($connessione_al_server,$query_zip) or die ("Creazione record non riuscita".mysqli_error($connessione_al_server));
+							 $query_zip="INSERT INTO processloader_db.uploaded_files (Id,File_name,Description,User,Creation_date,file_type,status,Username) VALUES (NULL,?,?,?,?,?,?,?)";
+							 $stmt_zip = mysqli_prepare($connessione_al_server, $query_zip) or die ("Creazione record non riuscita".mysqli_error($connessione_al_server));
+							 $user_id = 0;
+							 $status = 'NO';
+							 mysqli_stmt_bind_param($stmt_zip, "ssissss", $nome, $descrizione, $user_id, $data, $tipo, $status, $utente_us);
+							 $query_caricamento = mysqli_stmt_execute($stmt_zip);
+							 mysqli_stmt_close($stmt_zip);
+							 if (!$query_caricamento) {
+								 die ("Creazione record non riuscita".mysqli_error($connessione_al_server));
+							 }
 						 //
 						 $array_lista = [];
 						 $findme="/Ingestion/Main.kjb";
@@ -67,8 +75,15 @@ if($ext == 'zip'){
 											$_SESSION['file_zip'] = $nome;
 											$_SESSION['data_zip']= $data;
 											//Modifica stato database
-											$sql = "UPDATE  `uploaded_files` SET `uploaded_files`.`status`='OK - ".date('Y-m-d H:i:s')."' WHERE `File_name`='".$nome."' AND `Creation_date`='".$data."'";
-											$result = mysqli_query($connessione_al_server, $sql) or die(mysqli_error($connessione_al_server));
+												$sql = "UPDATE `uploaded_files` SET `uploaded_files`.`status`=? WHERE `File_name`=? AND `Creation_date`=?";
+												$stmt = mysqli_prepare($connessione_al_server, $sql) or die(mysqli_error($connessione_al_server));
+												$status_ok = 'OK - '.date('Y-m-d H:i:s');
+												mysqli_stmt_bind_param($stmt, "sss", $status_ok, $nome, $data);
+												$result = mysqli_stmt_execute($stmt);
+												mysqli_stmt_close($stmt);
+												if (!$result) {
+													die(mysqli_error($connessione_al_server));
+												}
 											//
 											header("location:file_archive.php");  
 											} else {
@@ -86,8 +101,16 @@ if($ext == 'zip'){
                      $zip = new ZipArchive;
                      if ($zip->open($cartella.'/'.$nome) === TRUE){
                         //il file è stato aperto, ora inizia l'analisi.
-						 $query_zip="INSERT INTO processloader_db.uploaded_files (Id,File_name,Description,User,Creation_date,file_type,status,Username)VALUES (NULL,'".$nome."','".$descrizione."','0','".$data."','".$tipo."','NO','".$utente_us."')";
-						 $query_caricamento = mysqli_query($connessione_al_server,$query_zip) or die ("Creazione record non riuscita".mysqli_error($connessione_al_server));
+							 $query_zip="INSERT INTO processloader_db.uploaded_files (Id,File_name,Description,User,Creation_date,file_type,status,Username) VALUES (NULL,?,?,?,?,?,?,?)";
+							 $stmt_zip = mysqli_prepare($connessione_al_server, $query_zip) or die ("Creazione record non riuscita".mysqli_error($connessione_al_server));
+							 $user_id = 0;
+							 $status = 'NO';
+							 mysqli_stmt_bind_param($stmt_zip, "ssissss", $nome, $descrizione, $user_id, $data, $tipo, $status, $utente_us);
+							 $query_caricamento = mysqli_stmt_execute($stmt_zip);
+							 mysqli_stmt_close($stmt_zip);
+							 if (!$query_caricamento) {
+								 die ("Creazione record non riuscita".mysqli_error($connessione_al_server));
+							 }
 						 // 
 						$array_lista = [];
 						$findme="/Main.R";
@@ -116,8 +139,15 @@ if($ext == 'zip'){
 											$_SESSION['file_zip'] = $nome;
 											$_SESSION['data_zip']= $data;
 											//Modifica stato database
-											$sql = "UPDATE  `uploaded_files` SET `uploaded_files`.`status`='OK - ".date('Y-m-d H:i:s')."' WHERE `File_name`='".$nome."' AND `Creation_date`='".$data."'";
-											$result = mysqli_query($connessione_al_server, $sql) or die(mysqli_error($connessione_al_server));
+												$sql = "UPDATE `uploaded_files` SET `uploaded_files`.`status`=? WHERE `File_name`=? AND `Creation_date`=?";
+												$stmt = mysqli_prepare($connessione_al_server, $sql) or die(mysqli_error($connessione_al_server));
+												$status_ok = 'OK - '.date('Y-m-d H:i:s');
+												mysqli_stmt_bind_param($stmt, "sss", $status_ok, $nome, $data);
+												$result = mysqli_stmt_execute($stmt);
+												mysqli_stmt_close($stmt);
+												if (!$result) {
+													die(mysqli_error($connessione_al_server));
+												}
 											//
 											header("location:file_archive.php");  
 											} else {
@@ -134,8 +164,16 @@ if($ext == 'zip'){
                      $zip = new ZipArchive;
                      if ($zip->open($cartella.'/'.$nome) === TRUE){
                         //il file è stato aperto, ora inizia l'analisi.
-						 $query_zip="INSERT INTO processloader_db.uploaded_files (Id,File_name,Description,User,Creation_date,file_type,status,Username)VALUES (NULL,'".$nome."','".$descrizione."','0','".$data."','".$tipo."','NO','".$utente_us."')";
-						 $query_caricamento = mysqli_query($connessione_al_server,$query_zip) or die ("Creazione record non riuscita".mysqli_error($connessione_al_server));
+							 $query_zip="INSERT INTO processloader_db.uploaded_files (Id,File_name,Description,User,Creation_date,file_type,status,Username) VALUES (NULL,?,?,?,?,?,?,?)";
+							 $stmt_zip = mysqli_prepare($connessione_al_server, $query_zip) or die ("Creazione record non riuscita".mysqli_error($connessione_al_server));
+							 $user_id = 0;
+							 $status = 'NO';
+							 mysqli_stmt_bind_param($stmt_zip, "ssissss", $nome, $descrizione, $user_id, $data, $tipo, $status, $utente_us);
+							 $query_caricamento = mysqli_stmt_execute($stmt_zip);
+							 mysqli_stmt_close($stmt_zip);
+							 if (!$query_caricamento) {
+								 die ("Creazione record non riuscita".mysqli_error($connessione_al_server));
+							 }
 						 //
 						 $array_lista = [];
 						 $findme="/Main.java";
@@ -164,8 +202,15 @@ if($ext == 'zip'){
 											$_SESSION['file_zip'] = $nome;
 											$_SESSION['data_zip']= $data;
 											//Modifica stato database
-											$sql = "UPDATE  `uploaded_files` SET `uploaded_files`.`status`='OK - ".date('Y-m-d H:i:s')."' WHERE `File_name`='".$nome."' AND `Creation_date`='".$data."'";
-											$result = mysqli_query($connessione_al_server, $sql) or die(mysqli_error($connessione_al_server));
+												$sql = "UPDATE `uploaded_files` SET `uploaded_files`.`status`=? WHERE `File_name`=? AND `Creation_date`=?";
+												$stmt = mysqli_prepare($connessione_al_server, $sql) or die(mysqli_error($connessione_al_server));
+												$status_ok = 'OK - '.date('Y-m-d H:i:s');
+												mysqli_stmt_bind_param($stmt, "sss", $status_ok, $nome, $data);
+												$result = mysqli_stmt_execute($stmt);
+												mysqli_stmt_close($stmt);
+												if (!$result) {
+													die(mysqli_error($connessione_al_server));
+												}
 											//
 											header("location:file_archive.php");  
 											} else {

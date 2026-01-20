@@ -9,10 +9,10 @@
 	//mysqli_select_db($link, $dbname);
 
 if(isset($_POST['date'])){
-    $dateSearch=$_POST['date'];
+    $dateSearch = $_POST['date'];
 }
 else{
-    $dateSearch='1970/01/01';
+    $dateSearch = '1970/01/01';
 }
 
 if(isset($_POST['values'])){
@@ -27,17 +27,17 @@ else{
 }
 
 	
-	 if (isset($_POST['limit'])){
-		$limit=$_POST['limit'];
-	 }else{
-		$limit=5; 
-	 }
+ if (isset($_POST['limit'])){
+	$limit = (int) $_POST['limit'];
+ }else{
+	$limit = 5; 
+ }
 	
-	if (isset($_POST["page"])) { 
-		$page  = $_POST["page"]; 
-	} else { 
-		$page=1; 
-	}; 
+if (isset($_POST["page"])) { 
+	$page  = (int) $_POST["page"]; 
+} else { 
+	$page=1; 
+}; 
     if(isset($_POST['limit'])){
         if ($_POST['limit'] == ""){
         $limit = 5;
@@ -45,31 +45,36 @@ else{
     }
 $start_from = ($page-1) * $limit; 
 
-if($values!=null){
-    $value="";
-    for($i=0;$i<count($values);$i++){
-
-
-        if($i==count($values)-1){
-            $value=$value."'".$values[$i]."'";
-        } else{$value=$value."'".$values[$i]."'"." OR status=";}
-
-    }
+if (($values !== null) && !empty($values)) {
+	$placeholders = implode(",", array_fill(0, count($values), "?"));
+	$query = "SELECT * FROM ServicePhoto WHERE status IN (" . $placeholders . ") AND timestamp > ? ORDER BY timestamp DESC LIMIT ?, ?";
+	$stmt = mysqli_prepare($link, $query);
+	if (!$stmt) {
+		die(mysqli_error($link));
+	}
+	$params = $values;
+	$params[] = $dateSearch;
+	$params[] = $start_from;
+	$params[] = $limit;
+	$types = str_repeat("s", count($values)) . "sii";
+	$bind_names = [];
+	$bind_names[] = $types;
+	for ($i = 0; $i < count($params); $i++) {
+		$bind_names[] = &$params[$i];
+	}
+	call_user_func_array('mysqli_stmt_bind_param', $bind_names);
+	mysqli_stmt_execute($stmt);
+	$result = mysqli_stmt_get_result($stmt);
+} else {
+	$query = "SELECT * FROM ServicePhoto WHERE timestamp > ? ORDER BY timestamp DESC LIMIT ?, ?";
+	$stmt = mysqli_prepare($link, $query);
+	if (!$stmt) {
+		die(mysqli_error($link));
+	}
+	mysqli_stmt_bind_param($stmt, "sii", $dateSearch, $start_from, $limit);
+	mysqli_stmt_execute($stmt);
+	$result = mysqli_stmt_get_result($stmt);
 }
-
-	
-  if(($values!=null)||($values!="")||(!empty($values))){
-    $value="";
-    for($i=0;$i<count($values);$i++){
-        if($i==count($values)-1){
-            $value=$value."'".$values[$i]."'";
-        } else{$value=$value."'".$values[$i]."'"." OR status=";}
-    }
-	    $query = "SELECT * FROM ServicePhoto WHERE status=$value AND timestamp > '$dateSearch' ORDER BY timestamp DESC LIMIT $start_from, $limit";
-    }
-    else{$query = "SELECT * FROM ServicePhoto WHERE timestamp > '$dateSearch'ORDER BY timestamp DESC LIMIT $start_from, $limit";}
-
-    $result = mysqli_query($link, $query) or die(mysqli_error($link));
 	$list = array();
 	$num = $result->num_rows;
 	if ($num > 0) {
@@ -104,8 +109,14 @@ if($values!=null){
 					$formatDate2 = date("Y-m-d H:i:s", $pastDate);	
 					$futureDate = $currentDate+(60*1);
 					$formatDate1 = date("Y-m-d H:i:s", $futureDate);						
-					$query_comment = "SELECT * FROM ServiceComment WHERE timestamp<'$data1' AND timestamp>'$data2'";
-					$comment_res = mysqli_query($link, $query_comment) or die(mysqli_error($link));
+					$query_comment = "SELECT * FROM ServiceComment WHERE timestamp < ? AND timestamp > ?";
+					$stmt_comment = mysqli_prepare($link, $query_comment);
+					if (!$stmt_comment) {
+						die(mysqli_error($link));
+					}
+					mysqli_stmt_bind_param($stmt_comment, "ss", $data1, $data2);
+					mysqli_stmt_execute($stmt_comment);
+					$comment_res = mysqli_stmt_get_result($stmt_comment);
 					if($comment_res->num_rows>0){
 						$row = mysqli_fetch_array($comment_res);
 						$comment=$row['comment'];
@@ -113,6 +124,7 @@ if($values!=null){
 						$comment_status=$row['status'];
 						
 					}
+					mysqli_stmt_close($stmt_comment);
 					else{
 						$comment='no comments';
 						$comment_id='null';
@@ -138,14 +150,16 @@ if($values!=null){
 					"comment_status"=>$comment_status
 				);
 		array_push($list, $listFile);
+			}
 		}
-	}
+		if (isset($stmt)) {
+			mysqli_stmt_close($stmt);
+		}
 		echo json_encode($list);
 
 
 	
 	
-
 
 
 

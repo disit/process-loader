@@ -79,8 +79,14 @@ if ($control == 1){
 			}
 	///////////////////	
 }else{
-			$query = 'UPDATE uploaded_files SET	Public="'.$mod_s.'", Date_of_publication="'.$creation_date_jb.'" WHERE Id ="'.$id.'"';
-					$query_job_type = mysqli_query($connessione_al_server,$query) or die ("query di creazione del job type non riuscita    ".mysqli_error($connessione_al_server));
+			$stmt = mysqli_prepare($connessione_al_server, "UPDATE uploaded_files SET Public=?, Date_of_publication=? WHERE Id=?");
+			if (!$stmt) {
+				die("query di creazione del job type non riuscita    " . mysqli_error($connessione_al_server));
+			}
+			$id_int = (int) $id;
+			mysqli_stmt_bind_param($stmt, "isi", $mod_s, $creation_date_jb, $id_int);
+			$query_job_type = mysqli_stmt_execute($stmt);
+			mysqli_stmt_close($stmt);
 					$url = "http://localhost:8983/solr/collection1/dataimport?command=full-import";
 					url_get($url);
 			/////

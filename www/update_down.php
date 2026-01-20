@@ -28,8 +28,12 @@ mysqli_select_db($link, $dbname);
 	$result = mysqli_query($link, $query_down) or die(mysqli_error($link));
 	$downloads = 17; */
 
-    		 $query="UPDATE uploaded_files SET Download_number = '$downx' WHERE Id ='$idx'" ;
-			$query_job_type = mysqli_query($connessione_al_server,$query) ;
+    $stmt = mysqli_prepare($connessione_al_server, "UPDATE uploaded_files SET Download_number = ? WHERE Id = ?");
+	if ($stmt) {
+		mysqli_stmt_bind_param($stmt, "ii", $downx, $idx);
+		$query_job_type = mysqli_stmt_execute($stmt);
+		mysqli_stmt_close($stmt);
+	}
    						 
 
 			$url = "http://localhost:8983/solr/collection1/dataimport?command=full-import";

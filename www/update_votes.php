@@ -23,11 +23,18 @@ include('curl.php');
 	$valuex = intval($_POST['value']);
 	echo "<script type='text/javascript'>alert('$downx');</script>";
 
-    						 $query="UPDATE uploaded_files SET Total_stars = '$valuex'+Total_stars, Votes=Votes+1 WHERE Id ='$idx'" ;
-	 echo($query);
-			$query_job_type = mysqli_query($connessione_al_server,$query) ;
-   			   $query2="UPDATE uploaded_files SET Average_stars = Total_stars/Votes WHERE Id ='$idx'" ;
-			$query_job_type = mysqli_query($connessione_al_server,$query2) ;
+    $stmt = mysqli_prepare($connessione_al_server, "UPDATE uploaded_files SET Total_stars = ? + Total_stars, Votes = Votes + 1 WHERE Id = ?");
+	if ($stmt) {
+		mysqli_stmt_bind_param($stmt, "ii", $valuex, $idx);
+		mysqli_stmt_execute($stmt);
+		mysqli_stmt_close($stmt);
+	}
+    $stmt2 = mysqli_prepare($connessione_al_server, "UPDATE uploaded_files SET Average_stars = Total_stars/Votes WHERE Id = ?");
+	if ($stmt2) {
+		mysqli_stmt_bind_param($stmt2, "i", $idx);
+		mysqli_stmt_execute($stmt2);
+		mysqli_stmt_close($stmt2);
+	}
 
 
 			$url = "http://localhost:8983/solr/collection1/dataimport?command=full-import";

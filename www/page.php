@@ -184,6 +184,16 @@ if(isset($_REQUEST['message'])){
 	var error_status = "<?=$error_status; ?>";
 	var nascondi= "<?=$hide_menu; ?>";
 	///
+	function escapeHtml(value) {
+		return String(value)
+			.replace(/&/g, '&amp;')
+			.replace(/</g, '&lt;')
+			.replace(/>/g, '&gt;')
+			.replace(/"/g, '&quot;')
+			.replace(/'/g, '&#39;')
+			.replace(/`/g, '&#96;');
+	}
+
 	function myCardsWriter(rowIndex, record, columns, cellWriter)
 	{
 		var title = record.file_name;	 
@@ -275,6 +285,35 @@ if(isset($_REQUEST['message'])){
 		if (record.dateofpublication != null){
 			data_pubblicazione = record.dateofpublication;
 		}
+
+		var safeId = Number(record.id) || 0;
+		record.id = safeId;
+		record.Id = safeId;
+		record.file_name = escapeHtml(record.file_name);
+		record.image = escapeHtml(record.image);
+		record.username = escapeHtml(record.username);
+		record.resource_type = escapeHtml(record.resource_type);
+		record.nature = escapeHtml(record.nature);
+		record.sub_nature = escapeHtml(record.sub_nature);
+		record.protocol = escapeHtml(record.protocol);
+		record.realtime = escapeHtml(record.realtime);
+		record.periodic = escapeHtml(record.periodic);
+		record.license = escapeHtml(record.license);
+		record.OS = escapeHtml(record.OS);
+		record.OpenSource = escapeHtml(record.OpenSource);
+		record.format = escapeHtml(record.format);
+		record.link = escapeHtml(record.link);
+		record.creation_date = escapeHtml(record.creation_date);
+		record.headerFontColor = escapeHtml(record.headerFontColor);
+		record.average_stars = escapeHtml(record.average_stars);
+		record.votes = escapeHtml(record.votes);
+		record.Public = escapeHtml(record.Public);
+		title = escapeHtml(title);
+		username = escapeHtml(username);
+		category = escapeHtml(category);
+		description = escapeHtml(description);
+		file_type = escapeHtml(file_type);
+		data_pubblicazione = escapeHtml(data_pubblicazione);
 			
 		var sf = '<?=$sf; ?>';
 		var bg_color='#6C8793';

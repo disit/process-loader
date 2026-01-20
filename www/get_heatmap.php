@@ -24,8 +24,16 @@ include('external_service.php');
 $link = mysqli_connect($host_heatmap, $username_heatmap, $password_heatmap) or die("failed to connect to server !!");
 mysqli_set_charset($link, 'utf8');
 mysqli_select_db($link, $dbname_heatmap);
+
+if (!isset($_SESSION['accessToken'])){
+    echo('Unauthorized Access');
+    die();
+}
 //
-$action = $_REQUEST['action'];
+//$action = $_REQUEST['action'];
+$action0 = mysqli_real_escape_string($link,$_REQUEST['action']);
+$action = filter_var($action0 , FILTER_SANITIZE_STRING);
+
 if ($action == 'get_values') {
     $map_name0   = mysqli_real_escape_string($link, $_REQUEST['map_name']);
 	$map_name  = filter_var($map_name0, FILTER_SANITIZE_STRING);
@@ -104,8 +112,14 @@ JOIN (
     echo json_encode($list);
     //
 } elseif ($action == 'get_heatmaps') {
-    $start_from = $_REQUEST['start_from'];
-    $limit      = $_REQUEST['limit'];
+    //$start_from = $_REQUEST['start_from'];
+    $start_from0 = mysqli_real_escape_string($link,$_REQUEST['start_from']);
+    $start_from = filter_var($start_from0 , FILTER_SANITIZE_STRING);
+
+    //$limit      = $_REQUEST['limit'];
+    $limit0 = mysqli_real_escape_string($link,$_REQUEST['limit']);
+    $limit= filter_var($limit0 , FILTER_SANITIZE_STRING);
+
     $query_n    = "SELECT metadata.map_name, maps_completed.completed, metadata.metric_name, metadata.description, metadata.date, metadata.nature, metadata.subnature FROM heatmap.metadata,heatmap.maps_completed WHERE metadata.map_name = maps_completed.map_name AND metadata.date = maps_completed.date ORDER BY metadata.date DESC LIMIT " . $start_from . ", " . $limit . ";";
     //
     $result = mysqli_query($link, $query_n) or die(mysqli_error($link));
@@ -266,25 +280,28 @@ JOIN (
     $name_color_map0 = $_REQUEST['name_color_map'];
 	$name_color_map = filter_var($name_color_map0, FILTER_SANITIZE_STRING);
 	//
-    $array_min0 = $_REQUEST['paramMin0'];
+    $array_min0 = array_values($_REQUEST['paramMin0']);
 	$array_min = filter_var_array($array_min0, FILTER_SANITIZE_STRING);
 	//
-    $array_max0      = $_REQUEST['paramMax0'];
+    $array_max0      = array_values($_REQUEST['paramMax0']);
 	$array_max = filter_var_array($array_max0, FILTER_SANITIZE_STRING);
 	//
-    $array_rgb0      = $_REQUEST['paramRgb0'];
+    $array_rgb0      = array_values($_REQUEST['paramRgb0']);
 	$array_rgb = filter_var_array($array_rgb0, FILTER_SANITIZE_STRING);
 	//
-    $array_color0   = $_REQUEST['paramColor0'];
+    $array_color0   = array_values($_REQUEST['paramColor0']);
 	$array_color  = filter_var_array($array_color0, FILTER_SANITIZE_STRING);
 	//
-    $array_order0   = $_REQUEST['paramOrder0'];
+    $array_order0   = array_values($_REQUEST['paramOrder0']);
 	$array_order  = filter_var_array($array_order0, FILTER_SANITIZE_STRING);
 	//
     $lun            = count($array_rgb);
     //
     for ($i = 0; $i < $lun; $i++) {
         //
+        if(!($array_rgb[$i])){
+            echo('NOT FOUND '.$i);
+        }else{
         $val_rgb  = explode('(', $array_rgb[$i]);
         $val_rgb2 = explode(')', $val_rgb[1]);
         $rgb      = '[' . $val_rgb2[0] . ']';
@@ -302,6 +319,7 @@ JOIN (
 		}
 		echo ($query.'<br />');
 		$result = mysqli_query($link, $query) or die(mysqli_error($link));
+        }
     }
     $sf    = $_REQUEST['showFrame'];
     $limit = $_REQUEST['limit'];
@@ -314,7 +332,13 @@ JOIN (
     $query_user = "INSERT INTO `heatmap`.`colormapUsers` (`colormap`, `username`) VALUES ('" . $name_color_map . "', '" . $utente . "');";
     echo ($query_user.'<br />');
     $result_user= mysqli_query($link, $query_user) or die(mysqli_error($link));
-
+    ////CREATE IN COLORMAP 
+    //HeatmapRanges
+    $link_rm = mysqli_connect($host_dashboardbuilder, $username_dashboardbuilder, $password_dashboardbuilder) or die("failed to connect to server !!");
+    mysqli_set_charset($link_rm, 'utf8');
+    mysqli_select_db($link_rm, $db_dashboardbuilder); 
+    $query_update_metric = "INSERT INTO HeatmapRanges (metricName) VALUES ('$name_color_map')";
+    $result_rm = mysqli_query($link_rm, $query_update_metric) or die(mysqli_error($link_rm));
     /////////////
     header("location:colorMap.php?showFrame=" . $sf . "&page=" . $page . "&orderBy=" . $order . "&order=" . $by . "&limit=" . $limit);
     ///
@@ -604,7 +628,6 @@ echo json_encode($response);
     if (isset($_FILES['file']) && $_FILES['file']['error'] === UPLOAD_ERR_OK) {
         // Nome del file senza estensione preso da un parametro POST
         $fileName = $_POST['metric'];
-    
         // Percorso assoluto della cartella di destinazione nel server
         //$targetDirectory = '/var/www/html/dashboardSmartCity/img/heatmapsGradientLegends/';
         $targetDirectory = $colormap_external_path.$colormap_external_directory;
@@ -648,10 +671,14 @@ echo json_encode($response);
                     $link_rm = mysqli_connect($host_heatmap, $username_heatmap, $password_heatmap) or die("failed to connect to server !!");
                     mysqli_set_charset($link_rm, 'utf8');
                     mysqli_select_db($link_rm, 'Dashboard');
+                    $fileName0   = mysqli_real_escape_string($link_rm, $_POST['metric']);
+                    $fileName  = filter_var($fileName0, FILTER_SANITIZE_STRING);
                 }else{ 
                     $link_rm = mysqli_connect($host_dashboardbuilder, $username_dashboardbuilder, $password_dashboardbuilder) or die("failed to connect to server !!");
                     mysqli_set_charset($link_rm, 'utf8');
-                    mysqli_select_db($link_rm, $db_dashboardbuilder);                         
+                    mysqli_select_db($link_rm, $db_dashboardbuilder); 
+                    $fileName0   = mysqli_real_escape_string($link_rm, $_POST['metric']);
+                    $fileName  = filter_var($fileName0, FILTER_SANITIZE_STRING);                        
                 }
                 
                 $query_metric = "SELECT * FROM HeatmapRanges WHERE metricName = '$fileName';";
@@ -711,8 +738,9 @@ echo json_encode($response);
     }
     echo json_encode($response);
 }else if ($action == 'view_legend') {
-    $metric = $_POST['metric'];
-    $url_legend = $colormap_external_link.$colormap_external_directory.$metric. '.png';
+    //$metric = $_POST['metric'];
+    //Unauthorized Access
+    
 ////////////
         if(!isset($host_dashboardbuilder)){
             $link_rm = mysqli_connect($host_heatmap, $username_heatmap, $password_heatmap) or die("failed to connect to server !!");
@@ -721,9 +749,14 @@ echo json_encode($response);
         }else{ 
             $link_rm = mysqli_connect($host_dashboardbuilder, $username_dashboardbuilder, $password_dashboardbuilder) or die("failed to connect to server !!");
             mysqli_set_charset($link_rm, 'utf8');
-            mysqli_select_db($link_rm, $db_dashboardbuilder);                         
+            mysqli_select_db($link_rm, $db_dashboardbuilder);                        
         }
-        $query_metric = "SELECT iconpath FROM HeatmapRanges WHERE metricName = '$metric';";
+        //
+        $metric0   = mysqli_real_escape_string($link_rm, $_POST['metric']);
+        $metric  = filter_var($metric0, FILTER_SANITIZE_STRING);  
+        //
+        $url_legend = $colormap_external_link.$colormap_external_directory.$metric. '.png';
+        $query_metric = "SELECT iconpath FROM HeatmapRanges WHERE metricName = '$metric' and iconPath != NULL;";
         $result_rm = mysqli_query($link_rm, $query_metric) or die(mysqli_error($link_rm));
         $count_rm = mysqli_num_rows($result_rm);
         //

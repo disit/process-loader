@@ -46,42 +46,79 @@ if ($action == 'get_photo_data') {
     
     
     if (isset($_REQUEST['limit'])) {
-        $limit = $_REQUEST['limit'];
+        $limit = (int) $_REQUEST['limit'];
     } else {
         $limit = 7;
     }
     
     if (isset($_REQUEST["page"])) {
-        $page = $_REQUEST["page"];
+        $page = (int) $_REQUEST["page"];
     } else {
         $page = 1;
     }
     
     $start_from = ($page - 1) * $limit;
     
-    $value = "";
-    for ($i = 0; $i < count($values); $i++) {
-        if ($i == count($values) - 1) {
-            $value = $value . "'" . $values[$i] . "'";
-        } else {
-            $value = $value . "'" . $values[$i] . "'" . " OR status=";
+    if (($values != null) && !empty($values)) {
+        $values = array_values($values);
+        $placeholders = implode(",", array_fill(0, count($values), "?"));
+        $query  = "SELECT DISTINCT * FROM ServicePhoto WHERE status IN (" . $placeholders . ") AND timestamp > ? ORDER BY timestamp DESC LIMIT ?, ?";
+        $query1 = "SELECT COUNT(*) FROM ServicePhoto WHERE timestamp > ? AND status IN (" . $placeholders . ")";
+        $params = $values;
+        $params[] = $dateSearch;
+        $params[] = $start_from;
+        $params[] = $limit;
+        $types = str_repeat("s", count($values)) . "sii";
+        $stmt = mysqli_prepare($link, $query);
+        if (!$stmt) {
+            die(mysqli_error($link));
         }
-    }
-    
-    if (($values != null) || ($values != "") || (!empty($values))) {
-        $query  = "SELECT DISTINCT * FROM ServicePhoto WHERE status=" . $value . " AND timestamp > '" . $dateSearch . "' ORDER BY timestamp DESC LIMIT " . $start_from . ", " . $limit;
-        $query1 = "SELECT COUNT(*) FROM ServicePhoto WHERE timestamp > '$dateSearch' AND status=$value";
+        $bind_names = [];
+        $bind_names[] = $types;
+        for ($i = 0; $i < count($params); $i++) {
+            $bind_names[] = &$params[$i];
+        }
+        call_user_func_array('mysqli_stmt_bind_param', $bind_names);
+        mysqli_stmt_execute($stmt);
+        $result = mysqli_stmt_get_result($stmt);
+        $stmt_count = mysqli_prepare($link, $query1);
+        if (!$stmt_count) {
+            die(mysqli_error($link));
+        }
+        $params_count = $values;
+        $params_count[] = $dateSearch;
+        $types_count = str_repeat("s", count($values)) . "s";
+        $bind_names_count = [];
+        $bind_names_count[] = $types_count;
+        for ($i = 0; $i < count($params_count); $i++) {
+            $bind_names_count[] = &$params_count[$i];
+        }
+        call_user_func_array('mysqli_stmt_bind_param', $bind_names_count);
+        mysqli_stmt_execute($stmt_count);
+        $result1 = mysqli_stmt_get_result($stmt_count);
     } else {
-        $query  = "SELECT DISTINCT * FROM ServicePhoto WHERE timestamp > '" . $dateSearch . "' ORDER BY timestamp DESC LIMIT " . $start_from . ", " . $limit . "";
-        $query1 = "SELECT COUNT(*) FROM ServicePhoto WHERE timestamp > '$dateSearch'";
+        $query  = "SELECT DISTINCT * FROM ServicePhoto WHERE timestamp > ? ORDER BY timestamp DESC LIMIT ?, ?";
+        $query1 = "SELECT COUNT(*) FROM ServicePhoto WHERE timestamp > ?";
+        $stmt = mysqli_prepare($link, $query);
+        if (!$stmt) {
+            die(mysqli_error($link));
+        }
+        mysqli_stmt_bind_param($stmt, "sii", $dateSearch, $start_from, $limit);
+        mysqli_stmt_execute($stmt);
+        $result = mysqli_stmt_get_result($stmt);
+        $stmt_count = mysqli_prepare($link, $query1);
+        if (!$stmt_count) {
+            die(mysqli_error($link));
+        }
+        mysqli_stmt_bind_param($stmt_count, "s", $dateSearch);
+        mysqli_stmt_execute($stmt_count);
+        $result1 = mysqli_stmt_get_result($stmt_count);
     }
     
-    $result1 = mysqli_query($link, $query1) or die(mysqli_error($link));
     $result1     = $result1->fetch_array();
     $result1     = intval($result1[0]);
     $total_pages = ceil($result1 / $limit);
     
-    $result = mysqli_query($link, $query) or die(mysqli_error($link));
     $list = array();
     $num  = $result->num_rows;
     if ($num > 0) {
@@ -119,8 +156,17 @@ if ($action == 'get_photo_data') {
                 }
                 
                 //
-                $query0 = "UPDATE ServicePhoto SET latitude = '" . $coord[0] . "', longitude = '" . $coord[1] . "', city='" . mysqli_real_escape_string($link, $city) . "', province='" . mysqli_real_escape_string($link, $province) . "', address='" . mysqli_real_escape_string($link, $address) . "' WHERE id='" . $row1['id'] . "'";
-                $result0 = mysqli_query($link, $query0) or die(mysqli_error($link));
+                $stmt_update = mysqli_prepare($link, "UPDATE ServicePhoto SET latitude = ?, longitude = ?, city = ?, province = ?, address = ? WHERE id = ?");
+				if (!$stmt_update) {
+					die(mysqli_error($link));
+				}
+				$city_safe = mysqli_real_escape_string($link, $city);
+				$province_safe = mysqli_real_escape_string($link, $province);
+				$address_safe = mysqli_real_escape_string($link, $address);
+				$id_row = (int) $row1['id'];
+				mysqli_stmt_bind_param($stmt_update, "ddsssi", $coord[0], $coord[1], $city_safe, $province_safe, $address_safe, $id_row);
+				$result0 = mysqli_stmt_execute($stmt_update);
+				mysqli_stmt_close($stmt_update);
                 //                    
                 
             } else {
@@ -192,6 +238,12 @@ if ($action == 'get_photo_data') {
             array_push($list, $listFile);
         }
     }
+    if (isset($stmt)) {
+        mysqli_stmt_close($stmt);
+    }
+    if (isset($stmt_count)) {
+        mysqli_stmt_close($stmt_count);
+    }
     echo json_encode($list);
     
 } elseif ($action == 'get_comment_data') {
@@ -207,66 +259,84 @@ if ($action == 'get_photo_data') {
         $values = null;
     }
     if (isset($_REQUEST['limit'])) {
-        $limit = $_REQUEST['limit'];
+        $limit = (int) $_REQUEST['limit'];
     } else {
         $limit = 7;
     }
     if (isset($_REQUEST["page_comment"])) {
-        $page = $_REQUEST["page_comment"];
+        $page = (int) $_REQUEST["page_comment"];
     } else {
         $page = 1;
     }
     
     $start_from = ($page - 1) * $limit;
     
-    if ($values != null) {
-        $value = "";
-        for ($i = 0; $i < count($values); $i++) {
-            if ($i == count($values) - 1) {
-                $value = $value . "'" . $values[$i] . "'";
-            } else {
-                $value = $value . "'" . $values[$i] . "'" . " OR status=";
-            }
-            
-        }
-    }
-    
     $link = mysqli_connect($host_photo, $username_photo, $password_photo) or die("failed to connect to server !!");
     mysqli_set_charset($link, 'utf8');
     
     mysqli_set_charset($link, 'utf8');
     mysqli_select_db($link, $dbname_photo);
-    if (isset($_REQUEST['values'])) {
-        $values = $_REQUEST['values'];
-        
-    }
-    
-    $value = "";
-    for ($i = 0; $i < count($values); $i++) {
-        if ($i == count($values) - 1) {
-            $value = $value . "'" . $values[$i] . "'";
-        } else {
-            $value = $value . "'" . $values[$i] . "'" . " OR status=";
+    if ($values != null && !empty($values)) {
+        $values = array_values($values);
+        $placeholders = implode(",", array_fill(0, count($values), "?"));
+        $query  = "SELECT DISTINCT * FROM ServiceComment WHERE status IN (" . $placeholders . ") AND timestamp > ? ORDER BY timestamp DESC LIMIT ?, ?";
+        $query1 = "SELECT COUNT(*) FROM ServiceComment WHERE timestamp > ? AND status IN (" . $placeholders . ")";
+        $params = $values;
+        $params[] = $dateSearch;
+        $params[] = $start_from;
+        $params[] = $limit;
+        $types = str_repeat("s", count($values)) . "sii";
+        $stmt = mysqli_prepare($link, $query);
+        if (!$stmt) {
+            die(mysqli_error($link));
         }
-        
-    }
-    
-    if ($values != null) {
-        $query  = "SELECT DISTINCT * FROM ServiceComment WHERE status=$value AND timestamp>'" . $dateSearch . "' ORDER BY timestamp DESC LIMIT " . $start_from . ", " . $limit;
-        $query1 = "SELECT COUNT(*) FROM ServiceComment WHERE timestamp > '" . $dateSearch . "' AND status=" . $value . "";
+        $bind_names = [];
+        $bind_names[] = $types;
+        for ($i = 0; $i < count($params); $i++) {
+            $bind_names[] = &$params[$i];
+        }
+        call_user_func_array('mysqli_stmt_bind_param', $bind_names);
+        mysqli_stmt_execute($stmt);
+        $result = mysqli_stmt_get_result($stmt);
+        $stmt_count = mysqli_prepare($link, $query1);
+        if (!$stmt_count) {
+            die(mysqli_error($link));
+        }
+        $params_count = $values;
+        $params_count[] = $dateSearch;
+        $types_count = str_repeat("s", count($values)) . "s";
+        $bind_names_count = [];
+        $bind_names_count[] = $types_count;
+        for ($i = 0; $i < count($params_count); $i++) {
+            $bind_names_count[] = &$params_count[$i];
+        }
+        call_user_func_array('mysqli_stmt_bind_param', $bind_names_count);
+        mysqli_stmt_execute($stmt_count);
+        $result1 = mysqli_stmt_get_result($stmt_count);
     } else {
-        $query  = "SELECT DISTINCT * FROM ServiceComment WHERE timestamp > '" . $dateSearch . "' ORDER BY timestamp DESC LIMIT " . $start_from . ", " . $limit;
-        $query1 = "SELECT COUNT(*) FROM ServiceComment WHERE timestamp > '" . $dateSearch . "'";
+        $query  = "SELECT DISTINCT * FROM ServiceComment WHERE timestamp > ? ORDER BY timestamp DESC LIMIT ?, ?";
+        $query1 = "SELECT COUNT(*) FROM ServiceComment WHERE timestamp > ?";
+        $stmt = mysqli_prepare($link, $query);
+        if (!$stmt) {
+            die(mysqli_error($link));
+        }
+        mysqli_stmt_bind_param($stmt, "sii", $dateSearch, $start_from, $limit);
+        mysqli_stmt_execute($stmt);
+        $result = mysqli_stmt_get_result($stmt);
+        $stmt_count = mysqli_prepare($link, $query1);
+        if (!$stmt_count) {
+            die(mysqli_error($link));
+        }
+        mysqli_stmt_bind_param($stmt_count, "s", $dateSearch);
+        mysqli_stmt_execute($stmt_count);
+        $result1 = mysqli_stmt_get_result($stmt_count);
     }
     
-    
-    $result1 = mysqli_query($link, $query1) or die(mysqli_error($link));
     $result1 = $result1->fetch_array();
     $result1 = intval($result1[0]);
     
     $total_pages1 = ceil($result1 / $limit);
     
-    $result = mysqli_query($link, $query) or die(mysqli_error($link));
     $list = array();
     $num  = $result->num_rows;
     if ($num > 0) {
@@ -307,8 +377,17 @@ if ($action == 'get_photo_data') {
                 $coord0 = $coord[0];
                 $coord1 = $coord[1];
                 //
-				$query0 = "UPDATE ServiceComment SET latitude = '" . $coord[0] . "', longitude = '" . $coord[1] . "', city='" . mysqli_real_escape_string($link, $city) . "', province='" . mysqli_real_escape_string($link, $province) . "', address='" . mysqli_real_escape_string($link, $address) . "' WHERE id='" . $row1['id'] . "'";
-                $result0 = mysqli_query($link, $query0) or die(mysqli_error($link));
+				$stmt_update = mysqli_prepare($link, "UPDATE ServiceComment SET latitude = ?, longitude = ?, city = ?, province = ?, address = ? WHERE id = ?");
+				if (!$stmt_update) {
+					die(mysqli_error($link));
+				}
+				$city_safe = mysqli_real_escape_string($link, $city);
+				$province_safe = mysqli_real_escape_string($link, $province);
+				$address_safe = mysqli_real_escape_string($link, $address);
+				$id_row = (int) $row1['id'];
+				mysqli_stmt_bind_param($stmt_update, "ddsssi", $coord[0], $coord[1], $city_safe, $province_safe, $address_safe, $id_row);
+                $result0 = mysqli_stmt_execute($stmt_update);
+				mysqli_stmt_close($stmt_update);
                 //
             } else {
                 $coord0 = $row1['latitude'];
@@ -331,26 +410,47 @@ if ($action == 'get_photo_data') {
             array_push($list, $listFile);
         }
     }
+    if (isset($stmt)) {
+        mysqli_stmt_close($stmt);
+    }
+    if (isset($stmt_count)) {
+        mysqli_stmt_close($stmt_count);
+    }
     echo json_encode($list);
     
 } elseif ($action == 'change-status') {
     $id         = intval($_REQUEST['id']);
     $new_status = $_REQUEST['new_status'];
-    $query      = "UPDATE ServicePhoto SET status = '" . $new_status . "' WHERE id='" . $id . "'";
-    $result = mysqli_query($link, $query) or die(mysqli_error($link));
+    $stmt = mysqli_prepare($link, "UPDATE ServicePhoto SET status = ? WHERE id = ?");
+    if (!$stmt) {
+        die(mysqli_error($link));
+    }
+    mysqli_stmt_bind_param($stmt, "si", $new_status, $id);
+    $result = mysqli_stmt_execute($stmt);
+    mysqli_stmt_close($stmt);
     echo ($id);
 } elseif ($action == 'statusComment') {
     $id         = intval($_REQUEST['id']);
     $new_status = $_REQUEST['new_status'];
-    $query3     = "UPDATE ServiceComment SET status = '" . $new_status . "' WHERE id='" . $id . "'";
-    $result = mysqli_query($link, $query3) or die(mysqli_error($link));
+    $stmt = mysqli_prepare($link, "UPDATE ServiceComment SET status = ? WHERE id = ?");
+    if (!$stmt) {
+        die(mysqli_error($link));
+    }
+    mysqli_stmt_bind_param($stmt, "si", $new_status, $id);
+    $result = mysqli_stmt_execute($stmt);
+    mysqli_stmt_close($stmt);
     echo ($id);
 } elseif($action == 'rotate-image'){
 	$image_name = $_REQUEST['image_name'];
 	$directions =  $_REQUEST['direction'];
 	//
-	$query = "SELECT id, ip FROM ServicePhoto WHERE file='".$image_name."';";
-	$result = mysqli_query($link, $query) or die(mysqli_error($link));
+	$stmt = mysqli_prepare($link, "SELECT id, ip FROM ServicePhoto WHERE file = ?");
+	if (!$stmt) {
+		die(mysqli_error($link));
+	}
+	mysqli_stmt_bind_param($stmt, "s", $image_name);
+	mysqli_stmt_execute($stmt);
+	$result = mysqli_stmt_get_result($stmt);
 	$num  = $result->num_rows;
 	$list = array();
 	$ip = '';
@@ -362,7 +462,8 @@ if ($action == 'get_photo_data') {
 						$ip = $row1['ip'];
 						//);
 				//array_push($list, $listFile);
-			}
+		}
+	mysqli_stmt_close($stmt);
 	}
 	$url = $photo_service_api.'update-photo.jsp?id='.$id.'&rotate='.$directions;
 	//echo ($url);

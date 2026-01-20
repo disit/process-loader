@@ -8,14 +8,14 @@ if (isset ($_SESSION['username'])&& isset($_SESSION['role'])){
 	mysqli_set_charset($link, 'utf8');
 	mysqli_select_db($link, $dbname);
 
-	$id0 = mysqli_real_escape_string($link, $_POST['id']);
-	$id = filter_var($id0, FILTER_SANITIZE_STRING);
+		$id0 = mysqli_real_escape_string($link, $_POST['id']);
+		$id = (int)filter_var($id0, FILTER_SANITIZE_NUMBER_INT);
 	//
-	$user_vecchio0 = mysqli_real_escape_string($link, $_POST['user_old']);
-	$user_vecchio = filter_var($user_vecchio0, FILTER_SANITIZE_STRING);
+		$user_vecchio0 = mysqli_real_escape_string($link, $_POST['user_old']);
+		$user_vecchio = filter_var($user_vecchio0, FILTER_SANITIZE_STRING);
 	//
-	$user_nuovo0 = mysqli_real_escape_string($link,$_POST['user_new']);
-	$user_nuovo = filter_var($user_nuovo0, FILTER_SANITIZE_STRING);
+		$user_nuovo0 = mysqli_real_escape_string($link,$_POST['user_new']);
+		$user_nuovo = filter_var($user_nuovo0, FILTER_SANITIZE_STRING);
 	//
 	$creation_date0 = mysqli_real_escape_string($link, $_POST['date']);
 	$creation_date = filter_var($creation_date0, FILTER_SANITIZE_STRING);
@@ -34,8 +34,11 @@ if (isset ($_SESSION['username'])&& isset($_SESSION['role'])){
 	$creaCartella=mkdir($nuova_pos, 0777, true);
 	$move1 = rename($vecchia_pos,$nuova_pos);
 		if($move1){
-			$query="UPDATE `uploaded_files` SET `Username` = '".$user_nuovo."' WHERE `Id` = '".$id."'" ;
-			$resultUser = mysqli_query($link, $query) or die(mysqli_error($link));
+		$query="UPDATE `uploaded_files` SET `Username` = ? WHERE `Id` = ?" ;
+		$stmt_user = mysqli_prepare($link, $query) or die(mysqli_error($link));
+		mysqli_stmt_bind_param($stmt_user, "si", $user_nuovo, $id);
+		$resultUser = mysqli_stmt_execute($stmt_user);
+		mysqli_stmt_close($stmt_user);
 			$url = "http://localhost:8983/solr/collection1/dataimport?command=full-import";
 			url_get($url);
 				////ETL////
@@ -53,8 +56,11 @@ if (isset ($_SESSION['username'])&& isset($_SESSION['role'])){
 												}
 										///MODIFICA DEI JOB TYPE///
 										$vecchio_file_pos = $user_vecchio.'/'.$data_C_mod4.'/'.$nome;
-										$query_job_type = "SELECT * FROM processloader_db.job_type WHERE file_position ='".$vecchio_file_pos."'";
-										$resultjobType = mysqli_query($link, $query_job_type) or die('Error celect job_type');
+											$query_job_type = "SELECT * FROM processloader_db.job_type WHERE file_position = ?";
+											$stmt_job_type = mysqli_prepare($link, $query_job_type) or die('Error celect job_type');
+											mysqli_stmt_bind_param($stmt_job_type, "s", $vecchio_file_pos);
+											mysqli_stmt_execute($stmt_job_type);
+											$resultjobType = mysqli_stmt_get_result($stmt_job_type);
 										$jb_list = array();
 										$num_rows = $resultjobType->num_rows;
 											if ($resultjobType ->num_rows > 0) {
@@ -64,19 +70,26 @@ if (isset ($_SESSION['username'])&& isset($_SESSION['role'])){
 											
 											//echo ($num_rows);
 											$nuovo_file_pos = $user_nuovo.'/'.$data_C_mod4.'/'.$file_name;
-											for ($i = 0; $i <= $num_rows; $i++){
+											for ($i = 0; $i < $num_rows; $i++){
 												$old_process_paramter=$jb_list[$i]['ProcessParameter'];
 												$old_file_position=$jb_list[$i]['file_position'];
 												$Id=$jb_list[$i]['Id'];
 												$new_process_paramter = str_replace($user_vecchio,$user_nuovo,$old_process_paramter);
 												$new_file_position = str_replace($user_vecchio,$user_nuovo,$old_file_position);
-												$query_nuova_file_pos = "UPDATE processloader_db.job_type SET file_position = '".$new_file_position."', ProcessParameter = '".$new_process_paramter."' WHERE Id = '".$Id."'";
-												$result_nuobo_file_pos = mysqli_query($link, $query_nuova_file_pos) or die('Error select job');
+												$query_nuova_file_pos = "UPDATE processloader_db.job_type SET file_position = ?, ProcessParameter = ? WHERE Id = ?";
+												$stmt_update_job = mysqli_prepare($link, $query_nuova_file_pos) or die('Error select job');
+												mysqli_stmt_bind_param($stmt_update_job, "ssi", $new_file_position, $new_process_paramter, $Id);
+												$result_nuobo_file_pos = mysqli_stmt_execute($stmt_update_job);
+												mysqli_stmt_close($stmt_update_job);
 											}
+											mysqli_stmt_close($stmt_job_type);
 											///fine dei Job Type ///
 											///MODIFICA DEL JOB///
-										$query_job = "SELECT * FROM processloader_db.processes WHERE file_position ='".$vecchio_file_pos."'";
-										$resultjob = mysqli_query($link, $query_job) or die('Select Job');
+											$query_job = "SELECT * FROM processloader_db.processes WHERE file_position = ?";
+											$stmt_job = mysqli_prepare($link, $query_job) or die('Select Job');
+											mysqli_stmt_bind_param($stmt_job, "s", $vecchio_file_pos);
+											mysqli_stmt_execute($stmt_job);
+											$resultjob = mysqli_stmt_get_result($stmt_job);
 										$proc_list = array();
 										$num_rows2 = $resultjob->num_rows;
 											if ($resultjob ->num_rows > 0) {
@@ -84,7 +97,7 @@ if (isset ($_SESSION['username'])&& isset($_SESSION['role'])){
 													array_push($proc_list, $row);
 													}
 												
-											for ($j = 0; $j <= $num_rows2; $j++){
+											for ($j = 0; $j < $num_rows2; $j++){
 												$old_process_paramter=$proc_list[$j]['ProcessParameter'];
 												$old_file_position=$proc_list[$j]['file_position'];
 												$Id=$proc_list[$j]['Id'];
@@ -92,8 +105,11 @@ if (isset ($_SESSION['username'])&& isset($_SESSION['role'])){
 												$process_group=$proc_list[$j]['Process_group'];
 												$new_process_paramter = str_replace($user_vecchio,$user_nuovo,$old_process_paramter);
 												$new_file_position = str_replace($user_vecchio,$user_nuovo,$old_file_position);
-												$query_nuova_file_pos2 = "UPDATE processloader_db.processes SET file_position = '".$new_file_position."', ProcessParameter = '".$new_process_paramter."' WHERE Id = '".$Id."'";
-												$result_nuobo_file_pos2 = mysqli_query($link, $query_nuova_file_pos2) or die('Error update jobs');
+												$query_nuova_file_pos2 = "UPDATE processloader_db.processes SET file_position = ?, ProcessParameter = ? WHERE Id = ?";
+												$stmt_update_proc = mysqli_prepare($link, $query_nuova_file_pos2) or die('Error update jobs');
+												mysqli_stmt_bind_param($stmt_update_proc, "ssi", $new_file_position, $new_process_paramter, $Id);
+												$result_nuobo_file_pos2 = mysqli_stmt_execute($stmt_update_proc);
+												mysqli_stmt_close($stmt_update_proc);
 													///FINE MODIFICA DEL JOB///
 													//USO DELLE API///
 													$hostQ = $proc_list[$j]['id_disces'];
@@ -106,8 +122,11 @@ if (isset ($_SESSION['username'])&& isset($_SESSION['role'])){
 													$linkQ = mysqli_connect($hostQ, $usernameQ, $passwordQ);
 													mysqli_set_charset($linkQ, 'utf8');
 													mysqli_select_db($linkQ, $dbnameQ);
-													$query_det="SELECT * FROM quartz.QRTZ_JOB_DETAILS WHERE JOB_NAME='".$process_name."' AND JOB_GROUP='".$process_group."'";
-													$result_det = mysqli_query($linkQ, $query_det) or die(mysqli_error('Error, insert query failed to SCE'));
+														$query_det="SELECT * FROM quartz.QRTZ_JOB_DETAILS WHERE JOB_NAME=? AND JOB_GROUP=?";
+														$stmt_det = mysqli_prepare($linkQ, $query_det) or die(mysqli_error('Error, insert query failed to SCE'));
+														mysqli_stmt_bind_param($stmt_det, "ss", $process_name, $process_group);
+														mysqli_stmt_execute($stmt_det);
+														$result_det = mysqli_stmt_get_result($stmt_det);
 													$detail_list = array();
 													$num_rows3 = $result_det->num_rows;
 														if ($result_det->num_rows > 0) {
@@ -121,11 +140,15 @@ if (isset ($_SESSION['username'])&& isset($_SESSION['role'])){
 																$blob_det_nuovo3 =  str_replace('#isNonConcurrent=','\#isNonConcurrent=',$blob_det_nuovo2);
 																$blob_det_nuovo4 =  str_replace('-param:processName','-param\:processName',$blob_det_nuovo3);
 																$blob_det_nuovo =  str_replace('\/','\\/',$blob_det_nuovo4);
-																$modify_job = "UPDATE quartz.QRTZ_JOB_DETAILS SET JOB_DATA='".$blob_det_nuovo."' WHERE JOB_NAME='".$process_name."' AND JOB_GROUP='".$process_group."'";
-																$result_job2 = mysqli_query($linkQ, $modify_job) or die('Error SCE update');
-															//}
-														}
-														mysqli_close($linkQ);
+																	$modify_job = "UPDATE quartz.QRTZ_JOB_DETAILS SET JOB_DATA=? WHERE JOB_NAME=? AND JOB_GROUP=?";
+																	$stmt_mod = mysqli_prepare($linkQ, $modify_job) or die('Error SCE update');
+																	mysqli_stmt_bind_param($stmt_mod, "sss", $blob_det_nuovo, $process_name, $process_group);
+																	$result_job2 = mysqli_stmt_execute($stmt_mod);
+																	mysqli_stmt_close($stmt_mod);
+																//}
+															}
+															mysqli_stmt_close($stmt_det);
+															mysqli_close($linkQ);
 																if (isset($_REQUEST['showFrame'])){
 																	if ($_REQUEST['showFrame'] == 'false'){
 																			header ("location:page.php?showFrame=false&modify_ownership=ok");
@@ -139,6 +162,7 @@ if (isset ($_SESSION['username'])&& isset($_SESSION['role'])){
 													}
 											//fine del caso in cui ci sono i job
 											}
+											mysqli_stmt_close($stmt_job);
 											//
 										//fine del caso in cui ci sono i job_type
 										}

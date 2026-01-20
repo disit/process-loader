@@ -20,9 +20,9 @@ include('config.php'); // Includes Login Script
   //
 	if($ext == 'zip'){
 		//ETL
-	if ($tipo=="ETL"){
-	//
-	$base= basename($nome,".zip");
+		if ($tipo=="ETL"){
+		//
+		$base= basename($nome,".zip");
 	//cartella
 	$cartella = 'uploads/'.$_SESSION['username'].'/'.$data1.'/'.$time2.'/'.$base.'/';
 	$creaCartella=mkdir($cartella, 0777, true);
@@ -31,11 +31,19 @@ include('config.php'); // Includes Login Script
 	if (move_uploaded_file($percorso, $cartella . $nome))
 		{
 			print 'Upload eseguito con successo<br>';
-			$data=date('Y-m-d H:i:s');
-			$query_zip="INSERT INTO processloader_db.uploaded_files (Id,File_name,Description,User,Creation_date,file_type,status)VALUES (NULL,'".$nome."','".$descrizione."','0','".$data."','".$tipo."','NO','".$utente_us."')";
-			$query_caricamento = mysqli_query($connessione_al_server,$query_zip) or die ("Creazione record non riuscita".mysqli_error($connessione_al_server));
-				$zip = new ZipArchive;
-				if ($zip->open($cartella.'/'.$nome) === TRUE) {
+				$data=date('Y-m-d H:i:s');
+				$query_zip="INSERT INTO processloader_db.uploaded_files (Id,File_name,Description,User,Creation_date,file_type,status,Username) VALUES (NULL,?,?,?,?,?,?,?)";
+				$stmt_zip = mysqli_prepare($connessione_al_server, $query_zip) or die ("Creazione record non riuscita".mysqli_error($connessione_al_server));
+				$user_id = 0;
+				$status = 'NO';
+				mysqli_stmt_bind_param($stmt_zip, "ssissss", $nome, $descrizione, $user_id, $data, $tipo, $status, $utente_us);
+				$query_caricamento = mysqli_stmt_execute($stmt_zip);
+				mysqli_stmt_close($stmt_zip);
+				if (!$query_caricamento) {
+					die ("Creazione record non riuscita".mysqli_error($connessione_al_server));
+				}
+					$zip = new ZipArchive;
+					if ($zip->open($cartella.'/'.$nome) === TRUE) {
 					//$zip->extractTo('jobs/'.$_SESSION['username'].'/'.$data1.'/'.$time2.'/'.$base.'/','/Ingestion/'.'main.kjb');
 					$zip->extractTo('jobs/'.$_SESSION['username'].'/'.$data1.'/'.$time2.'/');
 					$zip->close();
@@ -46,17 +54,31 @@ include('config.php'); // Includes Login Script
 					$_SESSION['file_zip'] = $nome;
 					$_SESSION['data_zip']= $data;
 					//Modifica stato database
-					$sql = "UPDATE  `uploaded_files` SET `uploaded_files`.`status`='OK - ".date('Y-m-d H:i:s')."' WHERE `File_name`='".$nome."' AND `Creation_date`='".$data."'";
-					$result = mysqli_query($connessione_al_server, $sql) or die(mysqli_error($connessione_al_server));
-					//
-					header("location:file_archive.php");
-					//reindirizzato//
-			} else {
-					$sql2 = "UPDATE  `uploaded_files` SET `uploaded_files`.`status`='ERRORE VERIFICA' WHERE `File_name`='".$nome."' AND `Creation_date`='".$data."'";
-					$result2 = mysqli_query($connessione_al_server, $sql2) or die(mysqli_error($connessione_al_server));
-					print "Il file 'main.kjb' non è presente";
-					header("location:upload.php");
-			}
+						$sql = "UPDATE `uploaded_files` SET `uploaded_files`.`status`=? WHERE `File_name`=? AND `Creation_date`=?";
+						$stmt = mysqli_prepare($connessione_al_server, $sql) or die(mysqli_error($connessione_al_server));
+						$status_ok = 'OK - '.date('Y-m-d H:i:s');
+						mysqli_stmt_bind_param($stmt, "sss", $status_ok, $nome, $data);
+						$result = mysqli_stmt_execute($stmt);
+						mysqli_stmt_close($stmt);
+						if (!$result) {
+							die(mysqli_error($connessione_al_server));
+						}
+						//
+						header("location:file_archive.php");
+						//reindirizzato//
+				} else {
+						$sql2 = "UPDATE `uploaded_files` SET `uploaded_files`.`status`=? WHERE `File_name`=? AND `Creation_date`=?";
+						$stmt = mysqli_prepare($connessione_al_server, $sql2) or die(mysqli_error($connessione_al_server));
+						$status_err = 'ERRORE VERIFICA';
+						mysqli_stmt_bind_param($stmt, "sss", $status_err, $nome, $data);
+						$result2 = mysqli_stmt_execute($stmt);
+						mysqli_stmt_close($stmt);
+						if (!$result2) {
+							die(mysqli_error($connessione_al_server));
+						}
+						print "Il file 'main.kjb' non è presente";
+						header("location:upload.php");
+				}
 
     }
     else
@@ -76,11 +98,19 @@ include('config.php'); // Includes Login Script
 		if (move_uploaded_file($percorso, $cartella . $nome))
 		{
 			print 'Upload eseguito con successo<br>';
-			$data=date('Y-m-d H:i:s');
-			$query_zip="INSERT INTO processloader_db.uploaded_files (Id,File_name,Description,User,Creation_date,file_type,status)VALUES (NULL,'".$nome."','".$descrizione."','".$utente."','".$data."','".$tipo."','NO')";
-			$query_caricamento = mysqli_query($connessione_al_server,$query_zip) or die ("Creazione record non riuscita".mysqli_error($connessione_al_server));
-				$zip = new ZipArchive;
-				if ($zip->open($cartella.'/'.$nome) === TRUE) {
+				$data=date('Y-m-d H:i:s');
+				$query_zip="INSERT INTO processloader_db.uploaded_files (Id,File_name,Description,User,Creation_date,file_type,status) VALUES (NULL,?,?,?,?,?,?)";
+				$stmt_zip = mysqli_prepare($connessione_al_server, $query_zip) or die ("Creazione record non riuscita".mysqli_error($connessione_al_server));
+				$user_id = (int)$utente;
+				$status = 'NO';
+				mysqli_stmt_bind_param($stmt_zip, "ssisss", $nome, $descrizione, $user_id, $data, $tipo, $status);
+				$query_caricamento = mysqli_stmt_execute($stmt_zip);
+				mysqli_stmt_close($stmt_zip);
+				if (!$query_caricamento) {
+					die ("Creazione record non riuscita".mysqli_error($connessione_al_server));
+				}
+					$zip = new ZipArchive;
+					if ($zip->open($cartella.'/'.$nome) === TRUE) {
 					//$zip->extractTo('jobs/'.$_SESSION['username'].'/'.$data.'/'.$base.'/','main.kjb');
 					$zip->extractTo('jobs/'.$_SESSION['username'].'/'.$data1.'/'.$time2.'/');
 					$zip->close();
@@ -91,17 +121,31 @@ include('config.php'); // Includes Login Script
 					$_SESSION['file_zip'] = $nome;
 					$_SESSION['data_zip']= $data;
 					//Modifica stato database
-					$sql = "UPDATE  `uploaded_files` SET `uploaded_files`.`status`='OK - ".date('Y-m-d H:i:s')."' WHERE `File_name`='".$nome."' AND `Creation_date`='".$data."'";
-					$result = mysqli_query($connessione_al_server, $sql) or die(mysqli_error($connessione_al_server));
-					//
-					header("location:file_archive.php");
-					//reindirizzato//
-			} else {
-					$sql2 = "UPDATE  `uploaded_files` SET `uploaded_files`.`status`='ERRORE VERIFICA' WHERE `File_name`='".$nome."' AND `Creation_date`='".$data."'";
-					$result2 = mysqli_query($connessione_al_server, $sql2) or die(mysqli_error($connessione_al_server));
-					print "Il file 'main.kjb' non è presente";
-					header("location:upload.php");
-			}
+						$sql = "UPDATE `uploaded_files` SET `uploaded_files`.`status`=? WHERE `File_name`=? AND `Creation_date`=?";
+						$stmt = mysqli_prepare($connessione_al_server, $sql) or die(mysqli_error($connessione_al_server));
+						$status_ok = 'OK - '.date('Y-m-d H:i:s');
+						mysqli_stmt_bind_param($stmt, "sss", $status_ok, $nome, $data);
+						$result = mysqli_stmt_execute($stmt);
+						mysqli_stmt_close($stmt);
+						if (!$result) {
+							die(mysqli_error($connessione_al_server));
+						}
+						//
+						header("location:file_archive.php");
+						//reindirizzato//
+				} else {
+						$sql2 = "UPDATE `uploaded_files` SET `uploaded_files`.`status`=? WHERE `File_name`=? AND `Creation_date`=?";
+						$stmt = mysqli_prepare($connessione_al_server, $sql2) or die(mysqli_error($connessione_al_server));
+						$status_err = 'ERRORE VERIFICA';
+						mysqli_stmt_bind_param($stmt, "sss", $status_err, $nome, $data);
+						$result2 = mysqli_stmt_execute($stmt);
+						mysqli_stmt_close($stmt);
+						if (!$result2) {
+							die(mysqli_error($connessione_al_server));
+						}
+						print "Il file 'main.kjb' non è presente";
+						header("location:upload.php");
+				}
 
     } else
     {
@@ -119,11 +163,19 @@ include('config.php'); // Includes Login Script
 		if (move_uploaded_file($percorso, $cartella . $nome))
 		{
 			print 'Upload eseguito con successo<br>';
-			$data=date('Y-m-d H:i:s');
-			$query_zip="INSERT INTO processloader_db.uploaded_files (Id,File_name,Description,User,Creation_date,file_type,status)VALUES (NULL,'".$nome."','".$descrizione."','".$utente."','".$data."','".$tipo."','NO')";
-			$query_caricamento = mysqli_query($connessione_al_server,$query_zip) or die ("Creazione record non riuscita".mysqli_error($connessione_al_server));
-				$zip = new ZipArchive;
-				if ($zip->open($cartella.'/'.$nome) === TRUE) {
+				$data=date('Y-m-d H:i:s');
+				$query_zip="INSERT INTO processloader_db.uploaded_files (Id,File_name,Description,User,Creation_date,file_type,status) VALUES (NULL,?,?,?,?,?,?)";
+				$stmt_zip = mysqli_prepare($connessione_al_server, $query_zip) or die ("Creazione record non riuscita".mysqli_error($connessione_al_server));
+				$user_id = (int)$utente;
+				$status = 'NO';
+				mysqli_stmt_bind_param($stmt_zip, "ssisss", $nome, $descrizione, $user_id, $data, $tipo, $status);
+				$query_caricamento = mysqli_stmt_execute($stmt_zip);
+				mysqli_stmt_close($stmt_zip);
+				if (!$query_caricamento) {
+					die ("Creazione record non riuscita".mysqli_error($connessione_al_server));
+				}
+					$zip = new ZipArchive;
+					if ($zip->open($cartella.'/'.$nome) === TRUE) {
 					//$zip->extractTo('jobs/'.$_SESSION['username'].'/'.$data.'/'.$base.'/','main.kjb');
 					$zip->extractTo('jobs/'.$_SESSION['username'].'/'.$data1.'/'.$time2.'/');
 					$zip->close();
@@ -134,17 +186,31 @@ include('config.php'); // Includes Login Script
 					$_SESSION['file_zip'] = $nome;
 					$_SESSION['data_zip']= $data;
 					//Modifica stato database
-					$sql = "UPDATE  `uploaded_files` SET `uploaded_files`.`status`='OK - ".date('Y-m-d H:i:s')."' WHERE `File_name`='".$nome."' AND `Creation_date`='".$data."'";
-					$result = mysqli_query($connessione_al_server, $sql) or die(mysqli_error($connessione_al_server));
-					//
-					header("location:file_archive.php");
-					//reindirizzato//
-			} else {
-					$sql2 = "UPDATE  `uploaded_files` SET `uploaded_files`.`status`='ERRORE VERIFICA' WHERE `File_name`='".$nome."' AND `Creation_date`='".$data."'";
-					$result2 = mysqli_query($connessione_al_server, $sql2) or die(mysqli_error($connessione_al_server));
-					print "Il file 'main.kjb' non è presente";
-					header("location:upload.php");
-			}
+						$sql = "UPDATE `uploaded_files` SET `uploaded_files`.`status`=? WHERE `File_name`=? AND `Creation_date`=?";
+						$stmt = mysqli_prepare($connessione_al_server, $sql) or die(mysqli_error($connessione_al_server));
+						$status_ok = 'OK - '.date('Y-m-d H:i:s');
+						mysqli_stmt_bind_param($stmt, "sss", $status_ok, $nome, $data);
+						$result = mysqli_stmt_execute($stmt);
+						mysqli_stmt_close($stmt);
+						if (!$result) {
+							die(mysqli_error($connessione_al_server));
+						}
+						//
+						header("location:file_archive.php");
+						//reindirizzato//
+				} else {
+						$sql2 = "UPDATE `uploaded_files` SET `uploaded_files`.`status`=? WHERE `File_name`=? AND `Creation_date`=?";
+						$stmt = mysqli_prepare($connessione_al_server, $sql2) or die(mysqli_error($connessione_al_server));
+						$status_err = 'ERRORE VERIFICA';
+						mysqli_stmt_bind_param($stmt, "sss", $status_err, $nome, $data);
+						$result2 = mysqli_stmt_execute($stmt);
+						mysqli_stmt_close($stmt);
+						if (!$result2) {
+							die(mysqli_error($connessione_al_server));
+						}
+						print "Il file 'main.kjb' non è presente";
+						header("location:upload.php");
+				}
 
     } else
     {

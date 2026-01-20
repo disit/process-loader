@@ -48,8 +48,14 @@ alert('$message');
 
 
 //$query_reg="INSERT INTO processloader_db.users (Id,Username,Password,Role,Email,Notes)VALUES (NULL,'".$us_reg."','".$pw_reg."','".$rl_reg."','".$em_reg."','".$nt_reg."')";
-$query_reg="INSERT INTO processloader_db.users (Id,Username,Password,Role,Email,Notes)VALUES (NULL,'".$us_reg."','".md5($pw_reg)."','".$rl_reg."','".$em_reg."','".$nt_reg."')";
-$query_registrazione = mysqli_query($connessione_al_server,$query_reg) or die ("Operation failed".mysqli_error()); // se la query fallisce mostrami questo errore
+$password_hash = md5($pw_reg);
+$stmt = mysqli_prepare($connessione_al_server, "INSERT INTO processloader_db.users (Id,Username,Password,Role,Email,Notes) VALUES (NULL,?,?,?,?,?)");
+if (!$stmt) {
+	die("Operation failed" . mysqli_error($connessione_al_server));
+}
+mysqli_stmt_bind_param($stmt, "sssss", $us_reg, $password_hash, $rl_reg, $em_reg, $nt_reg);
+$query_registrazione = mysqli_stmt_execute($stmt);
+mysqli_stmt_close($stmt);
 //crea tabella
 //$nome_dir='./jobs/'.$us_reg;
 $nome_dir = $repository_files.$us_reg;
