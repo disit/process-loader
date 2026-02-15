@@ -45,7 +45,7 @@
     "eslint": "^6.7.2",
     "eslint-loader": "^3.0.2",
     "gh-pages": "^1.0.0",
-    "gulp": "^3.9.1",
+    "gulp": "^4.0.2",
     "gulp-autoprefixer": "^4.0.0",
     "gulp-clean-css": "^3.9.4",
     "gulp-compile-handlebars": "^0.6.1",
