@@ -16,7 +16,6 @@
    along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
 
-session_start();
 $username = "user";
 $password = "password";
 $host="localhost";
@@ -54,6 +53,10 @@ $access_token_userinfo = "http://localhost/auth/realms/master/protocol/openid-co
 //R PARAMETERS
 $r_path = '/usr/bin/Rscript';
 
+$storeSessionOnDB='no';
+include_once __DIR__ . "/init_session.php";
+session_start();
+
 $connessione_al_server= mysqli_connect($host, $username, $password) or die("Errore di Connessione!!");
 if(!$connessione_al_server){
 die ('Non riesco a connettermi: errore '.mysqli_error()); // questo apparirà solo se ci sarà un errore
@@ -63,5 +66,3 @@ $db_selected=mysqli_select_db($connessione_al_server,$dbname); // dove io ho scr
 if(!$db_selected){
 die ('Errore nella selezione del database: errore '.mysqli_error()); // se la connessione non andrà a buon fine apparirà questo messaggio
 }
-
-?>
