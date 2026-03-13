@@ -248,7 +248,7 @@ if (isset($_SESSION['role'])) {
 
 			//echo('limits_n'.gettype($limits_n));
 
-            if (($role == 'any') || ($role == 'Manager') || ($role == 'AreaManager') || ($role == 'ToolAdmin') || ($role == 'RootAdmin')) {
+            if (($role == 'any') || ($role == 'Manager') || ($role == 'AreaManager') || ($role == 'ToolAdmin') || ($role == 'RootAdmin') || ($role == 'Observer')) {
 
                 if (in_array($elementtype, $types_limits)) {
                     if (in_array($organization, $check_org)) {
@@ -348,7 +348,7 @@ if (isset($_SESSION['role'])) {
                 //-------//
 
                 //
-				if (($role == 'any') || ($role == 'Manager') || ($role == 'AreaManager') || ($role == 'ToolAdmin') || ($role == 'RootAdmin')) {
+				if (($role == 'any') || ($role == 'Manager') || ($role == 'AreaManager') || ($role == 'ToolAdmin') || ($role == 'RootAdmin') || ($role == 'Observer')) {
                     //
                     if (in_array($elementtype, $types_limits)) {
                         if (in_array($organization, $check_org)) {
@@ -422,7 +422,7 @@ if (isset($_SESSION['role'])) {
              array_push($check_org, 'any');
             //
 
-            if (($role == 'any') || ($role == 'Manager') || ($role == 'AreaManager') || ($role == 'ToolAdmin') || ($role == 'RootAdmin')) {
+            if (($role == 'any') || ($role == 'Manager') || ($role == 'AreaManager') || ($role == 'ToolAdmin') || ($role == 'RootAdmin') || ($role == 'Observer')) {
                 //
                 if (in_array($elementtype, $types_limits)) {
                     if (in_array($organization, $check_org)) {

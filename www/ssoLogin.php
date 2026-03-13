@@ -83,8 +83,10 @@
               $ldapRole = "Manager";
               $ldapOk = true;
            } else {
-              $msg="user ".$username." does not have a valid role";
-           }
+	   //$msg="user ".$username." does not have a valid role";
+              $ldapRole = "Observer";
+              $ldapOk = true;
+	   }
         } else {
           $msg="user ".$username." cannot access to ProcessLoader! 	".$ldapUsername;
         }

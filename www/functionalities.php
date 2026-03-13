@@ -32,18 +32,19 @@ $result = mysqli_query($link, $query) or die(mysqli_error($link));
         $function_list = array();
         if ($result->num_rows > 0) {
 		while ($row = mysqli_fetch_array($result)) {
-					$process = array("functionalities" => array(
+			$process = array("functionalities" => array(
                         "id" => $row['id'],
                         "functionality" => $row['functionality'],
                         "ToolAdmin" => $row['ToolAdmin'],
                         "AreaManager" => $row['AreaManager'],
-                        "Manager"=> $row['Manager'],
-						"Public"=>$row['Public'],
+			"Manager"=> $row['Manager'],
+			"Observer"=> $row['Observer'],
+			"Public"=>$row['Public'],
                         "link"=>$row['link'],
-						"view"=>$row['view'],
-						"class"=>$row['class'],
-						"RootAdmin"=>$row['RootAdmin']
-                )
+			"view"=>$row['view'],
+			"class"=>$row['class'],
+			"RootAdmin"=>$row['RootAdmin']
+                	)
                 );
                 array_push($function_list, $process);
 				//OPERAZIONI
@@ -110,5 +111,3 @@ $result = mysqli_query($link, $query) or die(mysqli_error($link));
 
         mysqli_close($link);
 		
-?>
-

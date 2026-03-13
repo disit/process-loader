@@ -287,7 +287,7 @@ if (!isset($_GET['pageTitle'])){
 			<div class="input-group"><span class="input-group-addon">Element type: </span><select id="elementtype_c" name="elementtype_c"  class="form-control input-group-addon"></select></div><br />
 	       <div class="input-group"><span class="input-group-addon">User: </span><input id="user_c" name="user_c" type="text" class="form-control" /></div><br />
 		   <div class="input-group"><span class="input-group-addon">Organization: </span><select id="organization_c" name="organization_c" class="form-control input-group-addon"></select></div><br />
-		   <div class="input-group"><span class="input-group-addon">Role: </span><select id="role_c" name="role_c" onchange="changhe_rule()"   class="form-control input-group-addon"><option value="any">any</option><option value="Manager">Manager</option><option value="AreaManager">AreaManager</option><option value="ToolAdmin">ToolAdmin</option><option value="RootAdmin">RootAdmin</option></select></div><br />
+		   <div class="input-group"><span class="input-group-addon">Role: </span><select id="role_c" name="role_c" onchange="changhe_rule()"   class="form-control input-group-addon"><option value="any">any</option><option value="Manager">Manager</option><option value="AreaManager">AreaManager</option><option value="ToolAdmin">ToolAdmin</option><option value="RootAdmin">RootAdmin</option><option value="Observer">Observer</option></select></div><br />
 			<div class="input-group"><span class="input-group-addon">Limits: </span><input id="limits_c" name="limits_c" type="text" class="form-control" /></div><br />
 				
       </div>
