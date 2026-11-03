@@ -20,6 +20,13 @@ include('config.php'); // Includes Login Script
 include('control.php');
 //include('functionalities.php');
 
+// This page returns private data and must not rely on the client-side redirect
+// below as its only access control.
+if (!isset($_SESSION['username']) || $_SESSION['username'] === '') {
+    http_response_code(401);
+    exit('Authentication required');
+}
+
 if (isset ($_SESSION['username'])){
   $utente_att = $_SESSION['username'];	
 }else{
@@ -108,7 +115,55 @@ if (!isset($_GET['pageTitle'])){
             include 'datatablemanager_APICient.php';
             include 'datatablemanager_APIQueryManager.php';
 
-            $element_id = $_GET['elementId'];
+            $element_id = isset($_GET['elementId']) ? trim((string) $_GET['elementId']) : '';
+
+            // Element IDs are generated as <sanitized-file-name>|<unix-timestamp>.
+            // Reject anything else before it can reach the legacy SQL builders.
+            if ($element_id === '' || strlen($element_id) > 255 ||
+                !preg_match('/\A[A-Za-z0-9._-]{1,220}\|[0-9]{1,20}\z/', $element_id)) {
+                http_response_code(400);
+                exit('Invalid elementId');
+            }
+
+            // Non-admin users may preview only elements returned by the
+            // ownership service for their current access token.
+            $admin_roles = array('ToolAdmin', 'AreaManager', 'Manager', 'RootAdmin');
+            if (!in_array($role_att, $admin_roles, true)) {
+                $access_token = isset($_SESSION['accessToken']) ? (string) $_SESSION['accessToken'] : '';
+                $authorized = false;
+                if ($access_token !== '') {
+                    $ownership_url = getSelectDataTableQuery(rawurlencode($access_token));
+                    $ch = curl_init($ownership_url);
+                    curl_setopt_array($ch, array(
+                        CURLOPT_RETURNTRANSFER => true,
+                        CURLOPT_CONNECTTIMEOUT => 5,
+                        CURLOPT_TIMEOUT => 10,
+                        CURLOPT_SSL_VERIFYPEER => true,
+                        CURLOPT_SSL_VERIFYHOST => 2
+                    ));
+                    $ownership_response = curl_exec($ch);
+                    curl_close($ch);
+                    $ownership_items = json_decode((string) $ownership_response, true);
+                    if (is_array($ownership_items)) {
+                        foreach ($ownership_items as $ownership_item) {
+                            if (is_array($ownership_item) &&
+                                isset($ownership_item['elementId']) &&
+                                hash_equals((string) $ownership_item['elementId'], $element_id)) {
+                                $authorized = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+                if (!$authorized) {
+                    http_response_code(403);
+                    exit('Element not authorized');
+                }
+            }
+
+            // The existing SQL helpers build query strings. Escape the already
+            // allow-listed value as a defence-in-depth measure.
+            $element_id = $conn->real_escape_string($element_id);
             $dateObserved_type_query = getDateObservedTypeQuery($element_id);
             $dateObserved_type = executeGetDateObservedType($dateObserved_type_query);
 
@@ -159,23 +214,31 @@ if (!isset($_GET['pageTitle'])){
 
             $value_name_types_concat_sheet_name_type_all_headers_array_for_table = array_slice($value_name_types_concat_sheet_name_type_all_headers_array, 2);
 
+            $escape_preview = static function ($value) {
+                return htmlspecialchars((string) $value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+            };
+            $safe_feat_value_types = array_map($escape_preview, $feat_value_types);
+            $safe_feat_value_units = array_map($escape_preview, $feat_value_units);
+            $safe_feat_data_types = array_map($escape_preview, $feat_data_types);
+            $safe_headers = array_map($escape_preview, $value_name_types_concat_sheet_name_type_all_headers_array_for_table);
+
             echo "<tr class=header ><td id=\"cell_first_second_row\" colspan=\"2\" style=\"background-color: white;\"></td><td style=\"background: darkcyan;font-family: Montserrat;font-weight: 400;font-size: 14px;\"  colspan=";
             echo count($feat_names);
             echo "><b>Value Type</b></td></tr>";
-            echo "<tr><td colspan=\"2\" style=\"background-color: white;border-top-style: hidden;border-left-style: hidden;border-bottom-style: hidden;\"></td><td style=\"background: cadetblue;font-family: Montserrat;font-weight: 400;font-size: 14px;\">" . implode("</td><td style=\"background: cadetblue;font-family: Montserrat; font-weight: 400;font-size: 14px;\">", $feat_value_types) . "</td></tr>";
+            echo "<tr><td colspan=\"2\" style=\"background-color: white;border-top-style: hidden;border-left-style: hidden;border-bottom-style: hidden;\"></td><td style=\"background: cadetblue;font-family: Montserrat;font-weight: 400;font-size: 14px;\">" . implode("</td><td style=\"background: cadetblue;font-family: Montserrat; font-weight: 400;font-size: 14px;\">", $safe_feat_value_types) . "</td></tr>";
 
             echo "<tr class=header><td id=\"cell_first_second_row\" colspan=\"2\" style=\"background-color: white;\"></td><td style=\"background: darkcyan;font-family: Montserrat;font-weight: 400;font-size: 14px;\"  colspan=";
             echo count($feat_names);
             echo "><b>Value Unit</b></td></tr>";
-            echo "<tr><td colspan=\"2\" style=\"background-color: white;border-top-style: hidden;border-left-style: hidden;border-bottom-style: hidden;\"></td><td style=\"background: cadetblue;font-family: Montserrat;font-weight: 400;font-size: 14px;\">" . implode("</td><td style=\"background: cadetblue;font-family: Montserrat; font-weight: 400;font-size: 14px;\">", $feat_value_units) . "</td></tr>";
+            echo "<tr><td colspan=\"2\" style=\"background-color: white;border-top-style: hidden;border-left-style: hidden;border-bottom-style: hidden;\"></td><td style=\"background: cadetblue;font-family: Montserrat;font-weight: 400;font-size: 14px;\">" . implode("</td><td style=\"background: cadetblue;font-family: Montserrat; font-weight: 400;font-size: 14px;\">", $safe_feat_value_units) . "</td></tr>";
             echo "<tr class=header><td id=\"cell_first_second_row\" colspan=\"2\" style=\"background-color: white;\"></td><td style=\"background: darkcyan;font-family: Montserrat;font-weight: 400;font-size: 14px;\"  colspan=";
             echo count($feat_names);
             echo "><b>Data Type</b></td></tr>";
-            echo "<tr><td colspan=\"2\" style=\"background-color: white;border-top-style: hidden;border-left-style: hidden;\"></td><td style=\"background: cadetblue;font-family: Montserrat;font-weight: 400;font-size: 14px;\">" . implode("</td><td style=\"background: cadetblue;font-family: Montserrat;font-weight: 400;font-size: 14px;\">", $feat_data_types) . "</td></tr>";
+            echo "<tr><td colspan=\"2\" style=\"background-color: white;border-top-style: hidden;border-left-style: hidden;\"></td><td style=\"background: cadetblue;font-family: Montserrat;font-weight: 400;font-size: 14px;\">" . implode("</td><td style=\"background: cadetblue;font-family: Montserrat;font-weight: 400;font-size: 14px;\">", $safe_feat_data_types) . "</td></tr>";
             
             //////////////////////////////////////////////////
             $header_row="";
-            $header_row.= '<tr><td style="background: #1C70D2;font-weight: bold">Device Name</td><td style="background: #1C70D2;font-weight: bold">Sheet Name</td><th style="color: black;">' . implode('</th><th style="color: black;">', $value_name_types_concat_sheet_name_type_all_headers_array_for_table) . '</th>';
+            $header_row.= '<tr><td style="background: #1C70D2;font-weight: bold">Device Name</td><td style="background: #1C70D2;font-weight: bold">Sheet Name</td><th style="color: black;">' . implode('</th><th style="color: black;">', $safe_headers) . '</th>';
             
             if($coordinate_type=="file"){
             $header_row.='<td class=\"header\" style="background: #1C70D2;color: black;font-family: Montserrat;font-weight:400; font-size: 14px;">' .'Latitude'. '</td><td class=\"header\" style="color: black;font-family: Montserrat;font-weight:400; font-size: 14px;background: #1C70D2;">'.'Longitude'.'</td>';
@@ -262,7 +325,8 @@ if (!isset($_GET['pageTitle'])){
 //                          $row_array_to_be_inseted[count($features) + 6] = "Address field is empty <b>OR</b> no coordinate found by the provided address";
                         }
                     }
-                        echo '<tr><td>' . implode('</td><td>', $row_array_to_be_inseted) . '</td></tr>';
+                        $safe_row = array_map($escape_preview, $row_array_to_be_inseted);
+                        echo '<tr><td>' . implode('</td><td>', $safe_row) . '</td></tr>';
                     }
                 }
             ?>

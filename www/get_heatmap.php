@@ -317,7 +317,6 @@ JOIN (
 		if($max == ''){
 			$query    = "INSERT INTO heatmap.colors (`id`,`metric_name`, `min`, `rgb`, `color`, `order`)VALUES(NULL,'" . $name_color_map . "','" . $min . "','" . $rgb . "','" . mysqli_real_escape_string($link, $array_color[$i]) . "'," . mysqli_real_escape_string($link, $array_order[$i]) . ")";
 		}
-		echo ($query.'<br />');
 		$result = mysqli_query($link, $query) or die(mysqli_error($link));
         }
     }
@@ -330,13 +329,20 @@ JOIN (
     $utente = $_SESSION['username'];
     //INSERT INTO colormapUsers;
     $query_user = "INSERT INTO `heatmap`.`colormapUsers` (`colormap`, `username`) VALUES ('" . $name_color_map . "', '" . $utente . "');";
-    echo ($query_user.'<br />');
     $result_user= mysqli_query($link, $query_user) or die(mysqli_error($link));
     ////CREATE IN COLORMAP 
-    //HeatmapRanges
-    $link_rm = mysqli_connect($host_dashboardbuilder, $username_dashboardbuilder, $password_dashboardbuilder) or die("failed to connect to server !!");
-    mysqli_set_charset($link_rm, 'utf8');
-    mysqli_select_db($link_rm, $db_dashboardbuilder); 
+    //HeatmapRanges. In this deployment HeatmapRanges is hosted in the
+    //Dashboard database reachable with the heatmap connection. Keep support
+    //for a dedicated dashboard-builder connection when it is configured.
+    if (!isset($host_dashboardbuilder)) {
+        $link_rm = mysqli_connect($host_heatmap, $username_heatmap, $password_heatmap) or die("failed to connect to server !!");
+        mysqli_set_charset($link_rm, 'utf8');
+        mysqli_select_db($link_rm, 'Dashboard');
+    } else {
+        $link_rm = mysqli_connect($host_dashboardbuilder, $username_dashboardbuilder, $password_dashboardbuilder) or die("failed to connect to server !!");
+        mysqli_set_charset($link_rm, 'utf8');
+        mysqli_select_db($link_rm, $db_dashboardbuilder);
+    }
     $query_update_metric = "INSERT INTO HeatmapRanges (metricName) VALUES ('$name_color_map')";
     $result_rm = mysqli_query($link_rm, $query_update_metric) or die(mysqli_error($link_rm));
     /////////////
@@ -353,24 +359,24 @@ JOIN (
     }
     
 } elseif ($action == 'modify_colormap') {
-    $metric_name = $_REQUEST['metric_name'];
+    $metric_name = $_REQUEST['metric_name'] ?? '';
     //echo ($metric_name);
-    $paramId    = $_REQUEST['paramId'];
+    $paramId    = $_REQUEST['paramId'] ?? array();
 	$paramId   = filter_var_array($paramId, FILTER_SANITIZE_STRING);
 	//
-    $paramMin   = $_REQUEST['paramMin'];
+    $paramMin   = $_REQUEST['paramMin'] ?? array();
 	$paramMin   = filter_var_array($paramMin, FILTER_SANITIZE_STRING);
 	//
-    $paramMax   = $_REQUEST['paramMax'];
+    $paramMax   = $_REQUEST['paramMax'] ?? array();
 	$paramMax   = filter_var_array($paramMax, FILTER_SANITIZE_STRING);
 	//
-    $paramRgb   = $_REQUEST['paramRgb'];
+    $paramRgb   = $_REQUEST['paramRgb'] ?? array();
 	$paramRgb  = filter_var_array($paramRgb, FILTER_SANITIZE_STRING);
 	//
-    $paramColor = $_REQUEST['paramColor'];
+    $paramColor = $_REQUEST['paramColor'] ?? array();
 	$paramColor = filter_var_array($paramColor, FILTER_SANITIZE_STRING);
 	//
-    $paramOrder = $_REQUEST['paramOrder'];
+    $paramOrder = $_REQUEST['paramOrder'] ?? array();
 	$paramOrder = filter_var_array($paramOrder, FILTER_SANITIZE_STRING);
     ////
     $lun        = count($paramId);
@@ -408,17 +414,16 @@ JOIN (
 			$query1   = "UPDATE heatmap.colors SET colors.min=NULL, colors.max='" . $paramMax[$i] . "', colors.rgb='" . $rgb . "', colors.color='" . mysqli_real_escape_string($link, $paramColor[$i]) . "', colors.order='" . mysqli_real_escape_string($link,$paramOrder[$i]) . "' WHERE colors.id='" . $paramId[$i] . "'";
 		}*/
 		//
-        echo($query1);
         $result1 = mysqli_query($link, $query1) or die(mysqli_error($link));
     }
     
-    $paramMinMod = $_REQUEST['paramMinMod'];
-    var_dump($paramMinMod);
-    $paramMaxMod = $_REQUEST['paramMaxMod'];
-    var_dump($paramMaxMod);
-    $paramRgbMod   = $_REQUEST['paramRgbMod'];
-    $paramColorMod = $_REQUEST['paramColorMod'];
-    $paramOrderMod = $_REQUEST['paramOrderMod'];
+    // The edit form uses paramMin/paramMax also for newly added rows.
+    // Older versions used paramMinMod/paramMaxMod, so accept both formats.
+    $paramMinMod = $_REQUEST['paramMinMod'] ?? $paramMin;
+    $paramMaxMod = $_REQUEST['paramMaxMod'] ?? $paramMax;
+    $paramRgbMod   = $_REQUEST['paramRgbMod'] ?? array();
+    $paramColorMod = $_REQUEST['paramColorMod'] ?? array();
+    $paramOrderMod = $_REQUEST['paramOrderMod'] ?? array();
     ////
     $lun2          = (count($paramRgbMod)) + $lun;
 	
@@ -455,11 +460,10 @@ JOIN (
 			$query2 = "INSERT INTO heatmap.colors (`id`,`metric_name`, `min`, `rgb`, `color`, `order`)VALUES(NULL,'" . $metric_name . "','" . $paramMinMod[$j] . "','" . $rgb . "','" . $paramColorMod[$j] . "','" . $paramOrderMod[$j] . "')";
 		}*/
 		//
-		echo ($query2);
         $result2 = mysqli_query($link, $query2) or die(mysqli_error($link));
     }
     ////
-	$paramdel = $_REQUEST['paramdel'];
+	$paramdel = $_REQUEST['paramdel'] ?? array();
 	$lun3 = count($paramdel);
 	for ($z = 0; $z < $lun3; $z++) {
 			$id = $paramdel[$z];
@@ -625,7 +629,8 @@ if ($result_test && $result_test->num_rows > 0) {
 echo json_encode($response);
 //
 } else if ($action == 'load_colormap') {
-    if (isset($_FILES['file']) && $_FILES['file']['error'] === UPLOAD_ERR_OK) {
+    $uploadError = $_FILES['file']['error'] ?? UPLOAD_ERR_NO_FILE;
+    if (isset($_FILES['file']) && $uploadError === UPLOAD_ERR_OK) {
         // Nome del file senza estensione preso da un parametro POST
         $fileName = $_POST['metric'];
         // Percorso assoluto della cartella di destinazione nel server
@@ -639,7 +644,11 @@ echo json_encode($response);
         // Verifica l'estensione del file
         $fileExtension = strtolower(pathinfo($_FILES['file']['name'], PATHINFO_EXTENSION));
         if (!in_array($fileExtension, $allowedExtensions)) {
-            echo "Wrong file type. It must be 'png'";
+            $response = [
+                'status' => 'error',
+                'message' => "Wrong file type. It must be 'png'"
+            ];
+            echo json_encode($response);
             exit;
         }
     
@@ -649,10 +658,22 @@ echo json_encode($response);
         finfo_close($finfo);
     
         if ($mimeType !== 'image/png') {
+            $response = [
+                'status' => 'error',
+                'message' => 'The uploaded file is not a valid PNG image.'
+            ];
+            echo json_encode($response);
             exit;
         } else {
             if (!is_dir($targetDirectory)) {
-                mkdir($targetDirectory, 0777, true);
+                if (!mkdir($targetDirectory, 0777, true) && !is_dir($targetDirectory)) {
+                    $response = [
+                        'status' => 'error',
+                        'message' => 'Unable to create the colormap destination directory.'
+                    ];
+                    echo json_encode($response);
+                    exit;
+                }
             }
     
             if (move_uploaded_file($_FILES['file']['tmp_name'], $targetFile)) {
@@ -698,43 +719,45 @@ echo json_encode($response);
                         
                 ///
             } else {
-                //echo "Errore nel caricamento del file.";
-                $fileError = $_FILES['file']['error'];
-                $errorMessage = '';
-            
-                // Crea un messaggio di errore dettagliato basato sul codice di errore
-                switch ($fileError) {
-                    case UPLOAD_ERR_INI_SIZE:
-                        $errorMessage = "File too large for server settings";
-                        break;
-                    case UPLOAD_ERR_FORM_SIZE:
-                        $errorMessage = "File too large";
-                        break;
-                    case UPLOAD_ERR_PARTIAL:
-                        $errorMessage = "File partially uploaded. Try again";
-                        break;
-                    case UPLOAD_ERR_NO_FILE:
-                        $errorMessage = "None file uploaded";
-                        break;
-                    case UPLOAD_ERR_NO_TMP_DIR:
-                        $errorMessage = "tmp directory not found";
-                        break;
-                    case UPLOAD_ERR_CANT_WRITE:
-                        $errorMessage = "Error in writing permission";
-                        break;
-                    case UPLOAD_ERR_EXTENSION:
-                        $errorMessage = "Upload blocked by a server extension";
-                        break;
-                    default:
-                        $errorMessage = "Not recognized error during fiule uplaod";
-                        break;
-                }
                 $response = [
                     'status' => 'error',
-                    'message' => $errorMessage  
+                    // At this point PHP accepted the upload (error = 0), but the
+                    // destination could not be written.
+                    'message' => 'Unable to save the uploaded legend. Check the destination path and its write permissions.'
                 ];
             }
         }
+    } else {
+        switch ($uploadError) {
+            case UPLOAD_ERR_INI_SIZE:
+                $errorMessage = 'File too large for server settings';
+                break;
+            case UPLOAD_ERR_FORM_SIZE:
+                $errorMessage = 'File too large';
+                break;
+            case UPLOAD_ERR_PARTIAL:
+                $errorMessage = 'File partially uploaded. Try again';
+                break;
+            case UPLOAD_ERR_NO_FILE:
+                $errorMessage = 'No file uploaded';
+                break;
+            case UPLOAD_ERR_NO_TMP_DIR:
+                $errorMessage = 'Temporary directory not found';
+                break;
+            case UPLOAD_ERR_CANT_WRITE:
+                $errorMessage = 'Error writing the uploaded file';
+                break;
+            case UPLOAD_ERR_EXTENSION:
+                $errorMessage = 'Upload blocked by a server extension';
+                break;
+            default:
+                $errorMessage = 'Unknown upload error (code '.$uploadError.')';
+                break;
+        }
+        $response = [
+            'status' => 'error',
+            'message' => $errorMessage
+        ];
     }
     echo json_encode($response);
 }else if ($action == 'view_legend') {

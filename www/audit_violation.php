@@ -22,9 +22,9 @@ include('functionalities.php');
 include ('external_service.php');
 include ('control.php');
 
-$link = mysqli_connect($host, $username, $password) or die("failed to connect to server !!");
+$link = mysqli_connect($profiledb_host, $profiledb_username, $profiledb_password) or die("failed to connect to server !!");
 mysqli_set_charset($link, 'utf8');
-mysqli_select_db($link, $dbname);
+mysqli_select_db($link, $profiledb_name);
 
 if (isset ($_SESSION['username'])){
   $utente_att = $_SESSION['username'];	

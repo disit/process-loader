@@ -48,16 +48,21 @@ else{
 }
 
 if (isset($_GET['action']) and $_GET['action'] == 'auth') {
-#$auth_db= 'AllowedUsers';
-    $auth_table = 'healthiness_users';
-    $auth_query = "SELECT * FROM $auth_table WHERE username = '$utente_us' ";
-    $auth_result = mysqli_query($connessione_al_server, $auth_query) or die(mysqli_error($link));
+    $auth_query = "SELECT 1 FROM healthiness_users WHERE username = ? LIMIT 1";
+    $auth_stmt = mysqli_prepare($connessione_al_server, $auth_query);
+    if (!$auth_stmt) {
+        die(mysqli_error($connessione_al_server));
+    }
+    mysqli_stmt_bind_param($auth_stmt, 's', $utente_us);
+    mysqli_stmt_execute($auth_stmt);
+    $auth_result = mysqli_stmt_get_result($auth_stmt);
     if ($auth_result->num_rows > 0) {
         $auth = 'Allowed';
     } else {
         $auth = 'Not_Allowed';
     }
 
+    mysqli_stmt_close($auth_stmt);
     echo $auth;
     exit();
 }
@@ -65,12 +70,28 @@ if (isset($_GET['action']) and $_GET['action'] == 'auth') {
 $columnNames = array('ServiceURI', 'Organization', 'Broker','DeviceName','DeviceModel','Nature','Subnature',
     'VariableName','VariableValue','ExpectedDate','LastMeasureDate','FailuresNumber','LastNotHealthy','Delta','MaxDelta','Percentage');
 
-// Find the use case and create the query
+// The table name is server-side configuration: it must never come from a request.
+$table_healthiness = getenv('DB_TABLE');
+$table_healthiness = ($table_healthiness !== false && $table_healthiness !== '') ? $table_healthiness : 'healthiness';
+if (!preg_match('/^[A-Za-z0-9_]+$/', $table_healthiness)) {
+    die('Nome tabella non valido.');
+}
+
+// Find the use case and create the query. Request values are validated here and
+// bound below; column names and sort directions are selected from whitelists.
 
 if (isset($_GET['search']) and isset($_GET['filter']) and isset($_GET['order'])) {
-        $offset = $_GET['offset'];
-        $limit = $_GET['limit'];
-        $device = $_GET['device'];
+        $search = $_GET['search'] === 'true';
+        $filter = $_GET['filter'] === 'true';
+        $order = $_GET['order'] === 'true';
+        $offset = filter_input(INPUT_GET, 'offset', FILTER_VALIDATE_INT);
+        $limit = filter_input(INPUT_GET, 'limit', FILTER_VALIDATE_INT);
+        $device = isset($_GET['device']) && $_GET['device'] === 'true' ? 'true' : 'false';
+
+        if ($offset === false || $offset < 0 || $limit === false || $limit < 1 || $limit > 1000) {
+            http_response_code(400);
+            exit('Parametri di paginazione non validi.');
+        }
 
         if($device == "false"){
             $select_query="*";
@@ -82,116 +103,72 @@ if (isset($_GET['search']) and isset($_GET['filter']) and isset($_GET['order']))
             $select_distinct = " DISTINCT ServiceURI, Organization, Broker, DeviceName, DeviceModel,Nature,Subnature,ExpectedDate,LastMeasureDate,FailuresNumber,LastNotHealthy,Delta,MaxDelta,Percentage";
             $variableOrd=" ";
         }
-        if ($_GET['search'] == "true" and $_GET['filter'] == "true" and $_GET['order'] == "true") {
-            // Searching params
-            $field = $_GET['column'];
-            $value = $_GET['value'];
+        $allowedColumns = array_flip($columnNames);
+        $conditions = array();
+        $params = array();
+        $types = '';
 
-            // Filtering params
-            $columnFilter = $_GET["filtercol"];
-            if ($_GET["type"] == 'under') {
-                $type = '<';
-            } else {
-                $type = '>';
+        if ($search) {
+            $fieldParam = $_GET['column'] ?? null;
+            $field = isset($allowedColumns[$fieldParam]) ? $fieldParam : null;
+            if ($field === null || !isset($_GET['value'])) {
+                http_response_code(400); exit('Parametro di ricerca non valido.');
             }
-            $threshold = $_GET["threshold"];
-
-            // Ordering params
-            $columnName = $columnNames[$_GET['clickedColumn']];
-            $colOrder = $_GET['direction'];
-
-            $query = "SELECT $select_distinct, (SELECT COUNT($select_query) FROM $table_healthiness WHERE $columnFilter $type $threshold AND $field LIKE '%$value%' ) " .
-                " as count, (SELECT COUNT(DISTINCT ServiceURI) FROM $table_healthiness where FailuresNumber >= 1 AND $columnFilter $type $threshold AND $field LIKE '%$value%' ) as nothealthyCount FROM $table_healthiness WHERE $columnFilter $type $threshold AND $field LIKE '%$value%' ORDER BY " .
-                " $columnName $colOrder, FailuresNumber DESC, ServiceURI ASC $variableOrd LIMIT $offset, $limit ";
-
-        } elseif ($_GET['search'] == "true" and $_GET['filter'] == "true") {
-            // Searching params
-            $field = $_GET['column'];
-            $value = $_GET['value'];
-
-            // Filtering params
-            $columnFilter = $_GET["filtercol"];
-            if ($_GET["type"] == 'under') {
-                $type = '<';
-            } else {
-                $type = '>';
-            }
-            $threshold = $_GET["threshold"];
-
-            $query = "SELECT $select_distinct, (SELECT COUNT($select_query) FROM $table_healthiness WHERE $columnFilter $type $threshold AND $field LIKE '%$value%' ) " .
-                " as count, (SELECT COUNT(DISTINCT ServiceURI) FROM $table_healthiness where FailuresNumber >= 1 AND $columnFilter $type $threshold AND $field LIKE '%$value%') as nothealthyCount FROM $table_healthiness WHERE $columnFilter $type $threshold AND $field LIKE '%$value%' ORDER BY " .
-                " FailuresNumber DESC, ServiceURI ASC $variableOrd  LIMIT $offset, $limit ";
-
-        } elseif ($_GET['order'] == "true" and $_GET['filter'] == "true") {
-            // Ordering params
-            $columnName = $columnNames[$_GET['clickedColumn']];
-            $colOrder = $_GET['direction'];
-
-            // Filtering params
-            $columnFilter = $_GET["filtercol"];
-            if ($_GET["type"] == 'under') {
-                $type = '<';
-            } else {
-                $type = '>';
-            }
-            $threshold = $_GET["threshold"];
-
-            $query = "SELECT $select_distinct, (SELECT COUNT($select_query) FROM $table_healthiness WHERE $columnFilter $type $threshold ) " .
-                " as count, (SELECT COUNT(DISTINCT ServiceURI) FROM $table_healthiness where FailuresNumber >= 1 AND $columnFilter $type $threshold) as nothealthyCount FROM $table_healthiness WHERE $columnFilter $type $threshold  ORDER BY " .
-                " $columnName $colOrder, FailuresNumber DESC, ServiceURI ASC $variableOrd  LIMIT $offset, $limit ";
-        } elseif ($_GET['order'] == "true" and $_GET['search'] == "true") {
-            // Ordering params
-            $columnName = $columnNames[$_GET['clickedColumn']];
-            $colOrder = $_GET['direction'];
-
-            // Searching params
-            $field = $_GET['column'];
-            $value = $_GET['value'];
-
-            $query = "SELECT $select_distinct, (SELECT COUNT($select_query) FROM $table_healthiness WHERE $field LIKE '%$value%' ) " .
-                " as count, (SELECT COUNT(DISTINCT ServiceURI) FROM $table_healthiness where FailuresNumber >= 1 AND $field LIKE '%$value%') as nothealthyCount FROM $table_healthiness WHERE  $field LIKE '%$value%'  ORDER BY " .
-                " $columnName $colOrder, FailuresNumber DESC, ServiceURI ASC $variableOrd  LIMIT $offset, $limit ";
-
-        } elseif ($_GET['search'] == "true") {
-            // Searching params
-            $field = $_GET['column'];
-            $value = $_GET['value'];
-
-            $query = "SELECT $select_distinct, (SELECT COUNT($select_query) FROM $table_healthiness WHERE $field LIKE '%$value%' ) " .
-                " as count, (SELECT COUNT(DISTINCT ServiceURI) FROM $table_healthiness where FailuresNumber >= 1 AND $field LIKE '%$value%' ) as nothealthyCount FROM $table_healthiness WHERE  $field LIKE '%$value%'  ORDER BY " .
-                " FailuresNumber DESC, ServiceURI ASC $variableOrd  LIMIT $offset, $limit ";
-
-        } elseif ($_GET['order'] == "true") {
-            // Ordering params
-            $columnName = $columnNames[$_GET['clickedColumn']];
-            $colOrder = $_GET['direction'];
-
-            $query = "SELECT $select_distinct, (SELECT COUNT($select_query) FROM $table_healthiness  ) " .
-                " as count, (SELECT COUNT(DISTINCT ServiceURI) FROM $table_healthiness where FailuresNumber >= 1 ) as nothealthyCount FROM $table_healthiness  ORDER BY " .
-                " $columnName $colOrder, FailuresNumber DESC, ServiceURI ASC $variableOrd  LIMIT $offset, $limit ";
-
-        } elseif ($_GET['filter'] == "true") {
-            // Filtering params
-            $columnFilter = $_GET["filtercol"];
-            if ($_GET["type"] == 'under') {
-                $type = '<';
-            } else {
-                $type = '>';
-            }
-            $threshold = $_GET["threshold"];
-
-            $query = "SELECT $select_distinct, (SELECT COUNT($select_query) FROM $table_healthiness WHERE $columnFilter $type $threshold ) " .
-                " as count, (SELECT COUNT(DISTINCT ServiceURI) FROM $table_healthiness where FailuresNumber >= 1 AND $columnFilter $type $threshold  ) as nothealthyCount FROM $table_healthiness WHERE $columnFilter $type $threshold  ORDER BY " .
-                " FailuresNumber DESC, ServiceURI ASC $variableOrd  LIMIT $offset, $limit ";
-        } else {
-            $query = "SELECT $select_distinct, (SELECT COUNT($select_query) FROM $table_healthiness ) as count, (SELECT COUNT(DISTINCT ServiceURI) FROM $table_healthiness where FailuresNumber >= 1 ) as nothealthyCount  FROM $table_healthiness " .
-                "  ORDER BY FailuresNumber DESC, ServiceURI $variableOrd  LIMIT  $offset ,$limit ;";
-
+            $conditions[] = "$field LIKE ?";
+            $params[] = '%' . $_GET['value'] . '%';
+            $types .= 's';
         }
+        if ($filter) {
+            $filterColumnParam = $_GET['filtercol'] ?? null;
+            $columnFilter = isset($allowedColumns[$filterColumnParam]) ? $filterColumnParam : null;
+            $threshold = filter_var($_GET['threshold'] ?? null, FILTER_VALIDATE_FLOAT);
+            if ($columnFilter === null || $threshold === false || !isset($_GET['type']) || !in_array($_GET['type'], array('under', 'over'), true)) {
+                http_response_code(400); exit('Parametro di filtro non valido.');
+            }
+            $conditions[] = "$columnFilter " . ($_GET['type'] === 'under' ? '<' : '>') . ' ?';
+            $params[] = $threshold;
+            $types .= 'd';
+        }
+
+        $where = count($conditions) ? ' WHERE ' . implode(' AND ', $conditions) : '';
+        $orderSql = 'FailuresNumber DESC, ServiceURI ASC';
+        if ($order) {
+            $clickedColumn = filter_input(INPUT_GET, 'clickedColumn', FILTER_VALIDATE_INT);
+            $columnName = ($clickedColumn !== false && $clickedColumn !== null && isset($columnNames[$clickedColumn])) ? $columnNames[$clickedColumn] : null;
+            $direction = ($_GET['direction'] ?? '') === 'DESC' ? 'DESC' : (($_GET['direction'] ?? '') === 'ASC' ? 'ASC' : null);
+            if ($columnName === null || $direction === null) {
+                http_response_code(400); exit('Parametro di ordinamento non valido.');
+            }
+            $orderSql = "$columnName $direction, $orderSql";
+        }
+
+        $query = "SELECT $select_distinct,
+            (SELECT COUNT($select_query) FROM $table_healthiness$where) AS count,
+            (SELECT COUNT(DISTINCT ServiceURI) FROM $table_healthiness" .
+            (count($conditions) ? ' WHERE FailuresNumber >= 1 AND ' . implode(' AND ', $conditions) : ' WHERE FailuresNumber >= 1') .
+            ") AS nothealthyCount
+            FROM $table_healthiness$where
+            ORDER BY $orderSql" . ($variableOrd === ', VariableName ASC' ? ', VariableName ASC' : '') .
+            " LIMIT ?, ?";
+
+        // Each subquery and the main query has its own parameter placeholders.
+        $bindValues = array_merge($params, $params, $params, array($offset, $limit));
+        $bindTypes = $types . $types . $types . 'ii';
+        $stmt = mysqli_prepare($connessione_al_server, $query);
+        if (!$stmt) {
+            die(mysqli_error($connessione_al_server));
+        }
+        $bindArgs = array($stmt, $bindTypes);
+        foreach ($bindValues as $key => $value) {
+            $bindValues[$key] = $value;
+            $bindArgs[] = &$bindValues[$key];
+        }
+        call_user_func_array('mysqli_stmt_bind_param', $bindArgs);
+        mysqli_stmt_execute($stmt);
+        $results = mysqli_stmt_get_result($stmt);
 
 
 // Retrieve the results of the query
-$results = mysqli_query($connessione_al_server, $query) or die(mysqli_error($connessione_al_server));
 $record_list = array();
 
 // Create an array of the results

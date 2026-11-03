@@ -96,7 +96,8 @@ $params[] = $limit;
 $types .= "ii";
 $stmt = mysqli_prepare($link, $query_n) or die(mysqli_error($link));
 if ($types !== "ii") {
-	$bind = array_merge(array($types), $params);
+	// mysqli_stmt_bind_param() expects the statement as its first argument.
+	$bind = array_merge(array($stmt, $types), $params);
 	$refs = array();
 	foreach ($bind as $k => &$v) {
 		$refs[$k] = &$v;

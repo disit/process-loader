@@ -16,10 +16,10 @@ include ('external_service.php');
    You should have received a copy of the GNU Affero General Public License
    along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
-$link = mysqli_connect($host, $username, $password) or die("failed to connect to server !!");
+$link = mysqli_connect($profiledb_host, $profiledb_username, $profiledb_password) or die("failed to connect to server !!");
 mysqli_set_charset($link, 'utf8');
-mysqli_select_db($link, $dbname);
-//echo $dbname;
+mysqli_select_db($link, $profiledb_name);
+//echo $profiledb_name;
 
 $query = "SELECT ownership.* FROM profiledb.ownership;";
 
