@@ -368,7 +368,7 @@ $json_Auth_users = json_encode($data_Auth_users);
 								$prev_page = $_REQUEST["page"] -1;
 								$suc_page = $_REQUEST["page"] +1;
 								$corr_page= $_REQUEST["page"];
-								$filter_string = $REQUEST["filter"];
+								$filter_string = $_REQUEST["filter"];
 								$array_link = array ();
 								/////
 							if ($prev_page >=1){

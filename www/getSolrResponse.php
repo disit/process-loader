@@ -65,7 +65,8 @@
 			}
 	
 	/////////////////////////
-	
+echo "[]";
+exit;	
 	// impostazioni server solr
 	$core = 'collection1';
 	$options = array
