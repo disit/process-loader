@@ -41,17 +41,17 @@ $dbname_kpi= getenv('PL_KPI_DBNAME') ?: 'processloader_db';
 
 //heatmap server
 $host_heatmap = getenv('PL_HEATMAP_HOST') ?: 'localhost';
-$username_heatmap = getenv('PL_HEATMAP_USERNAME') ?: 'root';
-$password_heatmap = getenv('PL_HEATMAP_PASSWORD') ?: 'ubuntu';
+$username_heatmap = getenv('PL_HEATMAP_USERNAME') ?: 'user';
+$password_heatmap = getenv('PL_HEATMAP_PASSWORD') ?: 'password';
 $dbname_heatmap = getenv('PL_HEATMAP_DBNAME') ?: 'heatmap';
 
 //userlimits
-$host_limits = getenv('PL_LIMITS_HOST') ?: 'localhost';
-$username_limits = getenv('PL_LIMITS_USERNAME') ?: 'username';
-$password_limits = getenv('PL_LIMITS_PASSWORD') ?: '';
+$host_limits = getenv('PL_LIMITS_HOST') ?: $profiledb_host;
+$username_limits = getenv('PL_LIMITS_USERNAME') ?: $profiledb_username;
+$password_limits = getenv('PL_LIMITS_PASSWORD') ?: $profiledb_password;
 $dbname_limits = getenv('PL_LIMITS_DBNAME') ?: 'profiledb';
 
-$org_limits_api = getenv('PL_LIMITS_ORG_API') ?: 'http://dashboard-test/dashboardSmartCity/api/organizations.php';
+$org_limits_api = getenv('PL_LIMITS_ORG_API') ?: $baseUrl . '/dashboardSmartCity/api/organizations.php';
 $types_limits = ["IOTID","DashboardID","ModelID","AppID","DAAppID","DeviceGroupID","HeatmapID","PortiaID","SynopticID","SynopticTmplID","BrokerID"];
 
 $host_od = getenv('PL_OD_HOST') ?: 'od-postgis';
