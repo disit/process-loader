@@ -16,17 +16,17 @@
    along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
 //EXTERNAL SERVICES//
-$host= 'loclahost';
-$username= 'user';
-$password= 'password';
-$dbname= 'profiledb';
-$snap4city_API='localhost';
+$profiledb_host= getenv('PL_PROFILEDB_HOST') ?: 'localhost';
+$profiledb_username= getenv('PL_PROFILEDB_USERNAME') ?: 'user';
+$profiledb_password= getenv('PL_PROFILEDB_PASSWORD') ?: 'password';
+$profiledb_name= getenv('PL_PROFILEDB_NAME') ?: 'profiledb';
+$snap4city_API= getenv('PL_SNAP4CITY_API') ?: 'localhost';
 
 //PHOTO SERVICE//
-$host_photo= 'localhost';
-$username_photo= 'user';
-$password_photo= 'password';
-$dbname_photo= 'ServiceMap';
+$host_photo= getenv('PL_PHOTO_HOST') ?: 'localhost';
+$username_photo= getenv('PL_PHOTO_USERNAME') ?: 'user';
+$password_photo= getenv('PL_PHOTO_PASSWORD') ?: 'password';
+$dbname_photo= getenv('PL_PHOTO_DBNAME') ?: 'ServiceMap';
 $photo_api='http://localhost/ServiceMap/api/v1/photo/thumbs/';
 $default_longitude = 11.252;
 $default_latitude = 43.773;
@@ -34,15 +34,32 @@ $default_serviceUri = 'http://localhost/ServiceMap/api/v1/?serviceUri=';
 $photo_service_api = 'http://localhost/ServiceMap/ajax/';
 
 //KPI EDITOR//
-$host_kpi= 'localhost';
-$username_kpi= 'user';
-$password_kpi= 'password';
-$dbname_kpi= 'processloader_db';
+$host_kpi= getenv('PL_KPI_HOST') ?: 'localhost';
+$username_kpi= getenv('PL_KPI_USERNAME') ?: 'user';
+$password_kpi= getenv('PL_KPI_PASSWORD') ?: 'password';
+$dbname_kpi= getenv('PL_KPI_DBNAME') ?: 'processloader_db';
 
 //heatmap server
-$host_heatmap ='localhost';
-$username_heatmap = 'root';
-$password_heatmap = 'ubuntu';
-$dbname_heatmap = 'heatmap';
+$host_heatmap = getenv('PL_HEATMAP_HOST') ?: 'localhost';
+$username_heatmap = getenv('PL_HEATMAP_USERNAME') ?: 'root';
+$password_heatmap = getenv('PL_HEATMAP_PASSWORD') ?: 'ubuntu';
+$dbname_heatmap = getenv('PL_HEATMAP_DBNAME') ?: 'heatmap';
 
-?>
+//userlimits
+$host_limits = getenv('PL_LIMITS_HOST') ?: 'localhost';
+$username_limits = getenv('PL_LIMITS_USERNAME') ?: 'username';
+$password_limits = getenv('PL_LIMITS_PASSWORD') ?: '';
+$dbname_limits = getenv('PL_LIMITS_DBNAME') ?: 'profiledb';
+
+$org_limits_api = getenv('PL_LIMITS_ORG_API') ?: 'http://dashboard-test/dashboardSmartCity/api/organizations.php';
+$types_limits = ["IOTID","DashboardID","ModelID","AppID","DAAppID","DeviceGroupID","HeatmapID","PortiaID","SynopticID","SynopticTmplID","BrokerID"];
+
+$host_od = getenv('PL_OD_HOST') ?: 'od-postgis';
+$username_od = getenv('PL_OD_USERNAME') ?: 'postgres';
+$password_od = getenv('PL_OD_PASSWORD') ?: '';
+$dbname_od = getenv('PL_OD_DBNAME') ?: 'postgres';
+
+$host_dashboardbuilder = getenv('PL_DASHBOARDBUILDER_HOST') ?: $host;
+$username_dashboardbuilder = getenv('PL_DASHBOARDBUILDER_USERNAME') ?: $username;
+$password_dashboardbuilder = getenv('PL_DASHBOARDBUILDER_PASSWORD') ?: $password;
+$db_dashboardbuilder = getenv('PL_DASHBOARDBUILDER_DBNAME') ?: 'Dashboard';
