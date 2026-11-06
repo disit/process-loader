@@ -16,20 +16,38 @@
    along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
 
-$username = "user";
-$password = "password";
-$host="localhost";
-$dbname = "processloader_db";
-$host_valueunit = $host;
-$username_valueunit = $username;
-$password_valueunit = $password;
-$dbname_valueunit = $dbname;
+$username = getenv("PL_DB_USER") ?: "username";
+$password = getenv("PL_DB_PASSWORD") ?: "password";
+$dbname = getenv("PL_DATABASE") ?: "processloader_db";
+$host = getenv("PL_DB_HOST") ?: "localhost";
+
+$host_valueunit = getenv("PL_VALUEUNIT_HOST") ?: $host;
+$username_valueunit = getenv("PL_VALUEUNIT_USER") ?: $username;
+$password_valueunit = getenv("PL_VALUEUNIT_PASSWORD") ?: $password;
+$dbname_valueunit = getenv("PL_VALUEUNIT_DATABASE") ?: $dbname;
 
 //SERVER LDAP
-$ldapServer = 'localhost';
-$ldapParamters = 'dc=organization,dc=com';
-$ldapAdminDN = ''; //Anonymous connection if empty
-$ldapAdminPwd = '';
+$ldapServer = getenv("PL_LDAPSERVER") ?: 'localhost';
+$ldapParamters = getenv("PL_LDAPBASE") ?: 'dc=ldap,dc=organization,dc=com';
+$ldapAdminDN = getenv("PL_LDAPADMINDN") ?: 'cn=admin,'.$ldapParamters;
+$ldapAdminPwd = getenv("PL_LDAPADMINPWD") ?: 'password';
+
+$baseUrl = getenv("PL_BASE_URL") ?: 'http://localhost';
+$ssoEndpoint = $oicd_address = getenv("PL_SSO_ENDPOINT") ?: $baseUrl;
+$ssoClientId = getenv("PL_SSO_CLIENTID") ?: 'php-dashboard-builder';
+$ssoClientSecret = getenv("PL_SSO_CLIENTSECRET") ?: '---';
+$personalDataApiBaseUrl = getenv("PL_PERSONAL_DATA_API_BASE_URL") ?: $baseUrl . '/ownership-api';
+$delegationDataApiUrl = getenv("PL_DELEGATION_DATA_API_URL") ?: $baseUrl . '/datamanager/api';
+
+$access_token_userinfo = $baseUrl . '/auth/realms/master/protocol/openid-connect/userinfo';
+$appUrl= $baseUrl . '/processloader';
+
+$colormap_external_path = getenv("PL_COLORMAP_EXTERNAL_PATH") ?: '/var/www/html/dashboardSmartCity/img/';
+$colormap_external_link = getenv("PL_COLORMAP_EXTERNAL_LINK") ?: $baseUrl . '/dashboardSmartCity/img/';
+$colormap_external_directory = getenv("PL_COLORMAP_EXTERNAL_DIRECTORY") ?: 'heatmapsGradientLegends/';
+
+$preview_path = getenv("PL_PREVIEW_PATH") ?: $baseUrl . '/dashboardSmartCity/view/preview.php';
+$host_trafficflowmanager = getenv("PL_TRAFFICFLOWMANAGER_PATH") ?: $baseUrl . '/trafficflowmanager';
 
 //nome repository files
 $repository_files = 'jobs/';
@@ -48,12 +66,11 @@ $pentaho = 'org.pentaho.di.kitchen.Kitchen';
 $xms = '-Xmx512m';
 $data_integration_path = ':/home/ubuntu/programs/data-integration/lib/*';
 $level = 'Debug';
-//Access_token
-$access_token_userinfo = "http://localhost/auth/realms/master/protocol/openid-connect/userinfo";
+
 //R PARAMETERS
 $r_path = '/usr/bin/Rscript';
 
-$storeSessionOnDB='no';
+$storeSessionOnDB = getenv("PL_SESSIONONDB") ?: 'no';
 include_once __DIR__ . "/init_session.php";
 session_start();
 
